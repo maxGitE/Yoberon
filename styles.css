@@ -1,0 +1,47 @@
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
+#canvas { 
+    display: block;
+}
+
+#menu {
+    position: absolute;
+    width: 50%;
+    height: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 10px;
+    background-color: #8c817e;
+}
+
+.menuButton {
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    display: block;
+    width: 250px;
+    height: 80px;
+    margin-top: 3%;
+    background-color: #000000;
+    color: #ffffff;
+    font-size: x-large;
+    font-weight: bolder;
+    cursor: pointer;
+    outline: none;
+    border: none;
+    box-shadow: 0 6px #635959;
+}
+
+button::-moz-focus-inner {
+    border: 0;
+}
+
+button:active {
+    padding: 0px;
+    box-shadow: 0 2px #635959;
+    transform: translate(-50%, 4px);
+}
