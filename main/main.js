@@ -110,6 +110,30 @@ function initialBoundingBox() {
             player.velocityX = 0;
         }
     }
+
+    boundingBoxVis(zBoundBehind, xBoundFirst, zBoundFirst, xBoundSecond, zBoundSecond);
+
+}
+
+function boundingBoxVis (zBoundBehind, xBoundFirst, zBoundFirst, xBoundSecond, zBoundSecond) {
+    let linematerial = new THREE.LineBasicMaterial({
+        color: 0x0000ff
+    });
+
+    let points = [];
+    points.push(new THREE.Vector3(-xBoundFirst, 0, zBoundBehind));
+    points.push(new THREE.Vector3(xBoundFirst, 0, zBoundBehind));
+    points.push(new THREE.Vector3(xBoundFirst, 0, zBoundFirst));
+    points.push(new THREE.Vector3(xBoundSecond, 0, zBoundFirst));
+    points.push(new THREE.Vector3(xBoundSecond, 0, zBoundSecond));
+    points.push(new THREE.Vector3(-xBoundSecond, 0, zBoundSecond));
+    points.push(new THREE.Vector3(-xBoundSecond, 0, zBoundFirst));
+    points.push(new THREE.Vector3(-xBoundFirst, 0, zBoundFirst));
+
+    let geometry = new THREE.BufferGeometry().setFromPoints(points);
+
+    let boundingBox = new THREE.LineLoop(geometry, linematerial);
+    scene.add(boundingBox);
 }
 
 function onResize() {
@@ -232,26 +256,6 @@ function initWorld() {
     let box = new THREE.Mesh(new THREE.CubeGeometry(5, 5, 5), new THREE.MeshBasicMaterial( {color: "white"} ));
     box.position.set(0, 2.5, -10);
     scene.add(box);
-
-    let linematerial = new THREE.LineBasicMaterial({
-        color: 0x0000ff
-    });
-
-    let points = [];
-    points.push(new THREE.Vector3(-15, 0, 5));
-    points.push(new THREE.Vector3(15, 0, 5));
-    points.push(new THREE.Vector3(15, 0, -50));
-    points.push(new THREE.Vector3(30, 0, -50));
-    points.push(new THREE.Vector3(30, 0, -100));
-    points.push(new THREE.Vector3(-30, 0, -100));
-    points.push(new THREE.Vector3(-30, 0, -50));
-    points.push(new THREE.Vector3(-15, 0, -50));
-
-    let geometry = new THREE.BufferGeometry().setFromPoints(points);
-
-    let boundingBox = new THREE.LineLoop(geometry, linematerial);
-    scene.add(boundingBox);
-
 }
 
 function render() {
