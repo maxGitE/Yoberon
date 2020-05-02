@@ -1,3 +1,5 @@
+import { GLTFLoader } from 'https://threejs.org/examples/jsm/loaders/GLTFLoader.js';
+
 window.onload = init;
 
 var canvas;
@@ -5,9 +7,12 @@ var renderer;
 var scene;
 var camera;
 var thirdPersonCamera;
+var ambientLight;
 var controls;
 var clock;
 var player;
+var textureLoader;
+var gltfLoader;
 
 function gameLoop() {
     requestAnimationFrame(gameLoop);
@@ -112,6 +117,14 @@ function initialBoundingBox() {
     }
 }
 
+function loadModel(url) {
+    function callback(gltf) {
+        player.playerModel = gltf.scene;
+        scene.add(player.playerModel);
+    }
+    gltfLoader.load(url, callback, undefined, (error) => console.log(error));
+}
+
 function onResize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -151,6 +164,11 @@ function initCameras() {
     thirdPersonCamera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 0.1, 2000);
     thirdPersonCamera.position.set(camera.position.x, camera.position.y + 5, camera.position.z + 5);
     camera.add(thirdPersonCamera);
+}
+
+function initLights() {
+    ambientLight = new THREE.AmbientLight("white", 1);
+    scene.add(ambientLight);
 }
 
 function initControls() {
@@ -222,6 +240,12 @@ function initTime() {
 
 function initPlayer() {
     player = new Player("Joax");
+    loadModel("models/playermodel.glb");
+}
+
+function initLoaders() {
+    textureLoader = new THREE.TextureLoader();
+    gltfLoader = new GLTFLoader();
 }
 
 function initWorld() {
@@ -251,7 +275,6 @@ function initWorld() {
 
     let boundingBox = new THREE.LineLoop(geometry, linematerial);
     scene.add(boundingBox);
-
 }
 
 function render() {
@@ -262,8 +285,10 @@ function init() {
     initRenderer();
     initScene();
     initCameras();
+    initLights();
     initControls();
     initTime();
+    initLoaders();
     initPlayer();
     initWorld();
 
