@@ -14,6 +14,8 @@ class Player {
         this._movingLeft = false;
         this._movingRight = false;
         this._jumping = false;
+        this._playerModel = undefined;
+        this._animations = [];
     }
 
     get name() {
@@ -80,6 +82,14 @@ class Player {
         return this._jumping;
     }
 
+    get playerModel() {
+        return this._playerModel;
+    }
+
+    get animations() {
+        return this._animations;
+    }
+
     set currentHealth(health) {
         this._currentHealth = health;
     }
@@ -108,12 +118,6 @@ class Player {
         this._velocity.z = z;
     }
 
-    set velocity(velArray) {
-        this._velocity.x = velArray[0];
-        this._velocity.y = velArray[1];
-        this._velocity.z = velArray[2];
-    }
-
     set movingForward(value) {
         this._movingForward = value;
     }
@@ -132,6 +136,14 @@ class Player {
 
     set jumping(value) {
         this._jumping = value;
+    }
+
+    set playerModel(model) {
+        this._playerModel = model;
+    }
+
+    addAnimation(animation) {
+        this._animations.push(animation);
     }
 
     addItem(item) {

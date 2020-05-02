@@ -52,37 +52,63 @@ function gameLoop() {
 }
 
 function initialBoundingBox() {
-    if(controls.getObject().position.z > -50) {
-        if(controls.getObject().position.z > 5) {
-            controls.getObject().position.z = 5;
+    let x = controls.getObject().position.x;
+    let z = controls.getObject().position.z;
+
+    let zBoundBehind = 5;
+    let xBoundFirst = 15;
+    let zBoundFirst = -50;
+    let xBoundSecond = 30;
+    let zBoundSecond = -100;
+
+    if(z > zBoundFirst) {
+        if(z > zBoundBehind) {
+            controls.getObject().position.z = zBoundBehind;
+            player.velocityZ = 0;
         }
-        if(controls.getObject().position.x > 15) {
-            controls.getObject().position.x = 15;
+
+        if(x > xBoundFirst) {
+            controls.getObject().position.x = xBoundFirst;
+            player.velocityX = 0;
         }
-        else if(controls.getObject().position.x < -15) {
-            controls.getObject().position.x = -15;
+        if(x < -xBoundFirst) {
+            controls.getObject().position.x = -xBoundFirst;
+            player.velocityX = 0;
         }
     }
-    else if(controls.getObject().position.z > -100) {
-        if(controls.getObject().position.x > 15) {
-            if(controls.getObject().position.z > -51) {
-                controls.getObject().position.z = -51;
+    else if(z > zBoundSecond) {
+        if(x > xBoundFirst) {
+            if(z > zBoundFirst - 1) {
+                controls.getObject().position.z = zBoundFirst - 1;
+                player.velocityZ = 0;
             }
-            if(controls.getObject().position.x > 30) {
-                controls.getObject().position.x = 30;
+            if(x > xBoundSecond) {
+                controls.getObject().position.x = xBoundSecond;
+                player.velocityX = 0;
             }
         }
-        if(controls.getObject().position.x < -15) {
-            if(controls.getObject().position.z > -51) {
-                controls.getObject().position.z = -51;
+        if(x < -xBoundFirst) {
+            if(z > zBoundFirst - 1) {
+                controls.getObject().position.z = zBoundFirst - 1;
+                player.velocityZ = 0;
             }
-            if(controls.getObject().position.x < -30) {
-                controls.getObject().position.x = -30;
+            if(x < -xBoundSecond) {
+                controls.getObject().position.x = -xBoundSecond;
+                player.velocityX = 0;
             }
         }
     }
     else {
-        controls.getObject().position.z = -100;
+        controls.getObject().position.z = zBoundSecond;
+        player.velocityZ = 0;
+        if(x > xBoundSecond) {
+            controls.getObject().position.x = xBoundSecond;
+            player.velocityX = 0;
+        }
+        if(x < -xBoundSecond) {
+            controls.getObject().position.x = -xBoundSecond;
+            player.velocityX = 0;
+        }
     }
 }
 
