@@ -7,12 +7,16 @@ var renderer;
 var scene;
 var camera;
 var thirdPersonCamera;
+var cameraType;
 var ambientLight;
 var controls;
 var clock;
 var player;
 var textureLoader;
 var gltfLoader;
+var idleAnim;
+var walkingAnim;
+let mixer;
 
 function gameLoop() {
     requestAnimationFrame(gameLoop);
@@ -48,7 +52,15 @@ function gameLoop() {
             player.jumping = false;
         }
 
+        player.playerModel.position.x = controls.getObject().position.x;
+        player.playerModel.position.z = controls.getObject().position.z;
+        player.playerModel.position.y = controls.getObject().position.y - 5;
+
         initialBoundingBox();
+
+        if(mixer !== undefined) {
+            mixer.update(clock.delta);
+        }
 
         clock.timeBefore = clock.timeNow;
     }
@@ -63,8 +75,8 @@ function initialBoundingBox() {
     let zBoundBehind = 5;
     let xBoundFirst = 15;
     let zBoundFirst = -50;
-    let xBoundSecond = 30;
-    let zBoundSecond = -100;
+    let xBoundSecond = 150;
+    let zBoundSecond = -300;
 
     if(z > zBoundFirst) {
         if(z > zBoundBehind) {
@@ -143,8 +155,18 @@ function boundingBoxVis (zBoundBehind, xBoundFirst, zBoundFirst, xBoundSecond, z
 
 function loadModel(url) {
     function callback(gltf) {
-        player.playerModel = gltf.scene;
+        player.playerModel = gltf.scene; // ** TODO **
+        let animations = gltf.animations;
+       // player.playerModel.scale.set(0.25, 0.25, 0.25);
+        player.playerModel.scale.set(1, 1, -1);
         scene.add(player.playerModel);
+        
+        mixer = new THREE.AnimationMixer(player.playerModel);
+
+        idleAnim = mixer.clipAction(animations[1]);
+        walkingAnim = mixer.clipAction(animations[0]);
+
+        idleAnim.play();
     }
     gltfLoader.load(url, callback, undefined, (error) => console.log(error));
 }
@@ -185,9 +207,12 @@ function initCameras() {
     camera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 0.1, 2000);
     camera.position.set(0, 5, 0);
     scene.add(camera);
+
     thirdPersonCamera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 0.1, 2000);
-    thirdPersonCamera.position.set(camera.position.x, camera.position.y + 5, camera.position.z + 5);
+    thirdPersonCamera.position.set(camera.position.x, camera.position.y + 5, camera.position.z + 50);
     camera.add(thirdPersonCamera);
+
+    cameraType = "fp";
 }
 
 function initLights() {
@@ -221,6 +246,8 @@ function initControls() {
         switch(event.keyCode) {
             case 87:    // W
                 player.movingForwards = true;
+                idleAnim.stop();
+                walkingAnim.play();
                 break;
             case 65:    // A
                 player.movingLeft = true;
@@ -237,6 +264,12 @@ function initControls() {
                     player.velocityY += 125;
                 }
                 break;
+            case 49:    // 1
+                cameraType = "fp";
+                break;
+            case 50:    // 2
+                cameraType = "tp";
+                break;
         }
     }
 
@@ -244,6 +277,8 @@ function initControls() {
         switch(event.keyCode) {
             case 87:    // W
                 player.movingForwards = false;
+                idleAnim.play();
+                walkingAnim.stop();
                 break;
             case 65:    // A
                 player.movingLeft  = false;
@@ -280,29 +315,11 @@ function initWorld() {
     let box = new THREE.Mesh(new THREE.CubeGeometry(5, 5, 5), new THREE.MeshBasicMaterial( {color: "white"} ));
     box.position.set(0, 2.5, -10);
     scene.add(box);
-
-    let linematerial = new THREE.LineBasicMaterial({
-        color: 0x0000ff
-    });
-
-    let points = [];
-    points.push(new THREE.Vector3(-15, 0, 5));
-    points.push(new THREE.Vector3(15, 0, 5));
-    points.push(new THREE.Vector3(15, 0, -50));
-    points.push(new THREE.Vector3(30, 0, -50));
-    points.push(new THREE.Vector3(30, 0, -100));
-    points.push(new THREE.Vector3(-30, 0, -100));
-    points.push(new THREE.Vector3(-30, 0, -50));
-    points.push(new THREE.Vector3(-15, 0, -50));
-
-    let geometry = new THREE.BufferGeometry().setFromPoints(points);
-
-    let boundingBox = new THREE.LineLoop(geometry, linematerial);
-    scene.add(boundingBox);
 }
 
 function render() {
-    renderer.render(scene, camera);
+    let cameraToRender = cameraType == "fp" ? camera : thirdPersonCamera;
+    renderer.render(scene, cameraToRender);
 }
 
 function init() {
