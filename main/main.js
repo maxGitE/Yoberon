@@ -1,13 +1,13 @@
 window.onload = init;
 
-let canvas;
-let renderer;
-let scene;
-let camera;
-let thirdPersonCamera;
-let controls;
-let clock;
-let player;
+var canvas;
+var renderer;
+var scene;
+var camera;
+var thirdPersonCamera;
+var controls;
+var clock;
+var player;
 
 function gameLoop() {
     requestAnimationFrame(gameLoop);
@@ -43,10 +43,47 @@ function gameLoop() {
             player.jumping = false;
         }
 
+        initialBoundingBox();
+
         clock.timeBefore = clock.timeNow;
     }
 
     render();
+}
+
+function initialBoundingBox() {
+    if(controls.getObject().position.z > -50) {
+        if(controls.getObject().position.z > 5) {
+            controls.getObject().position.z = 5;
+        }
+        if(controls.getObject().position.x > 15) {
+            controls.getObject().position.x = 15;
+        }
+        else if(controls.getObject().position.x < -15) {
+            controls.getObject().position.x = -15;
+        }
+    }
+    else if(controls.getObject().position.z > -100) {
+        if(controls.getObject().position.x > 15) {
+            if(controls.getObject().position.z > -51) {
+                controls.getObject().position.z = -51;
+            }
+            if(controls.getObject().position.x > 30) {
+                controls.getObject().position.x = 30;
+            }
+        }
+        if(controls.getObject().position.x < -15) {
+            if(controls.getObject().position.z > -51) {
+                controls.getObject().position.z = -51;
+            }
+            if(controls.getObject().position.x < -30) {
+                controls.getObject().position.x = -30;
+            }
+        }
+    }
+    else {
+        controls.getObject().position.z = -100;
+    }
 }
 
 function onResize() {
@@ -106,8 +143,6 @@ function initControls() {
     }
 
     function unlock() {
-        player.velocity = [0, 0, 0];
-        console.log(player.velocityX, player.velocityY, player.velocityZ);
         menuBlock.style.display = "block";
     }
 
@@ -171,6 +206,26 @@ function initWorld() {
     let box = new THREE.Mesh(new THREE.CubeGeometry(5, 5, 5), new THREE.MeshBasicMaterial( {color: "white"} ));
     box.position.set(0, 2.5, -10);
     scene.add(box);
+
+    let linematerial = new THREE.LineBasicMaterial({
+        color: 0x0000ff
+    });
+
+    let points = [];
+    points.push(new THREE.Vector3(-15, 0, 5));
+    points.push(new THREE.Vector3(15, 0, 5));
+    points.push(new THREE.Vector3(15, 0, -50));
+    points.push(new THREE.Vector3(30, 0, -50));
+    points.push(new THREE.Vector3(30, 0, -100));
+    points.push(new THREE.Vector3(-30, 0, -100));
+    points.push(new THREE.Vector3(-30, 0, -50));
+    points.push(new THREE.Vector3(-15, 0, -50));
+
+    let geometry = new THREE.BufferGeometry().setFromPoints(points);
+
+    let boundingBox = new THREE.LineLoop(geometry, linematerial);
+    scene.add(boundingBox);
+
 }
 
 function render() {
