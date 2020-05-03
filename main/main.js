@@ -14,19 +14,25 @@ var clock;
 var player;
 var textureLoader;
 var gltfLoader;
-var idleAnim;
-var walkingAnim;
 let mixer;
+let idleCalled = false;
+let playerPos = new THREE.Vector3();
+let controlsLocked = false;
+let flag = "poop";
 
 function gameLoop() {
     requestAnimationFrame(gameLoop);
 
-    if(controls.isLocked) {
+    if(controlsLocked) {
+
+        console.log(flag);
+        console.log(player.velocityX + " " + player.velocityY + " " + player.velocityZ);
+
         clock.timeNow = performance.now();
         clock.delta = (clock.timeNow - clock.timeBefore) / 1000;
 
         player.velocityX = player.velocityX - player.velocityX * 10 * clock.delta;
-        player.velocityY = player.velocityY - 9.807 * 50 * clock.delta;
+        player.velocityY = player.velocityY - 9.807 * 30 * clock.delta;
         player.velocityZ = player.velocityZ - player.velocityZ * 10 * clock.delta;
 
         if(player.movingLeft) {
@@ -49,12 +55,19 @@ function gameLoop() {
         if(controls.getObject().position.y < 5) {
             controls.getObject().position.y = 5;
             player.velocityY = 0;
-            player.jumping = false;
         }
 
         player.playerModel.position.x = controls.getObject().position.x;
         player.playerModel.position.z = controls.getObject().position.z;
         player.playerModel.position.y = controls.getObject().position.y - 5;
+        if(cameraType == "tp") {
+            if(controls.getObject().rotation.x * 180 / Math.PI > 15) {
+                controls.getObject().rotation.x = 15 * Math.PI / 180;
+            } 
+            controls.getObject().rotation.z = 0;
+            controls.getObject().rotation.order = "YXZ";
+        }
+        player.playerModel.rotation.set(0, controls.getObject().rotation.y, 0);
 
         initialBoundingBox();
 
@@ -132,6 +145,41 @@ function initialBoundingBox() {
 
 }
 
+function handleJumpAnimation() {
+    player.jumpAnim.enabled = true;
+    let tempAnimation = player.currentAnimation;
+    player.currentAnimation = player.jumpAnim;
+
+    player.idleAnim.enabled = false;
+    player.runAnim.enabled = false;
+    player.backwardsAnim.enabled = false;
+    player.walkAnim.enabled = false;
+    
+    setTimeout(function() {
+        player.jumping = false;
+        if(idleCalled == true) {
+            updatePlayerAnimation(player.idleAnim);
+            idleCalled = false;
+        }
+        else {
+            updatePlayerAnimation(tempAnimation);
+        }
+    }, 800);
+}
+
+function updatePlayerAnimation(newAnimation) {
+    //nextAnimation.reset();
+    if(!player.jumping) {
+        player.currentAnimation.enabled = false;
+        newAnimation.enabled = true;
+        player.currentAnimation = newAnimation;
+    }
+    else {
+        if(newAnimation == player.idleAnim)
+            idleCalled = true;
+    }
+}
+
 function boundingBoxVis (zBoundBehind, xBoundFirst, zBoundFirst, xBoundSecond, zBoundSecond) {
     let linematerial = new THREE.LineBasicMaterial({
         color: 0x0000ff
@@ -157,16 +205,31 @@ function loadModel(url) {
     function callback(gltf) {
         player.playerModel = gltf.scene; // ** TODO **
         let animations = gltf.animations;
-       // player.playerModel.scale.set(0.25, 0.25, 0.25);
-        player.playerModel.scale.set(1, 1, -1);
+     
+        player.playerModel.scale.set(0.5, 0.5, -0.5);
         scene.add(player.playerModel);
         
         mixer = new THREE.AnimationMixer(player.playerModel);
 
-        idleAnim = mixer.clipAction(animations[1]);
-        walkingAnim = mixer.clipAction(animations[0]);
+        player.walkAnim = mixer.clipAction(animations[0]);
+        player.idleAnim = mixer.clipAction(animations[1]);
+        player.backwardsAnim = mixer.clipAction(animations[2]);
+        player.runAnim = mixer.clipAction(animations[3]);
+        player.jumpAnim = mixer.clipAction(animations[4]);
 
-        idleAnim.play();
+        player.walkAnim.play();
+        player.idleAnim.play();
+        player.backwardsAnim.play();
+        player.jumpAnim.play();
+        player.runAnim.play();
+
+        player.walkAnim.enabled = false;
+        player.idleAnim.enabled = true;
+        player.backwardsAnim.enabled = false;
+        player.jumpAnim.enabled = false;
+        player.runAnim.enabled = false;
+        
+        player.currentAnimation = player.idleAnim;
     }
     gltfLoader.load(url, callback, undefined, (error) => console.log(error));
 }
@@ -209,7 +272,7 @@ function initCameras() {
     scene.add(camera);
 
     thirdPersonCamera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 0.1, 2000);
-    thirdPersonCamera.position.set(camera.position.x, camera.position.y + 5, camera.position.z + 50);
+    thirdPersonCamera.position.set(camera.position.x, camera.position.y, camera.position.z + 20);
     camera.add(thirdPersonCamera);
 
     cameraType = "fp";
@@ -232,10 +295,18 @@ function initControls() {
     controls.addEventListener("unlock", unlock);
 
     function lock() {
+        controlsLocked = true;
+        console.log(controlsLocked);
         menuBlock.style.display = "none";
     }
 
     function unlock() {
+        player.velocityX = 0;
+        player.velocityY = 0;
+        player.velocityZ = 0;
+        flag = "massive shit";
+        controlsLocked = false;
+        console.log(controlsLocked);
         menuBlock.style.display = "block";
     }
 
@@ -246,22 +317,25 @@ function initControls() {
         switch(event.keyCode) {
             case 87:    // W
                 player.movingForwards = true;
-                idleAnim.stop();
-                walkingAnim.play();
+                updatePlayerAnimation(player.walkAnim);
                 break;
             case 65:    // A
-                player.movingLeft = true;
+                if(cameraType == "fp")
+                    player.movingLeft = true;
                 break;
             case 83:    // S
                 player.movingBackwards = true;
+                updatePlayerAnimation(player.backwardsAnim);
                 break;
             case 68:    // D
-                player.movingRight = true;
+                if(cameraType == "fp")
+                    player.movingRight = true;
                 break;
             case 32:    // Space
                 if(!player.jumping) {
                     player.jumping = true;
                     player.velocityY += 125;
+                    handleJumpAnimation();
                 }
                 break;
             case 49:    // 1
@@ -277,14 +351,14 @@ function initControls() {
         switch(event.keyCode) {
             case 87:    // W
                 player.movingForwards = false;
-                idleAnim.play();
-                walkingAnim.stop();
+                updatePlayerAnimation(player.idleAnim);
                 break;
             case 65:    // A
                 player.movingLeft  = false;
                 break;
             case 83:    // S
                 player.movingBackwards = false;
+                updatePlayerAnimation(player.idleAnim);
                 break;
             case 68:    // D
                 player.movingRight = false;
@@ -299,7 +373,7 @@ function initTime() {
 
 function initPlayer() {
     player = new Player("Joax");
-    loadModel("models/playermodel.glb");
+    loadModel("models/pilot.glb");
 }
 
 function initLoaders() {

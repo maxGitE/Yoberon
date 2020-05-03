@@ -15,7 +15,11 @@ class Player {
         this._movingRight = false;
         this._jumping = false;
         this._playerModel = undefined;
-        this._animations = [];
+        this._idleAnim = undefined;
+        this._walkAnim = undefined;
+        this._backwardsAnim = undefined;
+        this._jumpAnim = undefined;
+        this._runAnim = undefined;
     }
 
     get name() {
@@ -86,8 +90,28 @@ class Player {
         return this._playerModel;
     }
 
-    get animations() {
-        return this._animations;
+    get currentAnimation() {
+        return this._currentAnimation;
+    }
+
+    get idleAnim() {
+        return this._idleAnim;
+    }
+    
+    get walkAnim() {
+        return this._walkAnim;
+    }
+
+    get backwardsAnim() {
+        return this._backwardsAnim;
+    }
+
+    get jumpAnim() {
+        return this._jumpAnim;
+    }
+
+    get runAnim() {
+        return this._runAnim;
     }
 
     set currentHealth(health) {
@@ -142,8 +166,28 @@ class Player {
         this._playerModel = model;
     }
 
-    addAnimation(animation) {
-        this._animations.push(animation);
+    set currentAnimation(animation) {
+        this._currentAnimation = animation;
+    }
+
+    set idleAnim(animation) {
+        this._idleAnim = animation;
+    }
+    
+    set walkAnim(animation) {
+        this._walkAnim = animation;
+    }
+
+    set backwardsAnim(animation) {
+        this._backwardsAnim = animation;
+    }
+
+    set jumpAnim(animation) {
+        this._jumpAnim = animation;
+    }
+
+    set runAnim(animation) {
+        this._runAnim = animation;
     }
 
     addItem(item) {
