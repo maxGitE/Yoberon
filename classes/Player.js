@@ -14,6 +14,8 @@ class Player {
         this._movingLeft = false;
         this._movingRight = false;
         this._jumping = false;
+        this._running = false;
+        this._runFactor = 1;
         this._playerModel = undefined;
         this._idleAnim = undefined;
         this._walkAnim = undefined;
@@ -84,6 +86,14 @@ class Player {
 
     get jumping() {
         return this._jumping;
+    }
+
+    get running() {
+        return this._running;
+    }
+
+    get runFactor() {
+        return this._runFactor;
     }
 
     get playerModel() {
@@ -160,6 +170,14 @@ class Player {
 
     set jumping(value) {
         this._jumping = value;
+    }
+
+    set running(value) {
+        this._running = value;
+    }
+
+    set runFactor(value) {
+        this._runFactor = value;
     }
 
     set playerModel(model) {
