@@ -303,35 +303,13 @@ function updatePlayerAnimation(newAnimation) {
     }
 }
 
-function loadModel(url) {
+function loadModel(url, key) {
     function callback(gltf) {
-        player.playerModel = gltf.scene; // ** TODO **
-        let animations = gltf.animations;
-     
-        player.playerModel.scale.set(0.5, 0.5, -0.5);
-        scene.add(player.playerModel);
-        
-        mixer = new THREE.AnimationMixer(player.playerModel);
-
-        player.walkAnim = mixer.clipAction(animations[0]);
-        player.idleAnim = mixer.clipAction(animations[1]);
-        player.backwardsAnim = mixer.clipAction(animations[2]);
-        player.runAnim = mixer.clipAction(animations[3]);
-        player.jumpAnim = mixer.clipAction(animations[4]);
-
-        player.walkAnim.play();
-        player.idleAnim.play();
-        player.backwardsAnim.play();
-        player.jumpAnim.play();
-        player.runAnim.play();
-
-        player.walkAnim.enabled = false;
-        player.idleAnim.enabled = true;
-        player.backwardsAnim.enabled = false;
-        player.jumpAnim.enabled = false;
-        player.runAnim.enabled = false;
-        
-        player.currentAnimation = player.idleAnim;
+        switch(key) {
+            case "player":
+                initPlayerModel(gltf);
+                break;
+        }
     }
     gltfLoader.load(url, callback, undefined, (error) => console.log(error));
 }
@@ -485,9 +463,39 @@ function initTime() {
     clock = new Clock();
 }
 
+function initPlayerModel(gltf) {
+    player.playerModel = gltf.scene; // ** TODO **
+    let animations = gltf.animations;
+ 
+    player.playerModel.scale.set(0.5, 0.5, -0.5);
+    scene.add(player.playerModel);
+    
+    mixer = new THREE.AnimationMixer(player.playerModel);
+
+    player.walkAnim = mixer.clipAction(animations[0]);
+    player.idleAnim = mixer.clipAction(animations[1]);
+    player.backwardsAnim = mixer.clipAction(animations[2]);
+    player.runAnim = mixer.clipAction(animations[3]);
+    player.jumpAnim = mixer.clipAction(animations[4]);
+
+    player.walkAnim.play();
+    player.idleAnim.play();
+    player.backwardsAnim.play();
+    player.jumpAnim.play();
+    player.runAnim.play();
+
+    player.walkAnim.enabled = false;
+    player.idleAnim.enabled = true;
+    player.backwardsAnim.enabled = false;
+    player.jumpAnim.enabled = false;
+    player.runAnim.enabled = false;
+    
+    player.currentAnimation = player.idleAnim;
+}
+
 function initPlayer() {
     player = new Player("Joax");
-    loadModel("models/pilot.glb");
+    loadModel("models/pilot.glb", "player");
 }
 
 function initLoaders() {
