@@ -25,6 +25,11 @@ let gltfLoader;
 let mixer;
 let idleCalled = false;
 
+/** SKYBOX TEXTURES */
+let skyboxURLs = ["cubemap/space_one/px.png", "cubemap/space_one/nx.png",
+                  "cubemap/space_one/py.png", "cubemap/space_one/ny.png", 
+                  "cubemap/space_one/pz.png", "cubemap/space_one/nz.png"]
+
 function gameLoop() {
     requestAnimationFrame(gameLoop);
 
@@ -303,6 +308,19 @@ function updatePlayerAnimation(newAnimation) {
     }
 }
 
+function loadTexture(url) {
+    function callback(material) {
+        if(material) {
+            material.map = texture;
+            material.needsUpdate = true;
+        }
+    }
+    let texture = new THREE.TextureLoader().load(url, callback);
+    texture.anisotropy = renderer.capabilities.getMaxAnisotropy(); // Max reduction in texture blur at glancing angles
+    texture.encoding = THREE.sRGBEncoding;
+    return texture;
+}
+
 function loadModel(url, key) {
     function callback(gltf) {
         switch(key) {
@@ -347,11 +365,11 @@ function initScene() {
 }
 
 function initCameras() {
-    camera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 0.1, 2000);
+    camera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 0.1, 2500);
     camera.position.set(0, 8, 0);
     scene.add(camera);
 
-    thirdPersonCamera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 0.1, 2000);
+    thirdPersonCamera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 0.1, 2500);
     thirdPersonCamera.position.set(camera.position.x, camera.position.y - 2, camera.position.z + 26);
     camera.add(thirdPersonCamera);
 
@@ -359,7 +377,7 @@ function initCameras() {
 }
 
 function initLights() {
-    ambientLight = new THREE.AmbientLight("white", 1);
+    ambientLight = new THREE.AmbientLight("white", 0.5);
     scene.add(ambientLight);
 }
 
@@ -498,19 +516,43 @@ function initPlayer() {
     loadModel("models/pilot.glb", "player");
 }
 
+function initSkybox() {
+    let material = [];
+    for(let i = 0; i < 6; i++) {
+        let texture = loadTexture(skyboxURLs[i]);
+        material.push(new THREE.MeshBasicMaterial( {
+            color: "white",
+            side: THREE.DoubleSide,
+            map: texture
+        } ));
+    }
+    let cube = new THREE.Mesh(new THREE.BoxGeometry(2000, 2000, 2000), material);
+    scene.add(cube);
+}
+
 function initLoaders() {
     textureLoader = new THREE.TextureLoader();
     gltfLoader = new GLTFLoader();
 }
 
 function initWorld() {
-    let ground = new THREE.Mesh(new THREE.PlaneGeometry(2000, 2000), new THREE.MeshBasicMaterial( {color: "green"} ));
-    ground.rotation.x = -Math.PI/2;
-    scene.add(ground);
-
     let box = new THREE.Mesh(new THREE.CubeGeometry(5, 5, 5), new THREE.MeshBasicMaterial( {color: "white"} ));
     box.position.set(0, 2.5, -10);
     scene.add(box);
+
+    let groundGeom = new THREE.PlaneGeometry(2000, 2000);
+    let groundTexture = loadTexture("textures/texture_grass_seamless.jpg");
+    groundTexture.wrapS = THREE.RepeatWrapping;
+    groundTexture.wrapT = THREE.RepeatWrapping;
+    groundTexture.repeat.set(125, 125);
+    let ground = new THREE.Mesh(groundGeom,
+                                    new THREE.MeshLambertMaterial({
+                                        color: "#aa3e13", 
+                                        side: THREE.DoubleSide,
+                                        map: groundTexture
+                                    }));
+    ground.rotation.x = -Math.PI/2;
+    scene.add(ground);
 }
 
 function render() {
@@ -527,6 +569,7 @@ function init() {
     initTime();
     initLoaders();
     initPlayer();
+    initSkybox();
     initWorld();
 
     gameLoop();
