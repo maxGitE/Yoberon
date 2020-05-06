@@ -1,4 +1,9 @@
 import { GLTFLoader } from 'https://threejs.org/examples/jsm/loaders/GLTFLoader.js';
+import Stats from 'https://cdn.rawgit.com/mrdoob/stats.js/master/src/Stats.js';
+
+let stats = new Stats();
+stats.showPanel(0);
+document.body.appendChild(stats.dom);
 
 window.onload = init;
 
@@ -29,6 +34,66 @@ let idleCalled = false;
 let skyboxURLs = ["cubemap/space_one/px.png", "cubemap/space_one/nx.png",
                   "cubemap/space_one/py.png", "cubemap/space_one/ny.png", 
                   "cubemap/space_one/pz.png", "cubemap/space_one/nz.png"]
+
+/** OBJECTS */
+let starFieldOne;
+let starFieldTwo;
+let box;
+
+function initPlayerModel(gltf) {
+    player.playerModel = gltf.scene; // ** TODO **
+    let animations = gltf.animations;
+ 
+    player.playerModel.scale.set(0.5, 0.5, -0.5);
+    scene.add(player.playerModel);
+    
+    mixer = new THREE.AnimationMixer(player.playerModel);
+
+    player.walkAnim = mixer.clipAction(animations[0]);
+    player.idleAnim = mixer.clipAction(animations[1]);
+    player.backwardsAnim = mixer.clipAction(animations[2]);
+    player.runAnim = mixer.clipAction(animations[3]);
+    player.jumpAnim = mixer.clipAction(animations[4]);
+
+    player.walkAnim.play();
+    player.idleAnim.play();
+    player.backwardsAnim.play();
+    player.jumpAnim.play();
+    player.runAnim.play();
+
+    player.walkAnim.enabled = false;
+    player.idleAnim.enabled = true;
+    player.backwardsAnim.enabled = false;
+    player.jumpAnim.enabled = false;
+    player.runAnim.enabled = false;
+    
+    player.currentAnimation = player.idleAnim;
+}
+
+function drawGround() {
+    let groundGeom = new THREE.PlaneBufferGeometry(200, 1000);
+    let groundTexture = loadTexture("textures/texture_grass_seamless.jpg");
+    groundTexture.wrapS = THREE.RepeatWrapping;
+    groundTexture.wrapT = THREE.RepeatWrapping;
+    groundTexture.repeat.set(2, 10);
+    let ground = new THREE.Mesh(groundGeom,
+                                    new THREE.MeshLambertMaterial({
+                                        color: "#aa3e13", 
+                                        side: THREE.DoubleSide,
+                                        map: groundTexture
+                                    }));
+    ground.rotation.x = -Math.PI/2;
+    ground.position.z -= 490;
+    scene.add(ground);
+}
+
+function drawStars() {
+    starFieldOne = new Starfield("black");
+    starFieldTwo = new Starfield("white");
+
+    scene.add(starFieldOne.starField);
+    scene.add(starFieldTwo.starField);
+}
 
 function gameLoop() {
     requestAnimationFrame(gameLoop);
@@ -90,6 +155,11 @@ function gameLoop() {
         if(mixer !== undefined) {
             mixer.update(clock.delta);
         }
+
+        // Update star field colours 
+        starFieldOne.updateColour(0.0025);
+        starFieldTwo.updateColour(0.005);
+
         // Update clock time
         clock.timeBefore = clock.timeNow;
     }
@@ -139,23 +209,15 @@ function levelZeroBoundingBox() {
 
     if(xPos >= boxOneLeft && xPos <= boxOneRight) {
         setBox(1);
-        console.clear();
-        console.log("boxOne");
     }
     else if(xPos > boxOneRight && xPos <= boxThreeLeft && zPos <= boxTwoBottom && zPos >= boxTwoTop) {
         setBox(2);
-        console.clear();
-        console.log("boxTwo");
     }
     else if(xPos > boxThreeLeft && xPos <= boxThreeRight) {
         setBox(3);
-        console.clear();
-        console.log("boxThree");
     }
     else if(xPos >= xTempleEntrance && xPos <= boxThreeLeft && zPos <= boxFourBottom && zPos >= boxFourTop) {
         setBox(4);
-        console.clear();
-        console.log("boxFour");
     }
 
     if(boxOne) {
@@ -245,7 +307,7 @@ function levelZeroBoundingBox() {
 
 function boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop) {
     let linematerial = new THREE.LineBasicMaterial({
-        color: 0x0000ff
+        color: 0xffff00
     });
 
     let points = [];
@@ -287,7 +349,12 @@ function handleJumpAnimation() {
             idleCalled = false;
         }
         else {
-            updatePlayerAnimation(tempAnimation);
+            if(tempAnimation == player.runAnim && player.movingForward && !player.running) {
+                updatePlayerAnimation(player.walkAnim);
+            }
+            else {
+                updatePlayerAnimation(tempAnimation);
+            }
         }
     }, 600);
 }
@@ -297,6 +364,8 @@ function handleJumpAnimation() {
  *  If the player is jumping and the next animation is idle, schedule idle to play at the end of the jump. 
  */
 function updatePlayerAnimation(newAnimation) { 
+    if(cameraType == "fp") return;
+
     if(!player.jumping) {
         player.currentAnimation.enabled = false;
         newAnimation.enabled = true;
@@ -430,7 +499,6 @@ function initControls() {
                 break;
             case 16:    // Shift
                 if(!player.running) {
-                    
                     player.running = true;
                     if(player.movingForward) {
                         player.runFactor = 1.5;
@@ -443,6 +511,18 @@ function initControls() {
                 break;
             case 50:    // 2
                 cameraType = "tp";
+                if(player.movingForward) {
+                    if(player.running) {
+                        updatePlayerAnimation(player.runAnim);
+                    }
+                    else {
+                        updatePlayerAnimation(player.walkAnim);
+                    }
+                }
+                if(player.movingBackward) {
+                    updatePlayerAnimation(player.walkAnim);
+                }
+                   
                 break;
         }
     }
@@ -479,41 +559,7 @@ function initControls() {
 
 function initTime() {
     clock = new Clock();
-}
-
-function initPlayerModel(gltf) {
-    player.playerModel = gltf.scene; // ** TODO **
-    let animations = gltf.animations;
- 
-    player.playerModel.scale.set(0.5, 0.5, -0.5);
-    scene.add(player.playerModel);
-    
-    mixer = new THREE.AnimationMixer(player.playerModel);
-
-    player.walkAnim = mixer.clipAction(animations[0]);
-    player.idleAnim = mixer.clipAction(animations[1]);
-    player.backwardsAnim = mixer.clipAction(animations[2]);
-    player.runAnim = mixer.clipAction(animations[3]);
-    player.jumpAnim = mixer.clipAction(animations[4]);
-
-    player.walkAnim.play();
-    player.idleAnim.play();
-    player.backwardsAnim.play();
-    player.jumpAnim.play();
-    player.runAnim.play();
-
-    player.walkAnim.enabled = false;
-    player.idleAnim.enabled = true;
-    player.backwardsAnim.enabled = false;
-    player.jumpAnim.enabled = false;
-    player.runAnim.enabled = false;
-    
-    player.currentAnimation = player.idleAnim;
-}
-
-function initPlayer() {
-    player = new Player("Joax");
-    loadModel("models/pilot.glb", "player");
+    clock.timeBefore = performance.now();
 }
 
 function initSkybox() {
@@ -526,7 +572,7 @@ function initSkybox() {
             map: texture
         } ));
     }
-    let cube = new THREE.Mesh(new THREE.BoxGeometry(2000, 2000, 2000), material);
+    let cube = new THREE.Mesh(new THREE.BoxGeometry(1000, 2000, 2000), material);
     scene.add(cube);
 }
 
@@ -535,27 +581,23 @@ function initLoaders() {
     gltfLoader = new GLTFLoader();
 }
 
+function initPlayer() {
+    player = new Player("Joax");
+    loadModel("models/pilot.min.glb", "player");
+}
+
 function initWorld() {
-    let box = new THREE.Mesh(new THREE.CubeGeometry(5, 5, 5), new THREE.MeshBasicMaterial( {color: "white"} ));
+    box = new THREE.Mesh(new THREE.CubeGeometry(5, 5, 5), new THREE.MeshBasicMaterial( {color: "white"} ));
     box.position.set(0, 2.5, -10);
     scene.add(box);
 
-    let groundGeom = new THREE.PlaneGeometry(2000, 2000);
-    let groundTexture = loadTexture("textures/texture_grass_seamless.jpg");
-    groundTexture.wrapS = THREE.RepeatWrapping;
-    groundTexture.wrapT = THREE.RepeatWrapping;
-    groundTexture.repeat.set(125, 125);
-    let ground = new THREE.Mesh(groundGeom,
-                                    new THREE.MeshLambertMaterial({
-                                        color: "#aa3e13", 
-                                        side: THREE.DoubleSide,
-                                        map: groundTexture
-                                    }));
-    ground.rotation.x = -Math.PI/2;
-    scene.add(ground);
+    drawGround();
+    drawStars();
 }
 
 function render() {
+    stats.update();
+
     let cameraToRender = cameraType == "fp" ? camera : thirdPersonCamera;
     renderer.render(scene, cameraToRender);
 }
@@ -567,9 +609,9 @@ function init() {
     initLights();
     initControls();
     initTime();
+    initSkybox();
     initLoaders();
     initPlayer();
-    initSkybox();
     initWorld();
 
     gameLoop();
