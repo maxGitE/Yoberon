@@ -1,6 +1,6 @@
 class Clock {
     constructor() {
-        this._timeBefore = performance.now();
+        this._timeBefore;
         this._timeNow;
         this._delta;
     }

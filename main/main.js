@@ -1,6 +1,35 @@
 import { GLTFLoader } from 'https://threejs.org/examples/jsm/loaders/GLTFLoader.js';
+import Stats from 'https://cdn.rawgit.com/mrdoob/stats.js/master/src/Stats.js';
 
-window.onload = init;
+let stats = new Stats();
+stats.showPanel(0);
+
+let menuBlock = document.getElementById("menu");
+let playButton = document.getElementById("play");
+let loading = document.getElementById("loading");
+
+window.onload = menu;
+
+/** TEST VARIABLES */
+// Boundary values for the respective box divisions
+let boxOneBottom = 10;
+let boxOneTop = -550;
+let boxOneLeft = -20;
+let boxOneRight = -boxOneLeft;
+
+let boxTwoBottom = -420;
+let boxTwoTop = -450;
+
+let boxThreeBottom = boxTwoBottom;
+let boxThreeTop = -605;
+let boxThreeLeft = 50;
+let boxThreeRight = 80;
+
+let boxFourBottom = -585;
+let boxFourTop = boxThreeTop;
+
+let xTempleEntrance = 40;
+let boundaryFactor = 5; // Account for skipped frames and fucked behaviour with game loop
 
 /** SCENE GLOBALS */
 let canvas;
@@ -17,16 +46,135 @@ let clock;
 let player;
 let currentLevel = 0;
 
+/** ALIEN */
+let alien;
+
 /** LOADERS */
 let textureLoader;
 let gltfLoader;
+let numModels = 0;
+let numModelsLoaded = 0;
 
 /** ANIMATION */
 let mixer;
 let idleCalled = false;
 
+/** SKYBOX TEXTURES */
+let skyboxURLs = ["cubemap/space_one/px.png", "cubemap/space_one/nx.png",
+                  "cubemap/space_one/py.png", "cubemap/space_one/ny.png", 
+                  "cubemap/space_one/pz.png", "cubemap/space_one/nz.png"]
+
+/** OBJECTS */
+let starFieldOne;
+let starFieldTwo;
+let box;
+
+function modelTests(gltf) {
+    
+}
+
+function initPlayerModel(gltf) {
+    player.playerModel = gltf.scene; // ** TODO **
+    let animations = gltf.animations;
+ 
+    player.playerModel.scale.set(0.5, 0.5, -0.5);
+    scene.add(player.playerModel);
+    
+    mixer = new THREE.AnimationMixer(player.playerModel);
+
+    player.walkAnim = mixer.clipAction(animations[0]);
+    player.idleAnim = mixer.clipAction(animations[1]);
+    player.backwardsAnim = mixer.clipAction(animations[2]);
+    player.runAnim = mixer.clipAction(animations[3]);
+    player.jumpAnim = mixer.clipAction(animations[4]);
+
+    player.walkAnim.play();
+    player.idleAnim.play();
+    player.backwardsAnim.play();
+    player.jumpAnim.play();
+    player.runAnim.play();
+
+    player.walkAnim.enabled = false;
+    player.idleAnim.enabled = true;
+    player.backwardsAnim.enabled = false;
+    player.jumpAnim.enabled = false;
+    player.runAnim.enabled = false;
+    
+    player.currentAnimation = player.idleAnim;
+}
+
+function initAlienModel(gltf) {
+    alien.alienModel = gltf.scene;
+    let animations = gltf.animations;
+
+    alien.alienModel.scale.set(5, 5, 5);
+    alien.alienModel.position.set(0, 0, -20);
+    scene.add(alien.alienModel);
+
+    mixer = new THREE.AnimationMixer(alien.alienModel);
+
+    alien.idleAnim = mixer.clipAction(animations[0]);
+    
+
+    alien.idleAnim.play();
+    // alien.shootAnim.play();
+    // console.log(alien.shootAnim);
+
+    // alien.idleAnim.enabled = false;
+    // alien.shootAnim.enabled = true;
+}
+
+function initTrees(gltf) {
+    let tree = gltf.scene;
+    let treeGeometry = tree.children[0].geometry;
+    let treeMaterial = tree.children[0].material;
+
+    let cluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 20);
+
+    let temp = new THREE.Object3D();
+
+    for (let i = 0; i < 20; i++) {
+        //temp.scale.set(5, 5, 5);
+        temp.position.set(-50, -8, -i*50);
+    
+        temp.updateMatrix();
+    
+        cluster.setMatrixAt(i, temp.matrix);
+    }
+    scene.add(cluster);
+}
+
+function drawGround() {
+    let groundGeom = new THREE.PlaneBufferGeometry(200, 1000);
+    let groundTexture = loadTexture("textures/texture_grass_seamless.jpg");
+    groundTexture.wrapS = THREE.RepeatWrapping;
+    groundTexture.wrapT = THREE.RepeatWrapping;
+    groundTexture.repeat.set(2, 10);
+    let ground = new THREE.Mesh(groundGeom,
+                                    new THREE.MeshLambertMaterial({
+                                        color: "#aa3e13", 
+                                        side: THREE.DoubleSide,
+                                        map: groundTexture
+                                    }));
+    ground.rotation.x = -Math.PI/2;
+    ground.position.z -= 490;
+    scene.add(ground);
+}
+
+function drawStars() {
+    starFieldOne = new Starfield("black");
+    starFieldTwo = new Starfield("white");
+
+    scene.add(starFieldOne.starField);
+    scene.add(starFieldTwo.starField);
+}
+
 function gameLoop() {
-    requestAnimationFrame(gameLoop);
+    setTimeout( function() {
+
+        requestAnimationFrame(gameLoop);
+
+    }, 1000 / 120);
 
     if(controls.isLocked) {
 
@@ -85,6 +233,11 @@ function gameLoop() {
         if(mixer !== undefined) {
             mixer.update(clock.delta);
         }
+
+        // Update star field colours 
+        starFieldOne.updateColour(0.0025);
+        starFieldTwo.updateColour(0.005);
+
         // Update clock time
         clock.timeBefore = clock.timeNow;
     }
@@ -112,45 +265,37 @@ function levelZeroBoundingBox() {
     let boxThree;
     let boxFour;
 
-    // Boundary values for the respective box divisions
-    let boxOneBottom = 10;
-    let boxOneTop = -550;
-    let boxOneLeft = -20;
-    let boxOneRight = -boxOneLeft;
+    // // Boundary values for the respective box divisions
+    // let boxOneBottom = 10;
+    // let boxOneTop = -550;
+    // let boxOneLeft = -20;
+    // let boxOneRight = -boxOneLeft;
 
-    let boxTwoBottom = -420;
-    let boxTwoTop = -450;
+    // let boxTwoBottom = -420;
+    // let boxTwoTop = -450;
     
-    let boxThreeBottom = boxTwoBottom;
-    let boxThreeTop = -605;
-    let boxThreeLeft = 50;
-    let boxThreeRight = 80;
+    // let boxThreeBottom = boxTwoBottom;
+    // let boxThreeTop = -605;
+    // let boxThreeLeft = 50;
+    // let boxThreeRight = 80;
     
-    let boxFourBottom = -585;
-    let boxFourTop = boxThreeTop;
+    // let boxFourBottom = -585;
+    // let boxFourTop = boxThreeTop;
 
-    let xTempleEntrance = 40;
-    let boundaryFactor = 5; // Account for skipped frames and fucked behaviour with game loop
+    // let xTempleEntrance = 40;
+    // let boundaryFactor = 5; // Account for skipped frames and fucked behaviour with game loop
 
     if(xPos >= boxOneLeft && xPos <= boxOneRight) {
         setBox(1);
-        console.clear();
-        console.log("boxOne");
     }
     else if(xPos > boxOneRight && xPos <= boxThreeLeft && zPos <= boxTwoBottom && zPos >= boxTwoTop) {
         setBox(2);
-        console.clear();
-        console.log("boxTwo");
     }
     else if(xPos > boxThreeLeft && xPos <= boxThreeRight) {
         setBox(3);
-        console.clear();
-        console.log("boxThree");
     }
     else if(xPos >= xTempleEntrance && xPos <= boxThreeLeft && zPos <= boxFourBottom && zPos >= boxFourTop) {
         setBox(4);
-        console.clear();
-        console.log("boxFour");
     }
 
     if(boxOne) {
@@ -235,29 +380,29 @@ function levelZeroBoundingBox() {
         }
     }
 
-    boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
+    //boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
 }
 
 function boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop) {
     let linematerial = new THREE.LineBasicMaterial({
-        color: 0x0000ff
+        color: 0xffff00
     });
 
     let points = [];
 
-    points.push(new THREE.Vector3(xTempleEntrance, 0, boxFourTop));
-    points.push(new THREE.Vector3(boxThreeRight, 0, boxFourTop));
-    points.push(new THREE.Vector3(boxThreeRight, 0, boxTwoBottom));
+    points.push(new THREE.Vector3(xTempleEntrance, .1, boxFourTop));
+    points.push(new THREE.Vector3(boxThreeRight, .1, boxFourTop));
+    points.push(new THREE.Vector3(boxThreeRight, .1, boxTwoBottom));
 
-    points.push(new THREE.Vector3(boxOneRight, 0, boxTwoBottom));
-    points.push(new THREE.Vector3(boxOneRight, 0, boxOneBottom));
-    points.push(new THREE.Vector3(-boxOneRight, 0, boxOneBottom));
-    points.push(new THREE.Vector3(-boxOneRight, 0, boxOneTop));
-    points.push(new THREE.Vector3(boxOneRight, 0, boxOneTop));
-    points.push(new THREE.Vector3(boxOneRight, 0, boxTwoTop));
-    points.push(new THREE.Vector3(boxThreeLeft, 0, boxTwoTop));
-    points.push(new THREE.Vector3(boxThreeLeft, 0, boxFourBottom));
-    points.push(new THREE.Vector3(xTempleEntrance, 0, boxFourBottom));
+    points.push(new THREE.Vector3(boxOneRight, .1, boxTwoBottom));
+    points.push(new THREE.Vector3(boxOneRight, .1, boxOneBottom));
+    points.push(new THREE.Vector3(-boxOneRight, .1, boxOneBottom));
+    points.push(new THREE.Vector3(-boxOneRight, .1, boxOneTop));
+    points.push(new THREE.Vector3(boxOneRight, .1, boxOneTop));
+    points.push(new THREE.Vector3(boxOneRight, .1, boxTwoTop));
+    points.push(new THREE.Vector3(boxThreeLeft, .1, boxTwoTop));
+    points.push(new THREE.Vector3(boxThreeLeft, .1, boxFourBottom));
+    points.push(new THREE.Vector3(xTempleEntrance, .1, boxFourBottom));
 
     let geometry = new THREE.BufferGeometry().setFromPoints(points);
 
@@ -282,7 +427,12 @@ function handleJumpAnimation() {
             idleCalled = false;
         }
         else {
-            updatePlayerAnimation(tempAnimation);
+            if(tempAnimation == player.runAnim && player.movingForward && !player.running) {
+                updatePlayerAnimation(player.walkAnim);
+            }
+            else {
+                updatePlayerAnimation(tempAnimation);
+            }
         }
     }, 600);
 }
@@ -292,6 +442,8 @@ function handleJumpAnimation() {
  *  If the player is jumping and the next animation is idle, schedule idle to play at the end of the jump. 
  */
 function updatePlayerAnimation(newAnimation) { 
+    if(cameraType == "fp") return;
+
     if(!player.jumping) {
         player.currentAnimation.enabled = false;
         newAnimation.enabled = true;
@@ -303,37 +455,35 @@ function updatePlayerAnimation(newAnimation) {
     }
 }
 
-function loadModel(url) {
-    function callback(gltf) {
-        player.playerModel = gltf.scene; // ** TODO **
-        let animations = gltf.animations;
-     
-        player.playerModel.scale.set(0.5, 0.5, -0.5);
-        scene.add(player.playerModel);
-        
-        mixer = new THREE.AnimationMixer(player.playerModel);
-
-        player.walkAnim = mixer.clipAction(animations[0]);
-        player.idleAnim = mixer.clipAction(animations[1]);
-        player.backwardsAnim = mixer.clipAction(animations[2]);
-        player.runAnim = mixer.clipAction(animations[3]);
-        player.jumpAnim = mixer.clipAction(animations[4]);
-
-        player.walkAnim.play();
-        player.idleAnim.play();
-        player.backwardsAnim.play();
-        player.jumpAnim.play();
-        player.runAnim.play();
-
-        player.walkAnim.enabled = false;
-        player.idleAnim.enabled = true;
-        player.backwardsAnim.enabled = false;
-        player.jumpAnim.enabled = false;
-        player.runAnim.enabled = false;
-        
-        player.currentAnimation = player.idleAnim;
+function loadTexture(url) {
+    function callback(material) {
+        if(material) {
+            material.map = texture;
+            material.needsUpdate = true;
+        }
     }
-    gltfLoader.load(url, callback, undefined, (error) => console.log(error));
+    let texture = new THREE.TextureLoader().load(url, callback);
+    texture.anisotropy = renderer.capabilities.getMaxAnisotropy(); // Max reduction in texture blur at glancing angles
+    texture.encoding = THREE.sRGBEncoding;
+    return texture;
+}
+
+function loadModel(url, key) {
+    numModels++;
+    function callback(gltf) {
+        switch(key) {
+            case "player":
+                initPlayerModel(gltf);
+                break;
+            case "alien":
+                //initAlienModel(gltf);
+                break;
+            case "tree":
+                initTrees(gltf);
+                break;
+        }
+    }
+    gltfLoader.load(url, callback, progress, (error) => console.log(error));
 }
 
 function onResize() {
@@ -369,11 +519,11 @@ function initScene() {
 }
 
 function initCameras() {
-    camera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 0.1, 2000);
+    camera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 0.001, 2500);
     camera.position.set(0, 8, 0);
     scene.add(camera);
 
-    thirdPersonCamera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 0.1, 2000);
+    thirdPersonCamera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 0.1, 2500);
     thirdPersonCamera.position.set(camera.position.x, camera.position.y - 2, camera.position.z + 26);
     camera.add(thirdPersonCamera);
 
@@ -381,18 +531,19 @@ function initCameras() {
 }
 
 function initLights() {
-    ambientLight = new THREE.AmbientLight("white", 1);
+    ambientLight = new THREE.AmbientLight("white", 0.25);
     scene.add(ambientLight);
 }
 
 function initControls() {
-    let menuBlock = document.getElementById("menu");
-    let playButton = document.getElementById("play");
-
     controls = new THREE.PointerLockControls(camera, canvas);
     scene.add(controls.getObject());
 
-    playButton.addEventListener("click", () => controls.lock());
+    document.addEventListener("click", function() {
+        gameLoop();
+        controls.lock();
+    });
+
     controls.addEventListener("lock", lock);
     controls.addEventListener("unlock", unlock);
 
@@ -434,7 +585,6 @@ function initControls() {
                 break;
             case 16:    // Shift
                 if(!player.running) {
-                    
                     player.running = true;
                     if(player.movingForward) {
                         player.runFactor = 1.5;
@@ -447,6 +597,18 @@ function initControls() {
                 break;
             case 50:    // 2
                 cameraType = "tp";
+                if(player.movingForward) {
+                    if(player.running) {
+                        updatePlayerAnimation(player.runAnim);
+                    }
+                    else {
+                        updatePlayerAnimation(player.walkAnim);
+                    }
+                }
+                if(player.movingBackward) {
+                    updatePlayerAnimation(player.walkAnim);
+                }
+                   
                 break;
         }
     }
@@ -483,11 +645,22 @@ function initControls() {
 
 function initTime() {
     clock = new Clock();
+    clock.timeBefore = performance.now();
 }
 
-function initPlayer() {
-    player = new Player("Joax");
-    loadModel("models/pilot.glb");
+function initSkybox() {
+    let material = [];
+    for(let i = 0; i < 6; i++) {
+        let texture = loadTexture(skyboxURLs[i]);
+        material.push(new THREE.MeshBasicMaterial( {
+            color: "white",
+            side: THREE.DoubleSide,
+            map: texture
+        } ));
+    }
+    let cube = new THREE.Mesh(new THREE.BoxGeometry(1500, 1000, 2000), material);
+    cube.position.y += 250;
+    scene.add(cube);
 }
 
 function initLoaders() {
@@ -495,31 +668,66 @@ function initLoaders() {
     gltfLoader = new GLTFLoader();
 }
 
-function initWorld() {
-    let ground = new THREE.Mesh(new THREE.PlaneGeometry(2000, 2000), new THREE.MeshBasicMaterial( {color: "green"} ));
-    ground.rotation.x = -Math.PI/2;
-    scene.add(ground);
+function initPlayer() {
+    player = new Player("Joax");
+    loadModel("models/characters/player/playermodel.glb", "player");
+}
 
-    let box = new THREE.Mesh(new THREE.CubeGeometry(5, 5, 5), new THREE.MeshBasicMaterial( {color: "white"} ));
+function initAlien() {
+    alien = new Alien();
+    loadModel("models/characters/enemy/alien.glb", "alien");
+}
+
+function initWorld() {
+    box = new THREE.Mesh(new THREE.CubeGeometry(5, 5, 5), new THREE.MeshBasicMaterial( {color: "white"} ));
     box.position.set(0, 2.5, -10);
     scene.add(box);
+
+    loadModel("models/environment/trees/pinetree.glb", "tree");
+
+    drawGround();
+    drawStars();
+
+    boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
 }
 
 function render() {
+    stats.update();
+
     let cameraToRender = cameraType == "fp" ? camera : thirdPersonCamera;
     renderer.render(scene, cameraToRender);
 }
 
 function init() {
+    menuBlock.style.display = "none";
+    loading.style.display = "block";
+
     initRenderer();
     initScene();
     initCameras();
     initLights();
-    initControls();
     initTime();
+    initSkybox();
     initLoaders();
     initPlayer();
+    initAlien();
     initWorld();
+}
 
-    gameLoop();
+function progress(xhr) {
+    if((xhr.loaded / xhr.total) == 1) {
+        numModelsLoaded++;
+    }
+
+    if(numModelsLoaded == numModels) {
+        setTimeout(function() {
+            loading.style.display = "none";
+            document.body.appendChild(stats.dom);
+            initControls();
+        }, 200);
+    }
+}
+
+function menu() {
+    playButton.addEventListener("click", () => init());
 }
