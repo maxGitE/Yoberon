@@ -8,6 +8,8 @@ let menuBlock = document.getElementById("menu");
 let playButton = document.getElementById("play");
 let loading = document.getElementById("loading");
 
+window.onload = menu;
+
 /** TEST VARIABLES */
 // Boundary values for the respective box divisions
 let boxOneBottom = 10;
@@ -68,10 +70,7 @@ let starFieldTwo;
 let box;
 
 function modelTests(gltf) {
-    let tree = gltf.scene;
-    tree.position.set(-20, -5, 0);
-    tree.scale.set(10, 10, 10);
-    scene.add(tree);
+    
 }
 
 function initPlayerModel(gltf) {
@@ -129,15 +128,14 @@ function initTrees(gltf) {
     let tree = gltf.scene;
     let treeGeometry = tree.children[0].geometry;
     let treeMaterial = tree.children[0].material;
-    console.log(tree);
 
-    let cluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 50);
+    let cluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 20);
 
     let temp = new THREE.Object3D();
 
-    for (let i = 0; i < 50; i++) {
-        tree.position.set(-20, -5, -i*30);
-        tree.scale.set(10, 10, 10);
+    for (let i = 0; i < 20; i++) {
+        //temp.scale.set(5, 5, 5);
+        temp.position.set(-50, -8, -i*50);
     
         temp.updateMatrix();
     
@@ -478,7 +476,8 @@ function loadModel(url, key) {
                 initPlayerModel(gltf);
                 break;
             case "alien":
-                initAlienModel(gltf);
+                //initAlienModel(gltf);
+                break;
             case "tree":
                 initTrees(gltf);
                 break;
@@ -541,8 +540,8 @@ function initControls() {
     scene.add(controls.getObject());
 
     document.addEventListener("click", function() {
-        controls.lock();
         gameLoop();
+        controls.lock();
     });
 
     controls.addEventListener("lock", lock);
@@ -676,7 +675,7 @@ function initPlayer() {
 
 function initAlien() {
     alien = new Alien();
-    loadModel("models/alien.glb", "alien");
+    loadModel("models/characters/enemy/alien.glb", "alien");
 }
 
 function initWorld() {
@@ -684,7 +683,7 @@ function initWorld() {
     box.position.set(0, 2.5, -10);
     scene.add(box);
 
-    loadModel("models/environment/trees/broadleaf.glb", "tree");
+    loadModel("models/environment/trees/pinetree.glb", "tree");
 
     drawGround();
     drawStars();
@@ -721,9 +720,11 @@ function progress(xhr) {
     }
 
     if(numModelsLoaded == numModels) {
-        loading.style.display = "none";
-        document.body.appendChild(stats.dom);
-        initControls();
+        setTimeout(function() {
+            loading.style.display = "none";
+            document.body.appendChild(stats.dom);
+            initControls();
+        }, 200);
     }
 }
 
