@@ -7,6 +7,27 @@ document.body.appendChild(stats.dom);
 
 window.onload = init;
 
+/** TEST VARIABLES */
+// Boundary values for the respective box divisions
+let boxOneBottom = 10;
+let boxOneTop = -550;
+let boxOneLeft = -20;
+let boxOneRight = -boxOneLeft;
+
+let boxTwoBottom = -420;
+let boxTwoTop = -450;
+
+let boxThreeBottom = boxTwoBottom;
+let boxThreeTop = -605;
+let boxThreeLeft = 50;
+let boxThreeRight = 80;
+
+let boxFourBottom = -585;
+let boxFourTop = boxThreeTop;
+
+let xTempleEntrance = 40;
+let boundaryFactor = 5; // Account for skipped frames and fucked behaviour with game loop
+
 /** SCENE GLOBALS */
 let canvas;
 let renderer;
@@ -21,6 +42,9 @@ let controls;
 let clock;
 let player;
 let currentLevel = 0;
+
+/** ALIEN */
+let alien;
 
 /** LOADERS */
 let textureLoader;
@@ -68,6 +92,27 @@ function initPlayerModel(gltf) {
     player.runAnim.enabled = false;
     
     player.currentAnimation = player.idleAnim;
+}
+
+function initAlienModel(gltf) {
+    alien.alienModel = gltf.scene;
+    let animations = gltf.animations;
+
+    alien.alienModel.scale.set(5, 5, 5);
+    alien.alienModel.position.set(0, 0, -20);
+    scene.add(alien.alienModel);
+
+    mixer = new THREE.AnimationMixer(alien.alienModel);
+
+    alien.idleAnim = mixer.clipAction(animations[0]);
+    
+
+    alien.idleAnim.play();
+    // alien.shootAnim.play();
+    // console.log(alien.shootAnim);
+
+    // alien.idleAnim.enabled = false;
+    // alien.shootAnim.enabled = true;
 }
 
 function drawGround() {
@@ -187,25 +232,25 @@ function levelZeroBoundingBox() {
     let boxThree;
     let boxFour;
 
-    // Boundary values for the respective box divisions
-    let boxOneBottom = 10;
-    let boxOneTop = -550;
-    let boxOneLeft = -20;
-    let boxOneRight = -boxOneLeft;
+    // // Boundary values for the respective box divisions
+    // let boxOneBottom = 10;
+    // let boxOneTop = -550;
+    // let boxOneLeft = -20;
+    // let boxOneRight = -boxOneLeft;
 
-    let boxTwoBottom = -420;
-    let boxTwoTop = -450;
+    // let boxTwoBottom = -420;
+    // let boxTwoTop = -450;
     
-    let boxThreeBottom = boxTwoBottom;
-    let boxThreeTop = -605;
-    let boxThreeLeft = 50;
-    let boxThreeRight = 80;
+    // let boxThreeBottom = boxTwoBottom;
+    // let boxThreeTop = -605;
+    // let boxThreeLeft = 50;
+    // let boxThreeRight = 80;
     
-    let boxFourBottom = -585;
-    let boxFourTop = boxThreeTop;
+    // let boxFourBottom = -585;
+    // let boxFourTop = boxThreeTop;
 
-    let xTempleEntrance = 40;
-    let boundaryFactor = 5; // Account for skipped frames and fucked behaviour with game loop
+    // let xTempleEntrance = 40;
+    // let boundaryFactor = 5; // Account for skipped frames and fucked behaviour with game loop
 
     if(xPos >= boxOneLeft && xPos <= boxOneRight) {
         setBox(1);
@@ -301,8 +346,6 @@ function levelZeroBoundingBox() {
                 break;
         }
     }
-
-    boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
 }
 
 function boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop) {
@@ -312,19 +355,19 @@ function boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxT
 
     let points = [];
 
-    points.push(new THREE.Vector3(xTempleEntrance, 0, boxFourTop));
-    points.push(new THREE.Vector3(boxThreeRight, 0, boxFourTop));
-    points.push(new THREE.Vector3(boxThreeRight, 0, boxTwoBottom));
+    points.push(new THREE.Vector3(xTempleEntrance, .1, boxFourTop));
+    points.push(new THREE.Vector3(boxThreeRight, .1, boxFourTop));
+    points.push(new THREE.Vector3(boxThreeRight, .1, boxTwoBottom));
 
-    points.push(new THREE.Vector3(boxOneRight, 0, boxTwoBottom));
-    points.push(new THREE.Vector3(boxOneRight, 0, boxOneBottom));
-    points.push(new THREE.Vector3(-boxOneRight, 0, boxOneBottom));
-    points.push(new THREE.Vector3(-boxOneRight, 0, boxOneTop));
-    points.push(new THREE.Vector3(boxOneRight, 0, boxOneTop));
-    points.push(new THREE.Vector3(boxOneRight, 0, boxTwoTop));
-    points.push(new THREE.Vector3(boxThreeLeft, 0, boxTwoTop));
-    points.push(new THREE.Vector3(boxThreeLeft, 0, boxFourBottom));
-    points.push(new THREE.Vector3(xTempleEntrance, 0, boxFourBottom));
+    points.push(new THREE.Vector3(boxOneRight, .1, boxTwoBottom));
+    points.push(new THREE.Vector3(boxOneRight, .1, boxOneBottom));
+    points.push(new THREE.Vector3(-boxOneRight, .1, boxOneBottom));
+    points.push(new THREE.Vector3(-boxOneRight, .1, boxOneTop));
+    points.push(new THREE.Vector3(boxOneRight, .1, boxOneTop));
+    points.push(new THREE.Vector3(boxOneRight, .1, boxTwoTop));
+    points.push(new THREE.Vector3(boxThreeLeft, .1, boxTwoTop));
+    points.push(new THREE.Vector3(boxThreeLeft, .1, boxFourBottom));
+    points.push(new THREE.Vector3(xTempleEntrance, .1, boxFourBottom));
 
     let geometry = new THREE.BufferGeometry().setFromPoints(points);
 
@@ -396,6 +439,9 @@ function loadModel(url, key) {
             case "player":
                 initPlayerModel(gltf);
                 break;
+            case "alien":
+                initAlienModel(gltf);
+                break;
         }
     }
     gltfLoader.load(url, callback, undefined, (error) => console.log(error));
@@ -434,7 +480,7 @@ function initScene() {
 }
 
 function initCameras() {
-    camera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 0.1, 2500);
+    camera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 0.001, 2500);
     camera.position.set(0, 8, 0);
     scene.add(camera);
 
@@ -586,6 +632,11 @@ function initPlayer() {
     loadModel("models/pilot.min.glb", "player");
 }
 
+function initAlien() {
+    alien = new Alien();
+    loadModel("models/alien.glb", "alien");
+}
+
 function initWorld() {
     box = new THREE.Mesh(new THREE.CubeGeometry(5, 5, 5), new THREE.MeshBasicMaterial( {color: "white"} ));
     box.position.set(0, 2.5, -10);
@@ -593,6 +644,8 @@ function initWorld() {
 
     drawGround();
     drawStars();
+
+    boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
 }
 
 function render() {
@@ -612,6 +665,7 @@ function init() {
     initSkybox();
     initLoaders();
     initPlayer();
+    initAlien();
     initWorld();
 
     gameLoop();
