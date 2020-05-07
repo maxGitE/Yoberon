@@ -123,6 +123,8 @@ function initAlienModel(gltf) {
 
     // alien.idleAnim.enabled = false;
     // alien.shootAnim.enabled = true;
+}
+
 function initTrees(gltf) {
     let tree = gltf.scene;
     let treeGeometry = tree.children[0].geometry;
