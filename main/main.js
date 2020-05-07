@@ -124,24 +124,40 @@ function initAlienModel(gltf) {
     // alien.shootAnim.enabled = true;
 }
 
-function initTrees(gltf) {
-    let tree = gltf.scene;
-    let treeGeometry = tree.children[0].geometry;
-    let treeMaterial = tree.children[0].material;
+function initPineTrees(gltf) {
+    let pinetree = gltf.scene;
+    let treeGeometry = pinetree.children[0].geometry;
+    let treeMaterial = pinetree.children[0].material;
 
-    let cluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 20);
+    let treeClusterOne = new THREE.InstancedMesh(treeGeometry, treeMaterial, 20);
+    let treeClusterTwo = new THREE.InstancedMesh(treeGeometry, treeMaterial, 20);
 
     let temp = new THREE.Object3D();
 
     for (let i = 0; i < 20; i++) {
-        //temp.scale.set(5, 5, 5);
-        temp.position.set(-50, -8, -i*50);
+        let scalingFactor = Math.random() * 0.5 + 0.5;
+        let xPosFactor = Math.random() * 10 - 55;
+        let zPosFactor = Math.random() * 10 + 40;
+
+        temp.scale.set(scalingFactor, scalingFactor, scalingFactor);
+        temp.position.set(xPosFactor, -8, -i*zPosFactor);
     
         temp.updateMatrix();
     
-        cluster.setMatrixAt(i, temp.matrix);
+        treeClusterOne.setMatrixAt(i, temp.matrix);
     }
-    scene.add(cluster);
+    scene.add(treeClusterOne);
+}
+
+function initBroadLeaf(gltf) {
+    let broadleaf = gltf.scene;
+    broadleaf.scale.set(10, 10, 10);
+    scene.add(broadleaf);
+}
+
+function drawTrees() {
+    loadModel("models/environment/trees/pinetree.glb", "pinetree");
+    loadModel("models/environment/trees/broadleaf.glb", "broadleaf");
 }
 
 function drawGround() {
@@ -170,13 +186,19 @@ function drawStars() {
 }
 
 function gameLoop() {
-    setTimeout( function() {
+    // setTimeout( function() {
 
-        requestAnimationFrame(gameLoop);
+    //     requestAnimationFrame(gameLoop);
 
-    }, 1000 / 120);
+    // }, 1000 / 120);
+
+    requestAnimationFrame(gameLoop);
+
 
     if(controls.isLocked) {
+
+        console.clear();
+        console.log(controls.getObject().position.x);
 
         clock.timeNow = performance.now();
         clock.delta = (clock.timeNow - clock.timeBefore) / 1000;
@@ -478,9 +500,11 @@ function loadModel(url, key) {
             case "alien":
                 //initAlienModel(gltf);
                 break;
-            case "tree":
-                initTrees(gltf);
+            case "pinetree":
+                initPineTrees(gltf);
                 break;
+            case "broadleaf":
+                initBroadLeaf(gltf);
         }
     }
     gltfLoader.load(url, callback, progress, (error) => console.log(error));
@@ -683,8 +707,7 @@ function initWorld() {
     box.position.set(0, 2.5, -10);
     scene.add(box);
 
-    loadModel("models/environment/trees/pinetree.glb", "tree");
-
+    drawTrees();
     drawGround();
     drawStars();
 
