@@ -1,6 +1,7 @@
 html, body {
     margin: 0;
     padding: 0;
+    background-color: #000000;
 }
 
 #canvas { 
@@ -44,4 +45,37 @@ button:active {
     padding: 0px;
     box-shadow: 0 2px #635959;
     transform: translate(-50%, 4px);
+}
+
+#loading {
+    display: none;
+    position: absolute;
+    width: 50%;
+    height: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #000000;
+    text-align: center;
+}
+
+@keyframes loadingAnimation {
+    0%   {transform: rotateY(0) translate(-50%)}
+    25%  {transform: rotateX(180deg) translate(-50%)}
+    50%  {transform: rotateX(360deg) translate(-50%)}
+    75%  {transform: rotateX(180deg) translate(-50%)}
+    100% {transform: rotateX(360deg) translate(-50%)}
+}
+
+#triangle {
+    width: 0;
+    height: 0;
+    position: absolute;
+    left: 50%;
+    border-left: 50px solid transparent;
+    border-right: 50px solid transparent;
+    border-bottom: 100px solid white;
+    animation: loadingAnimation;
+    animation-duration: 4s;
+    animation-iteration-count: infinite;
 }
