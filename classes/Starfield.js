@@ -11,7 +11,7 @@ class Starfield {
         }
 
         this._starGeometry = new THREE.BufferGeometry().setAttribute("position", new THREE.Float32BufferAttribute(this._starVertices, 3));
-        this._starMaterial = new THREE.PointsMaterial( {color: initialColour, size: 4, opacity: 1, transparent: true} );
+        this._starMaterial = new THREE.PointsMaterial( {color: initialColour, size: 3, opacity: 1, transparent: true} );
         this._starField = new THREE.Points(this._starGeometry, this._starMaterial);
         this._direction = initialColour == "black" ? "increase" : "decrease";
     }

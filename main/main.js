@@ -3,10 +3,13 @@ import Stats from 'https://cdn.rawgit.com/mrdoob/stats.js/master/src/Stats.js';
 
 let stats = new Stats();
 stats.showPanel(0);
-document.body.appendChild(stats.dom);
 
-window.onload = init;
+let menuBlock = document.getElementById("menu");
+let playButton = document.getElementById("play");
+let loading = document.getElementById("loading");
 
+window.onload = menu;
+ 
 /** SCENE GLOBALS */
 let canvas;
 let renderer;
@@ -25,6 +28,8 @@ let currentLevel = 0;
 /** LOADERS */
 let textureLoader;
 let gltfLoader;
+let numModels = 0;
+let numModelsLoaded = 0;
 
 /** ANIMATION */
 let mixer;
@@ -39,6 +44,13 @@ let skyboxURLs = ["cubemap/space_one/px.png", "cubemap/space_one/nx.png",
 let starFieldOne;
 let starFieldTwo;
 let box;
+
+function initTests(gltf) {
+    let tree = gltf.scene;
+    tree.position.set(-20, -5, 0);
+    tree.scale.set(10, 10, 10);
+    scene.add(tree);
+}
 
 function initPlayerModel(gltf) {
     player.playerModel = gltf.scene; // ** TODO **
@@ -70,6 +82,27 @@ function initPlayerModel(gltf) {
     player.currentAnimation = player.idleAnim;
 }
 
+function initTrees(gltf) {
+    let tree = gltf.scene;
+    let treeGeometry = tree.children[0].geometry;
+    let treeMaterial = tree.children[0].material;
+    console.log(tree);
+
+    let cluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 50);
+
+    let temp = new THREE.Object3D();
+
+    for (let i = 0; i < 50; i++) {
+        tree.position.set(-20, -5, -i*30);
+        tree.scale.set(10, 10, 10);
+    
+        temp.updateMatrix();
+    
+        cluster.setMatrixAt(i, temp.matrix);
+    }
+    scene.add(cluster);
+}
+
 function drawGround() {
     let groundGeom = new THREE.PlaneBufferGeometry(200, 1000);
     let groundTexture = loadTexture("textures/texture_grass_seamless.jpg");
@@ -96,7 +129,11 @@ function drawStars() {
 }
 
 function gameLoop() {
-    requestAnimationFrame(gameLoop);
+    setTimeout( function() {
+
+        requestAnimationFrame(gameLoop);
+
+    }, 1000 / 120);
 
     if(controls.isLocked) {
 
@@ -302,7 +339,7 @@ function levelZeroBoundingBox() {
         }
     }
 
-    boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
+    //boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
 }
 
 function boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop) {
@@ -391,14 +428,18 @@ function loadTexture(url) {
 }
 
 function loadModel(url, key) {
+    numModels++;
     function callback(gltf) {
         switch(key) {
             case "player":
                 initPlayerModel(gltf);
                 break;
+            case "tree":
+                initTrees(gltf);
+                break;
         }
     }
-    gltfLoader.load(url, callback, undefined, (error) => console.log(error));
+    gltfLoader.load(url, callback, progress, (error) => console.log(error));
 }
 
 function onResize() {
@@ -446,18 +487,19 @@ function initCameras() {
 }
 
 function initLights() {
-    ambientLight = new THREE.AmbientLight("white", 0.5);
+    ambientLight = new THREE.AmbientLight("white", 0.25);
     scene.add(ambientLight);
 }
 
 function initControls() {
-    let menuBlock = document.getElementById("menu");
-    let playButton = document.getElementById("play");
-
     controls = new THREE.PointerLockControls(camera, canvas);
     scene.add(controls.getObject());
 
-    playButton.addEventListener("click", () => controls.lock());
+    document.addEventListener("click", function() {
+        controls.lock();
+        gameLoop();
+    });
+
     controls.addEventListener("lock", lock);
     controls.addEventListener("unlock", unlock);
 
@@ -572,7 +614,8 @@ function initSkybox() {
             map: texture
         } ));
     }
-    let cube = new THREE.Mesh(new THREE.BoxGeometry(1000, 2000, 2000), material);
+    let cube = new THREE.Mesh(new THREE.BoxGeometry(1500, 1000, 2000), material);
+    cube.position.y += 250;
     scene.add(cube);
 }
 
@@ -583,13 +626,15 @@ function initLoaders() {
 
 function initPlayer() {
     player = new Player("Joax");
-    loadModel("models/pilot.min.glb", "player");
+    loadModel("models/characters/player/playermodel.glb", "player");
 }
 
 function initWorld() {
     box = new THREE.Mesh(new THREE.CubeGeometry(5, 5, 5), new THREE.MeshBasicMaterial( {color: "white"} ));
     box.position.set(0, 2.5, -10);
     scene.add(box);
+
+    loadModel("models/environment/trees/broadleaf.glb", "tree");
 
     drawGround();
     drawStars();
@@ -603,16 +648,32 @@ function render() {
 }
 
 function init() {
+    menuBlock.style.display = "none";
+    loading.style.display = "block";
+
     initRenderer();
     initScene();
     initCameras();
     initLights();
-    initControls();
     initTime();
     initSkybox();
     initLoaders();
     initPlayer();
     initWorld();
+}
 
-    gameLoop();
+function progress(xhr) {
+    if((xhr.loaded / xhr.total) == 1) {
+        numModelsLoaded++;
+    }
+
+    if(numModelsLoaded == numModels) {
+        loading.style.display = "none";
+        document.body.appendChild(stats.dom);
+        initControls();
+    }
+}
+
+function menu() {
+    playButton.addEventListener("click", () => init());
 }
