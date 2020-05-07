@@ -45,7 +45,7 @@ let starFieldOne;
 let starFieldTwo;
 let box;
 
-function initTests(gltf) {
+function modelTests(gltf) {
     let tree = gltf.scene;
     tree.position.set(-20, -5, 0);
     tree.scale.set(10, 10, 10);
