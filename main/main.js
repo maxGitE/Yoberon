@@ -150,16 +150,16 @@ function initPineTree(gltf) {
     let treeGeometry = pinetree.children[0].geometry;
     let treeMaterial = pinetree.children[0].material;
 
-    let cluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 330);
+    let cluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 340);
     let clusterTemp = new THREE.Object3D();
 
     let clusterX;
     let clusterZ;
 
-    for (let i = 0; i < 330; i++) {
+    for (let i = 0; i < 340; i++) {
         let scalingFactor = Math.random() * 0.3 + 0.7;
-        if(i < 180) {
-            if(i < 60) { // First row
+        if(i < 180) { // Left rows
+            if(i >= 0 && i < 60) { // First row
                 clusterX = Math.random() * 10 - 55; // x positions between -45 and -55
             }
             else if(i >= 60 && i < 120) { // Second row
@@ -170,15 +170,30 @@ function initPineTree(gltf) {
             }
             clusterZ = Math.random() * 600 - 550; // z positions between 50 and -550  
         }
-        else if(i >= 210 && i < 330) {
+        else if(i >= 180 && i < 220) { // Back rows
+            if(i < 190) { // First row
+                clusterZ = Math.random() * 10 + 40; // z positions between 40 and 50
+            }
+            else if(i >= 190 && i < 200) { // Second row
+                clusterZ = Math.random() * 10 + 60; // z positions between 60 and 70
+            }
+            else if(i >= 200 && i < 210){ // Third row
+                clusterZ = Math.random() * 10 + 80; // z positions between 80 and 90
+            }
+            else { // Fourth row
+                clusterZ = Math.random() * 10 + 90; // z positions between 90 and 100
+            }
+            clusterX = Math.random() * 130 - 65; // x positions between -65 and 65  
+        }
+        else if(i >= 220 && i < 340) { // First right rows
             if(i < 250) { // First row
-                clusterX = Math.random() * 10 + 55; // x positions between 45 and 55
+                clusterX = Math.random() * 10 + 45; // x positions between 45 and 55
             }
             else if(i >= 250 && i < 290) { // Second row
-                clusterX = Math.random() * 10 + 75; // x positions between 65 and 75
+                clusterX = Math.random() * 10 + 65; // x positions between 65 and 75
             }
             else { // Third row
-                clusterX = Math.random() * 10 + 95; // x positions between 85 and 95
+                clusterX = Math.random() * 10 + 85; // x positions between 85 and 95
             }
             clusterZ = Math.random() * 450 - 400; // z positions between 50 and -400 
         }
@@ -254,7 +269,7 @@ function gameLoop() {
 
         requestAnimationFrame(gameLoop);
 
-    }, 1000 / 120);
+    }, 1000 / 180);
 
     //requestAnimationFrame(gameLoop);
 
