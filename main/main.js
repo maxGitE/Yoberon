@@ -28,7 +28,7 @@ let boxThreeRight = 80;
 let boxFourBottom = -585;
 let boxFourTop = boxThreeTop;
 
-let xTempleEntrance = 40;
+let xleftClusterTempleEntrance = 40;
 let boundaryFactor = 5; // Account for skipped frames and fucked behaviour with game loop
 
 /** SCENE GLOBALS */
@@ -39,6 +39,8 @@ let camera;
 let thirdPersonCamera;
 let cameraType;
 let ambientLight;
+let directionalLight;
+let pointLight;
 
 /** PLAYER MISC */
 let controls;
@@ -68,6 +70,8 @@ let skyboxURLs = ["cubemap/space_one/px.png", "cubemap/space_one/nx.png",
 let starFieldOne;
 let starFieldTwo;
 let box;
+
+let savedPosition;
 
 function modelTests(gltf) {
     
@@ -124,35 +128,64 @@ function initAlienModel(gltf) {
     // alien.shootAnim.enabled = true;
 }
 
-function initPineTrees(gltf) {
+function initPineTree(gltf) {
     let pinetree = gltf.scene;
     let treeGeometry = pinetree.children[0].geometry;
     let treeMaterial = pinetree.children[0].material;
 
-    let treeClusterOne = new THREE.InstancedMesh(treeGeometry, treeMaterial, 20);
-    let treeClusterTwo = new THREE.InstancedMesh(treeGeometry, treeMaterial, 20);
+    let leftCluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 80);
+    let rightCluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 50);
+    let behindCluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 10);
 
-    let temp = new THREE.Object3D();
+    let leftClusterTemp = new THREE.Object3D();
+    let rightClusterTemp = new THREE.Object3D();
+    let behindClusterTemp = new THREE.Object3D();
 
-    for (let i = 0; i < 20; i++) {
-        let scalingFactor = Math.random() * 0.5 + 0.5;
-        let xPosFactor = Math.random() * 10 - 55;
-        let zPosFactor = Math.random() * 10 + 40;
+    for (let i = 0; i < 80; i++) {
+        let scalingFactor = Math.random() * 0.3 + 0.7;
+        let leftClusterX = Math.random() * 10 - 55; // x positions between -45 and -55
+        let leftClusterZ = Math.random() * 600 - 550; // z positions between 20 
 
-        temp.scale.set(scalingFactor, scalingFactor, scalingFactor);
-        temp.position.set(xPosFactor, -8, -i*zPosFactor);
+        leftClusterTemp.scale.set(scalingFactor, scalingFactor, scalingFactor);
+        leftClusterTemp.position.set(leftClusterX, -8, leftClusterZ);
     
-        temp.updateMatrix();
+        leftClusterTemp.updateMatrix();
     
-        treeClusterOne.setMatrixAt(i, temp.matrix);
+        leftCluster.setMatrixAt(i, leftClusterTemp.matrix);
     }
-    scene.add(treeClusterOne);
+    scene.add(leftCluster);
+
+    for(let i = 0; i < 50; i++) {
+        let scalingFactor = Math.random() * 0.3 + 0.7;
+        let leftClusterX = Math.random() * 10 - 55; // x positions between -45 and -55
+        let leftClusterZ = Math.random() * 600 - 550; // z positions between 20 
+    }
 }
 
 function initBroadLeaf(gltf) {
-    let broadleaf = gltf.scene;
-    broadleaf.scale.set(10, 10, 10);
-    scene.add(broadleaf);
+    let broadLeafGroup = new THREE.Object3D();
+
+    let broadleaf_one = gltf.scene;
+    let broadleaf_two = broadleaf_one.clone();
+    let broadleaf_three = broadleaf_one.clone();
+    let broadleaf_four = broadleaf_one.clone();
+
+    broadleaf_one.scale.set(50, 50, 50);
+    broadleaf_two.scale.set(50, 50, 50);
+    broadleaf_three.scale.set(80, 80, 80);
+    broadleaf_four.scale.set(60, 60, 60);
+
+    broadleaf_one.position.set(-100, 0, -50);
+    broadleaf_two.position.set(100, 0, -300);
+    broadleaf_three.position.set(120, 0, 100);
+    broadleaf_four.position.set(-120, 0, -600);
+    
+    broadLeafGroup.add(broadleaf_one);
+    broadLeafGroup.add(broadleaf_two);
+    broadLeafGroup.add(broadleaf_three);
+    broadLeafGroup.add(broadleaf_four);
+
+    scene.add(broadLeafGroup);
 }
 
 function drawTrees() {
@@ -161,11 +194,11 @@ function drawTrees() {
 }
 
 function drawGround() {
-    let groundGeom = new THREE.PlaneBufferGeometry(200, 1000);
+    let groundGeom = new THREE.PlaneBufferGeometry(1000, 2000, 100, 100);
     let groundTexture = loadTexture("textures/texture_grass_seamless.jpg");
     groundTexture.wrapS = THREE.RepeatWrapping;
     groundTexture.wrapT = THREE.RepeatWrapping;
-    groundTexture.repeat.set(2, 10);
+    groundTexture.repeat.set(100, 100);
     let ground = new THREE.Mesh(groundGeom,
                                     new THREE.MeshLambertMaterial({
                                         color: "#aa3e13", 
@@ -173,7 +206,6 @@ function drawGround() {
                                         map: groundTexture
                                     }));
     ground.rotation.x = -Math.PI/2;
-    ground.position.z -= 490;
     scene.add(ground);
 }
 
@@ -186,14 +218,14 @@ function drawStars() {
 }
 
 function gameLoop() {
-    // setTimeout( function() {
 
-    //     requestAnimationFrame(gameLoop);
+    setTimeout( function() {
 
-    // }, 1000 / 120);
+        requestAnimationFrame(gameLoop);
 
-    requestAnimationFrame(gameLoop);
+    }, 1000 / 120);
 
+    //requestAnimationFrame(gameLoop);
 
     if(controls.isLocked) {
 
@@ -304,7 +336,7 @@ function levelZeroBoundingBox() {
     // let boxFourBottom = -585;
     // let boxFourTop = boxThreeTop;
 
-    // let xTempleEntrance = 40;
+    // let xleftClusterTempleEntrance = 40;
     // let boundaryFactor = 5; // Account for skipped frames and fucked behaviour with game loop
 
     if(xPos >= boxOneLeft && xPos <= boxOneRight) {
@@ -316,7 +348,7 @@ function levelZeroBoundingBox() {
     else if(xPos > boxThreeLeft && xPos <= boxThreeRight) {
         setBox(3);
     }
-    else if(xPos >= xTempleEntrance && xPos <= boxThreeLeft && zPos <= boxFourBottom && zPos >= boxFourTop) {
+    else if(xPos >= xleftClusterTempleEntrance && xPos <= boxThreeLeft && zPos <= boxFourBottom && zPos >= boxFourTop) {
         setBox(4);
     }
 
@@ -367,7 +399,7 @@ function levelZeroBoundingBox() {
         if(zPos < boxFourTop + boundaryFactor) { // Place top boundary
             controls.getObject().position.z = boxFourTop + boundaryFactor;
         }
-        if(xPos < xTempleEntrance) { // Enter first temple
+        if(xPos < xleftClusterTempleEntrance) { // Enter first leftClusterTemple
             currentLevel = 1;
             // loadFirstLevel();
         }
@@ -402,17 +434,17 @@ function levelZeroBoundingBox() {
         }
     }
 
-    //boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
+    //boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xleftClusterTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
 }
 
-function boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop) {
+function boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xleftClusterTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop) {
     let linematerial = new THREE.LineBasicMaterial({
         color: 0xffff00
     });
 
     let points = [];
 
-    points.push(new THREE.Vector3(xTempleEntrance, .1, boxFourTop));
+    points.push(new THREE.Vector3(xleftClusterTempleEntrance, .1, boxFourTop));
     points.push(new THREE.Vector3(boxThreeRight, .1, boxFourTop));
     points.push(new THREE.Vector3(boxThreeRight, .1, boxTwoBottom));
 
@@ -424,7 +456,7 @@ function boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxT
     points.push(new THREE.Vector3(boxOneRight, .1, boxTwoTop));
     points.push(new THREE.Vector3(boxThreeLeft, .1, boxTwoTop));
     points.push(new THREE.Vector3(boxThreeLeft, .1, boxFourBottom));
-    points.push(new THREE.Vector3(xTempleEntrance, .1, boxFourBottom));
+    points.push(new THREE.Vector3(xleftClusterTempleEntrance, .1, boxFourBottom));
 
     let geometry = new THREE.BufferGeometry().setFromPoints(points);
 
@@ -438,7 +470,7 @@ function boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxT
  */
 function handleJumpAnimation() { 
     player.jumpAnim.enabled = true;
-    let tempAnimation = player.currentAnimation;
+    let leftClusterTempAnimation = player.currentAnimation;
     player.currentAnimation.enabled = false;
     player.currentAnimation = player.jumpAnim;
 
@@ -449,11 +481,11 @@ function handleJumpAnimation() {
             idleCalled = false;
         }
         else {
-            if(tempAnimation == player.runAnim && player.movingForward && !player.running) {
+            if(leftClusterTempAnimation == player.runAnim && player.movingForward && !player.running) {
                 updatePlayerAnimation(player.walkAnim);
             }
             else {
-                updatePlayerAnimation(tempAnimation);
+                updatePlayerAnimation(leftClusterTempAnimation);
             }
         }
     }, 600);
@@ -501,7 +533,7 @@ function loadModel(url, key) {
                 //initAlienModel(gltf);
                 break;
             case "pinetree":
-                initPineTrees(gltf);
+                initPineTree(gltf);
                 break;
             case "broadleaf":
                 initBroadLeaf(gltf);
@@ -543,24 +575,30 @@ function initScene() {
 }
 
 function initCameras() {
-    camera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 0.001, 2500);
+    camera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 1, 2500);
     camera.position.set(0, 8, 0);
     scene.add(camera);
 
-    thirdPersonCamera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 0.1, 2500);
+    thirdPersonCamera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 1, 2500);
     thirdPersonCamera.position.set(camera.position.x, camera.position.y - 2, camera.position.z + 26);
     camera.add(thirdPersonCamera);
 
     cameraType = "fp";
+    savedPosition = {x: camera.position.x, y: camera.position.y, z: camera.position.z};
 }
 
 function initLights() {
-    ambientLight = new THREE.AmbientLight("white", 0.25);
+    ambientLight = new THREE.AmbientLight("white", 0.15);
     scene.add(ambientLight);
+
+    pointLight = new THREE.PointLight("white", 1.5);
+    pointLight.distance = 30;
+    camera.add(pointLight);
+    camera.children[1].position.y = 5; // Lower the point light from 8 to 5
 }
 
 function initControls() {
-    controls = new THREE.PointerLockControls(camera, canvas);
+    controls = new THREE.PointerLockControls(camera, renderer.domElement);
     scene.add(controls.getObject());
 
     document.addEventListener("click", function() {
@@ -572,10 +610,13 @@ function initControls() {
     controls.addEventListener("unlock", unlock);
 
     function lock() {
+        controls.connect();
         menuBlock.style.display = "none";
     }
 
     function unlock() {
+        controls.isLocked = false;
+        controls.disconnect();
         menuBlock.style.display = "block";
     }
 
@@ -711,7 +752,7 @@ function initWorld() {
     drawGround();
     drawStars();
 
-    boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
+    boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xleftClusterTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
 }
 
 function render() {
