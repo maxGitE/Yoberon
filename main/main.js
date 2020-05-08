@@ -134,47 +134,47 @@ function initPineTree(gltf) {
     let treeGeometry = pinetree.children[0].geometry;
     let treeMaterial = pinetree.children[0].material;
 
-    let cluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 180);
+    let cluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 210);
     let clusterTemp = new THREE.Object3D();
 
-    let leftClusterX;
-    let leftClusterZ;
+    let clusterX;
+    let clusterZ;
 
-    for (let i = 0; i < 180; i++) {
+    for (let i = 0; i < 210; i++) {
         let scalingFactor = Math.random() * 0.3 + 0.7;
-        if(i < 60) { // Add second row behind first row
-            leftClusterX = Math.random() * 10 - 55; // x positions between -45 and -55
+        if(i < 180) {
+            if(i < 60) { // Add second row behind first row
+                clusterX = Math.random() * 10 - 55; // x positions between -45 and -55
+            }
+            else if(i >= 60 && i < 120) {
+                clusterX = Math.random() * 10 - 75; // x positions between -65 and -75
+            }
+            else {
+                clusterX = Math.random() * 10 - 95; // x positions between -85 and -95
+            }
+            clusterZ = Math.random() * 600 - 550; // z positions between 50 and -550  
         }
-        else if(i >= 60 && i < 120){
-            leftClusterX = Math.random() * 10 - 75; // x positions between -65 and -75
+        else if(i >= 180 && i < 210) {
+            if(i < 190) {
+                clusterZ = Math.random() * 10 + 40; // z positions between 40 and 50
+            }
+            else if(i < 200) {
+                clusterZ = Math.random() * 10 + 60; // z positions between 60 and 70
+            }
+            else {
+                clusterZ = Math.random() * 10 + 80; // z positions between 80 and 90
+            }
+            clusterX = Math.random() * 130 - 65; // x positions between -65 and 65  
         }
-        else {
-            leftClusterX = Math.random() * 10 - 95; // x positions between -85 and -95
-        }
-        leftClusterZ = Math.random() * 600 - 550; // z positions between 50 and -550  
-
+        
         clusterTemp.scale.set(scalingFactor, scalingFactor, scalingFactor);
-        clusterTemp.position.set(leftClusterX, -8, leftClusterZ);
+        clusterTemp.position.set(clusterX, -8, clusterZ);
     
         clusterTemp.updateMatrix();
     
         cluster.setMatrixAt(i, clusterTemp.matrix);
     }
     scene.add(cluster);
-
-    for(let i = 0; i < 10; i++) {
-        let scalingFactor = Math.random() * 0.3 + 0.7;
-
-        behindClusterX = Math.random() * 10 + 65; // x positions between -55 and 55
-        behindClusterZ = Math.random() * 10 + 100; // z positions between 20 
-
-        behindClusterTemp.scale.set(scalingFactor, scalingFactor, scalingFactor);
-        behindClusterTemp.position.set(behindClusterX, -8, behindClusterZ);
-    
-        behindClusterTemp.updateMatrix();
-    
-        behindCluster.setMatrixAt(i, behindClusterTemp.matrix);
-    }
 }
 
 function initBroadLeaf(gltf) {
