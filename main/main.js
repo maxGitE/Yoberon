@@ -37,6 +37,7 @@ let renderer;
 let scene;
 let camera;
 let thirdPersonCamera;
+let birdsEyeViewCamera;
 let cameraType;
 let ambientLight;
 let directionalLight;
@@ -133,18 +134,32 @@ function initPineTree(gltf) {
     let treeGeometry = pinetree.children[0].geometry;
     let treeMaterial = pinetree.children[0].material;
 
-    let leftCluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 80);
-    let rightCluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 50);
+    let leftCluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 180);
     let behindCluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 10);
+    let rightCluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 50);
 
     let leftClusterTemp = new THREE.Object3D();
-    let rightClusterTemp = new THREE.Object3D();
     let behindClusterTemp = new THREE.Object3D();
+    let rightClusterTemp = new THREE.Object3D();
 
-    for (let i = 0; i < 80; i++) {
+    let leftClusterX;
+    let leftClusterZ;
+
+    let behindClusterX;
+    let behindClusterZ;
+
+    for (let i = 0; i < 180; i++) {
         let scalingFactor = Math.random() * 0.3 + 0.7;
-        let leftClusterX = Math.random() * 10 - 55; // x positions between -45 and -55
-        let leftClusterZ = Math.random() * 600 - 550; // z positions between 20 
+        if(i < 60) { // Add second row behind first row
+            leftClusterX = Math.random() * 10 - 55; // x positions between -45 and -55
+        }
+        else if(i >= 60 && i < 120){
+            leftClusterX = Math.random() * 10 - 75; // x positions between -65 and -75
+        }
+        else {
+            leftClusterX = Math.random() * 10 - 95; // x positions between -85 and -95
+        }
+        leftClusterZ = Math.random() * 600 - 550; // z positions between 50 and -550  
 
         leftClusterTemp.scale.set(scalingFactor, scalingFactor, scalingFactor);
         leftClusterTemp.position.set(leftClusterX, -8, leftClusterZ);
@@ -153,13 +168,23 @@ function initPineTree(gltf) {
     
         leftCluster.setMatrixAt(i, leftClusterTemp.matrix);
     }
-    scene.add(leftCluster);
 
-    for(let i = 0; i < 50; i++) {
+    for(let i = 0; i < 10; i++) {
         let scalingFactor = Math.random() * 0.3 + 0.7;
-        let leftClusterX = Math.random() * 10 - 55; // x positions between -45 and -55
-        let leftClusterZ = Math.random() * 600 - 550; // z positions between 20 
+
+        behindClusterX = Math.random() * 10 + 65; // x positions between -55 and 55
+        behindClusterZ = Math.random() * 10 + 100; // z positions between 20 
+
+        behindClusterTemp.scale.set(scalingFactor, scalingFactor, scalingFactor);
+        behindClusterTemp.position.set(behindClusterX, -8, behindClusterZ);
+    
+        behindClusterTemp.updateMatrix();
+    
+        behindCluster.setMatrixAt(i, behindClusterTemp.matrix);
     }
+    
+    scene.add(leftCluster);
+    scene.add(behindCluster);
 }
 
 function initBroadLeaf(gltf) {
@@ -584,7 +609,11 @@ function initCameras() {
     camera.add(thirdPersonCamera);
 
     cameraType = "fp";
-    savedPosition = {x: camera.position.x, y: camera.position.y, z: camera.position.z};
+
+    birdsEyeViewCamera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 1, 2500);
+    birdsEyeViewCamera.position.set(-100, 300, 100);
+    birdsEyeViewCamera.lookAt(0, 0, 0);
+    scene.add(birdsEyeViewCamera);
 }
 
 function initLights() {
@@ -592,7 +621,7 @@ function initLights() {
     scene.add(ambientLight);
 
     pointLight = new THREE.PointLight("white", 1.5);
-    pointLight.distance = 30;
+    pointLight.distance = 50;
     camera.add(pointLight);
     camera.children[1].position.y = 5; // Lower the point light from 8 to 5
 }
@@ -675,6 +704,8 @@ function initControls() {
                 }
                    
                 break;
+            case 51:    // 3
+                cameraType = "bev"; break;
         }
     }
 
@@ -752,14 +783,19 @@ function initWorld() {
     drawGround();
     drawStars();
 
-    boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xleftClusterTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
+    boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
 }
 
 function render() {
     stats.update();
 
-    let cameraToRender = cameraType == "fp" ? camera : thirdPersonCamera;
-    renderer.render(scene, cameraToRender);
+    //let cameraToRender = cameraType == "fp" ? camera : thirdPersonCamera;
+    switch(cameraType) {
+        case "fp": renderer.render(scene, camera); break;
+        case "tp": renderer.render(scene, thirdPersonCamera); break;
+        case "bev": renderer.render(scene, birdsEyeViewCamera); break;
+    }
+    //renderer.render(scene, cameraToRender);
 }
 
 function init() {
