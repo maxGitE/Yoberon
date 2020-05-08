@@ -28,7 +28,7 @@ let boxThreeRight = 80;
 let boxFourBottom = -585;
 let boxFourTop = boxThreeTop;
 
-let xleftClusterTempleEntrance = 40;
+let xTempleEntrance = 40;
 let boundaryFactor = 5; // Account for skipped frames and fucked behaviour with game loop
 
 /** SCENE GLOBALS */
