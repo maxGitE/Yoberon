@@ -150,57 +150,47 @@ function initPineTree(gltf) {
     let treeGeometry = pinetree.children[0].geometry;
     let treeMaterial = pinetree.children[0].material;
 
-    let leftCluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 180);
-    let behindCluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 10);
-    let rightCluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 50);
+    let cluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 330);
+    let clusterTemp = new THREE.Object3D();
 
-    let leftClusterTemp = new THREE.Object3D();
-    let behindClusterTemp = new THREE.Object3D();
-    let rightClusterTemp = new THREE.Object3D();
+    let clusterX;
+    let clusterZ;
 
-    let leftClusterX;
-    let leftClusterZ;
-
-    let behindClusterX;
-    let behindClusterZ;
-
-    for (let i = 0; i < 180; i++) {
+    for (let i = 0; i < 330; i++) {
         let scalingFactor = Math.random() * 0.3 + 0.7;
-        if(i < 60) { // Add second row behind first row
-            leftClusterX = Math.random() * 10 - 55; // x positions between -45 and -55
+        if(i < 180) {
+            if(i < 60) { // First row
+                clusterX = Math.random() * 10 - 55; // x positions between -45 and -55
+            }
+            else if(i >= 60 && i < 120) { // Second row
+                clusterX = Math.random() * 10 - 75; // x positions between -65 and -75
+            }
+            else { // Third row
+                clusterX = Math.random() * 10 - 95; // x positions between -85 and -95
+            }
+            clusterZ = Math.random() * 600 - 550; // z positions between 50 and -550  
         }
-        else if(i >= 60 && i < 120){
-            leftClusterX = Math.random() * 10 - 75; // x positions between -65 and -75
+        else if(i >= 210 && i < 330) {
+            if(i < 250) { // First row
+                clusterX = Math.random() * 10 + 55; // x positions between 45 and 55
+            }
+            else if(i >= 250 && i < 290) { // Second row
+                clusterX = Math.random() * 10 + 75; // x positions between 65 and 75
+            }
+            else { // Third row
+                clusterX = Math.random() * 10 + 95; // x positions between 85 and 95
+            }
+            clusterZ = Math.random() * 450 - 400; // z positions between 50 and -400 
         }
-        else {
-            leftClusterX = Math.random() * 10 - 95; // x positions between -85 and -95
-        }
-        leftClusterZ = Math.random() * 600 - 550; // z positions between 50 and -550  
 
-        leftClusterTemp.scale.set(scalingFactor, scalingFactor, scalingFactor);
-        leftClusterTemp.position.set(leftClusterX, -8, leftClusterZ);
+        clusterTemp.scale.set(scalingFactor, scalingFactor, scalingFactor);
+        clusterTemp.position.set(clusterX, -8, clusterZ);
     
-        leftClusterTemp.updateMatrix();
+        clusterTemp.updateMatrix();
     
-        leftCluster.setMatrixAt(i, leftClusterTemp.matrix);
+        cluster.setMatrixAt(i, clusterTemp.matrix);
     }
-
-    for(let i = 0; i < 10; i++) {
-        let scalingFactor = Math.random() * 0.3 + 0.7;
-
-        behindClusterX = Math.random() * 10 + 65; // x positions between -55 and 55
-        behindClusterZ = Math.random() * 10 + 100; // z positions between 20 
-
-        behindClusterTemp.scale.set(scalingFactor, scalingFactor, scalingFactor);
-        behindClusterTemp.position.set(behindClusterX, -8, behindClusterZ);
-    
-        behindClusterTemp.updateMatrix();
-    
-        behindCluster.setMatrixAt(i, behindClusterTemp.matrix);
-    }
-    
-    scene.add(leftCluster);
-    scene.add(behindCluster);
+    scene.add(cluster);
 }
 
 function initBroadLeaf(gltf) {
@@ -377,7 +367,7 @@ function levelZeroBoundingBox() {
     // let boxFourBottom = -585;
     // let boxFourTop = boxThreeTop;
 
-    // let xleftClusterTempleEntrance = 40;
+    // let xclusterTempleEntrance = 40;
     // let boundaryFactor = 5; // Account for skipped frames and fucked behaviour with game loop
 
     if(xPos >= boxOneLeft && xPos <= boxOneRight) {
@@ -389,7 +379,7 @@ function levelZeroBoundingBox() {
     else if(xPos > boxThreeLeft && xPos <= boxThreeRight) {
         setBox(3);
     }
-    else if(xPos >= xleftClusterTempleEntrance && xPos <= boxThreeLeft && zPos <= boxFourBottom && zPos >= boxFourTop) {
+    else if(xPos >= xclusterTempleEntrance && xPos <= boxThreeLeft && zPos <= boxFourBottom && zPos >= boxFourTop) {
         setBox(4);
     }
 
@@ -440,7 +430,7 @@ function levelZeroBoundingBox() {
         if(zPos < boxFourTop + boundaryFactor) { // Place top boundary
             controls.getObject().position.z = boxFourTop + boundaryFactor;
         }
-        if(xPos < xleftClusterTempleEntrance) { // Enter first leftClusterTemple
+        if(xPos < xclusterTempleEntrance) { // Enter first clusterTemple
             currentLevel = 1;
             // loadFirstLevel();
         }
@@ -475,17 +465,17 @@ function levelZeroBoundingBox() {
         }
     }
 
-    //boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xleftClusterTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
+    //boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xclusterTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
 }
 
-function boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xleftClusterTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop) {
+function boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xclusterTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop) {
     let linematerial = new THREE.LineBasicMaterial({
         color: 0xffff00
     });
 
     let points = [];
 
-    points.push(new THREE.Vector3(xleftClusterTempleEntrance, .1, boxFourTop));
+    points.push(new THREE.Vector3(xclusterTempleEntrance, .1, boxFourTop));
     points.push(new THREE.Vector3(boxThreeRight, .1, boxFourTop));
     points.push(new THREE.Vector3(boxThreeRight, .1, boxTwoBottom));
 
@@ -497,7 +487,7 @@ function boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxT
     points.push(new THREE.Vector3(boxOneRight, .1, boxTwoTop));
     points.push(new THREE.Vector3(boxThreeLeft, .1, boxTwoTop));
     points.push(new THREE.Vector3(boxThreeLeft, .1, boxFourBottom));
-    points.push(new THREE.Vector3(xleftClusterTempleEntrance, .1, boxFourBottom));
+    points.push(new THREE.Vector3(xclusterTempleEntrance, .1, boxFourBottom));
 
     let geometry = new THREE.BufferGeometry().setFromPoints(points);
 
@@ -511,7 +501,7 @@ function boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxT
  */
 function handleJumpAnimation() { 
     player.jumpAnim.enabled = true;
-    let leftClusterTempAnimation = player.currentAnimation;
+    let clusterTempAnimation = player.currentAnimation;
     player.currentAnimation.enabled = false;
     player.currentAnimation = player.jumpAnim;
 
@@ -522,11 +512,11 @@ function handleJumpAnimation() {
             idleCalled = false;
         }
         else {
-            if(leftClusterTempAnimation == player.runAnim && player.movingForward && !player.running) {
+            if(clusterTempAnimation == player.runAnim && player.movingForward && !player.running) {
                 updatePlayerAnimation(player.walkAnim);
             }
             else {
-                updatePlayerAnimation(leftClusterTempAnimation);
+                updatePlayerAnimation(clusterTempAnimation);
             }
         }
     }, 600);
