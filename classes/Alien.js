@@ -6,12 +6,12 @@ class Alien {
         this._postition = {x: 0, y: 0, z: 0};
         this._alienModel = undefined;
         this._idleAnim = undefined;
-        this._shootAnim = undefined;
+        this._walkAnim = undefined;
         this._strafeLAnim = undefined;
         this._strafeRAnim = undefined;
-        this._walkAnim = undefined;
         this._walkBackwardsAnim = undefined;
-        this._deathAnim = undefined;
+        this._deathAnim = undefined;        
+        this._shootAnim = undefined;
     }
 
     /** GETTERS */

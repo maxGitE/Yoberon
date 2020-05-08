@@ -56,7 +56,7 @@ let numModels = 0;
 let numModelsLoaded = 0;
 
 /** ANIMATION */
-let mixer;
+let mixers = [];
 let idleCalled = false;
 
 /** SKYBOX TEXTURES */
@@ -80,7 +80,8 @@ function initPlayerModel(gltf) {
     player.playerModel.scale.set(0.5, 0.5, -0.5);
     scene.add(player.playerModel);
     
-    mixer = new THREE.AnimationMixer(player.playerModel);
+    let mixer = new THREE.AnimationMixer(player.playerModel);
+    mixers.push(mixer);
 
     player.walkAnim = mixer.clipAction(animations[0]);
     player.idleAnim = mixer.clipAction(animations[1]);
@@ -111,17 +112,32 @@ function initAlienModel(gltf) {
     alien.alienModel.position.set(0, 0, -20);
     scene.add(alien.alienModel);
 
-    mixer = new THREE.AnimationMixer(alien.alienModel);
+    let mixer = new THREE.AnimationMixer(alien.alienModel);
+    mixers.push(mixer);
 
     alien.idleAnim = mixer.clipAction(animations[0]);
-    
+    alien.walkAnim = mixer.clipAction(animations[1]);
+    alien.strafeLAnim = mixer.clipAction(animations[2]);
+    alien.strafeRAnim = mixer.clipAction(animations[3]);
+    alien.walkBackwardsAnim = mixer.clipAction(animations[4]);
+    alien.deathAnim = mixer.clipAction(animations[5]);
+    alien.shootAnim = mixer.clipAction(animations[6]);
 
     alien.idleAnim.play();
-    // alien.shootAnim.play();
-    // console.log(alien.shootAnim);
+    alien.walkAnim.play();
+    alien.strafeLAnim.play();
+    alien.strafeRAnim.play();
+    alien.walkBackwardsAnim.play();
+    alien.deathAnim.play();
+    alien.shootAnim.play();
 
-    // alien.idleAnim.enabled = false;
-    // alien.shootAnim.enabled = true;
+    alien.idleAnim.enabled = false;
+    alien.walkAnim.enabled = false;
+    alien.strafeLAnim.enabled = false;
+    alien.strafeRAnim.enabled = false;
+    alien.walkBackwardsAnim.enabled = false;
+    alien.deathAnim.enabled = false;
+    alien.shootAnim.enabled = true;
 }
 
 function initPineTrees(gltf) {
@@ -252,8 +268,8 @@ function gameLoop() {
         boundingBox();
 
         // Update animations
-        if(mixer !== undefined) {
-            mixer.update(clock.delta);
+        for (let i = 0; i < mixers.length; i++) {
+            mixers[i].update(clock.delta);            
         }
 
         // Update star field colours 
@@ -498,7 +514,7 @@ function loadModel(url, key) {
                 initPlayerModel(gltf);
                 break;
             case "alien":
-                //initAlienModel(gltf);
+                initAlienModel(gltf);
                 break;
             case "pinetree":
                 initPineTrees(gltf);
