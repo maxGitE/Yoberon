@@ -15,7 +15,7 @@ window.onload = menu;
 // Boundary values for the respective box divisions
 let boxOneBottom = 10;
 let boxOneTop = -550;
-let boxOneLeft = -20;
+let boxOneLeft = -40;
 let boxOneRight = -boxOneLeft;
 
 let boxTwoBottom = -420;
@@ -24,12 +24,12 @@ let boxTwoTop = -450;
 let boxThreeBottom = boxTwoBottom;
 let boxThreeTop = -605;
 let boxThreeLeft = 50;
-let boxThreeRight = 80;
+let boxThreeRight = 100;
 
 let boxFourBottom = -585;
 let boxFourTop = boxThreeTop;
 
-let xTempleEntrance = 40;
+let xTempleEntrance = 60;
 let boundaryFactor = 5; // Account for skipped frames and fucked behaviour with game loop
 
 /** SCENE GLOBALS */
@@ -149,13 +149,13 @@ function initPineTree(gltf) {
     let treeGeometry = pinetree.children[0].geometry;
     let treeMaterial = pinetree.children[0].material;
 
-    let cluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 550);
+    let cluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 551);
     let tempCluster = new THREE.Object3D();
 
     let clusterX;
     let clusterZ;
 
-    for(let i = 0; i < 550; i++) {
+    for(let i = 0; i < 551; i++) {
         if(i < 180) { // Left rows
             if(i < 60) { // First row
                 clusterX = Math.random() * 10 - 55; // x positions between -45 and -55
@@ -224,6 +224,10 @@ function initPineTree(gltf) {
                 clusterX = Math.random() * 10 + 30; // x positions between 30 and 40
             }
             clusterZ = Math.random() * 115 - 585; // z positions between -470 and -585
+        }
+        else if(i == 550) {
+            clusterX = 40;
+            clusterZ = -410;
         }
 
         let scalingFactor = Math.random() * 0.3 + 0.7;
