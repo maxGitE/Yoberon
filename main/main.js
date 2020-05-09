@@ -300,18 +300,34 @@ function drawTrees() {
 }
 
 function drawGround() {
-    let groundGeom = new THREE.PlaneBufferGeometry(1000, 2000, 100, 100);
-    let groundTexture = loadTexture("textures/texture_grass_seamless.jpg");
+    let pathGeom = new THREE.PlaneBufferGeometry(100, 250, 100, 100);
+    let pathTexture = loadTexture("textures/texture_grass_seamless.jpg");
+    pathTexture.wrapS = THREE.RepeatWrapping;
+    pathTexture.wrapT = THREE.RepeatWrapping;
+    pathTexture.repeat.set(10, 25);
+    let path = new THREE.Mesh(pathGeom,
+                                    new THREE.MeshLambertMaterial({
+                                        // color: "white",
+                                        side: THREE.DoubleSide,
+                                        map: pathTexture
+                                    }));
+    path.rotation.x = -Math.PI/2;
+    path.position.set(70, 0.01, -525);
+    scene.add(path);
+
+    let groundGeom = new THREE.PlaneBufferGeometry(400, 1000, 100, 100);
+    let groundTexture = loadTexture("textures/texture_path_outline.jpg");
     groundTexture.wrapS = THREE.RepeatWrapping;
     groundTexture.wrapT = THREE.RepeatWrapping;
-    groundTexture.repeat.set(100, 100);
+    groundTexture.repeat.set(40, 100);
     let ground = new THREE.Mesh(groundGeom,
                                     new THREE.MeshLambertMaterial({
-                                        color: "#aa3e13", 
+                                        // color: "lightyellow",
                                         side: THREE.DoubleSide,
                                         map: groundTexture
                                     }));
     ground.rotation.x = -Math.PI/2;
+    ground.position.set(0, 0, -350);
     scene.add(ground);
 }
 
@@ -637,7 +653,7 @@ function loadModel(url, key) {
                 initPlayerModel(gltf);
                 break;
             case "alien":
-               // initAlienModel(gltf);
+                // initAlienModel(gltf);
                 break;
             case "pinetree":
                 initPineTree(gltf);
