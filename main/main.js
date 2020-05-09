@@ -4,9 +4,10 @@ import Stats from 'https://cdn.rawgit.com/mrdoob/stats.js/master/src/Stats.js';
 let stats = new Stats();
 stats.showPanel(0);
 
-let menuBlock = document.getElementById("menu");
-let playButton = document.getElementById("play");
-let loading = document.getElementById("loading");
+const menuBlock = document.getElementById("menu");
+const playButton = document.getElementById("play");
+const loadingInfo = document.getElementById("loadinginfo");
+const loadingSymbol = document.getElementById("loadingsymbol");
 
 window.onload = menu;
 
@@ -40,7 +41,6 @@ let thirdPersonCamera;
 let birdsEyeViewCamera;
 let cameraType;
 let ambientLight;
-let directionalLight;
 let pointLight;
 
 /** PLAYER MISC */
@@ -55,6 +55,7 @@ let alien;
 /** LOADERS */
 let textureLoader;
 let gltfLoader;
+let loadingManager;
 let numModels = 0;
 let numModelsLoaded = 0;
 
@@ -148,14 +149,13 @@ function initPineTree(gltf) {
     let treeGeometry = pinetree.children[0].geometry;
     let treeMaterial = pinetree.children[0].material;
 
-    let cluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 430);
+    let cluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 550);
     let tempCluster = new THREE.Object3D();
 
     let clusterX;
     let clusterZ;
 
-    for(let i = 0; i < 340; i++) {
-
+    for(let i = 0; i < 550; i++) {
         if(i < 180) { // Left rows
             if(i < 60) { // First row
                 clusterX = Math.random() * 10 - 55; // x positions between -45 and -55
@@ -184,10 +184,10 @@ function initPineTree(gltf) {
             clusterX = Math.random() * 130 - 65; // x positions between -65 and 65  
         }
         else if(i >= 220 && i < 340) { // First right rows
-            if(i < 250) { // First row
+            if(i < 260) { // First row
                 clusterX = Math.random() * 10 + 45; // x positions between 45 and 55
             }
-            else if(i >= 250 && i < 290) { // Second row
+            else if(i >= 260 && i < 300) { // Second row
                 clusterX = Math.random() * 10 + 65; // x positions between 65 and 75
             }
             else { // Third row
@@ -206,6 +206,24 @@ function initPineTree(gltf) {
                 clusterX = Math.random() * 10 + 145; // x positions between 145 and 155
             }
             clusterZ = Math.random() * 300 - 650; // z positions between -350 and -650 
+        }
+        else if(i >= 430 && i < 520) {
+            if(i < 460) { // First row
+                clusterZ = Math.random() * 10 - 645; // z positions between -635 and -645
+            }
+            else if(i >= 460 && i < 490) { // Second row
+                clusterZ = Math.random() * 10 - 675; // z positions between -665 and -675
+            }
+            else { // Third row
+                clusterZ = Math.random() * 10 - 705; // z positions between -695 and -705
+            }
+            clusterX = Math.random() * 65 + 40; // x positions between 40 and 105
+        }
+        else if(i >= 520 && i < 550) {
+            if(i < 550) { // First row
+                clusterX = Math.random() * 10 + 30; // x positions between 30 and 40
+            }
+            clusterZ = Math.random() * 115 - 585; // z positions between -470 and -585
         }
 
         let scalingFactor = Math.random() * 0.3 + 0.7;
@@ -685,14 +703,13 @@ function loadTexture(url) {
 }
 
 function loadModel(url, key) {
-    numModels++;
     function callback(gltf) {
         switch(key) {
             case "player":
                 initPlayerModel(gltf);
                 break;
             case "alien":
-                // initAlienModel(gltf);
+                initAlienModel(gltf);
                 break;
             case "pinetree":
                 initPineTree(gltf);
@@ -714,7 +731,7 @@ function loadModel(url, key) {
                 break;
         }
     }
-    gltfLoader.load(url, callback, progress, (error) => console.log(error));
+    gltfLoader.load(url, callback, undefined, (error) => console.log(error));
 }
 
 function onResize() {
@@ -780,10 +797,7 @@ function initControls() {
     controls = new THREE.PointerLockControls(camera, renderer.domElement);
     scene.add(controls.getObject());
 
-    document.addEventListener("click", function() {
-        gameLoop();
-        controls.lock();
-    });
+    document.addEventListener("click", () => controls.lock());
 
     controls.addEventListener("lock", lock);
     controls.addEventListener("unlock", unlock);
@@ -909,9 +923,25 @@ function initSkybox() {
     scene.add(cube);
 }
 
+function initLoadingManager() {
+    loadingManager = new THREE.LoadingManager(onLoad, onProgress);
+
+    function onLoad() {
+        loadingInfo.style.display = "none";
+        loadingSymbol.style.display = "none";
+        document.body.appendChild(stats.dom);
+        initControls();
+        gameLoop();
+    }
+
+    function onProgress(url, itemsLoaded, itemsTotal) {
+        loadingInfo.innerHTML = "Loading file: " + url + " " + itemsLoaded + " of " + itemsTotal;
+    }
+}
+
 function initLoaders() {
-    textureLoader = new THREE.TextureLoader();
-    gltfLoader = new GLTFLoader();
+    textureLoader = new THREE.TextureLoader(loadingManager);
+    gltfLoader = new GLTFLoader(loadingManager);
 }
 
 function initPlayer() {
@@ -921,7 +951,7 @@ function initPlayer() {
 
 function initAlien() {
     alien = new Alien();
-    loadModel("models/characters/enemy/alien.glb", "alien");
+    //loadModel("models/characters/enemy/alien.glb", "alien");
 }
 
 function initWorld() {
@@ -952,7 +982,7 @@ function render() {
 
 function init() {
     menuBlock.style.display = "none";
-    loading.style.display = "block";
+    loadingSymbol.style.display = "block";
 
     initRenderer();
     initScene();
@@ -960,24 +990,11 @@ function init() {
     initLights();
     initTime();
     initSkybox();
+    initLoadingManager();
     initLoaders();
     initPlayer();
     initAlien();
     initWorld();
-}
-
-function progress(xhr) {
-    if((xhr.loaded / xhr.total) == 1) {
-        numModelsLoaded++;
-    }
-
-    if(numModelsLoaded == numModels) {
-        setTimeout(function() {
-            loading.style.display = "none";
-            document.body.appendChild(stats.dom);
-            initControls();
-        }, 200);
-    }
 }
 
 function menu() {

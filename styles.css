@@ -47,35 +47,100 @@ button:active {
     transform: translate(-50%, 4px);
 }
 
-#loading {
+#loadinginfo {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 500px;
+    height: 20px;
+    background-color: #000000;
+    color: #ffffff;
+}
+
+#loadingsymbol {
+    position: fixed;
     display: none;
-    position: absolute;
-    width: 50%;
-    height: 50%;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: #000000;
-    text-align: center;
+    -webkit-transform: translate(-50%, -50%) rotate(45deg) scale(1);
+            transform: translate(-50%, -50%) rotate(45deg) scale(1);
+  }
+  
+.stroke-still {
+    stroke: #232323;
+}
+  
+.stroke-animation {
+    -webkit-animation: stroke-spacing 1.2s ease-in, stroke-color 4.8s linear;
+            animation: stroke-spacing 1.2s ease-in, stroke-color 4.8s linear;
+    -webkit-animation-iteration-count: infinite;
+            animation-iteration-count: infinite;
+    -webkit-animation-delay: 0;
+            animation-delay: 0;
+    -webkit-animation-direction: normal;
+            animation-direction: normal;
+    -webkit-animation-fill-mode: forwards;
+            animation-fill-mode: forwards;
+    -webkit-animation-play-state: running;
+            animation-play-state: running;
+    -webkit-transform-origin: center center;
+            transform-origin: center center;
 }
 
-@keyframes loadingAnimation {
-    0%   {transform: rotateY(0) translate(-50%)}
-    25%  {transform: rotateX(180deg) translate(-50%)}
-    50%  {transform: rotateX(360deg) translate(-50%)}
-    75%  {transform: rotateX(180deg) translate(-50%)}
-    100% {transform: rotateX(360deg) translate(-50%)}
+@-webkit-keyframes stroke-spacing {
+    0% {
+        stroke-dasharray: 0 200;
+    }
+    45% {
+        stroke-dashoffset: 0;
+        stroke-dasharray: 200 200;
+    }
+    90% {
+        stroke-dashoffset: -200;
+        stroke-dasharray: 200 200;
+    }
+    100% {
+        stroke-dashoffset: -200;
+        stroke-dasharray: 200 200;
+    }
 }
 
-#triangle {
-    width: 0;
-    height: 0;
-    position: absolute;
-    left: 50%;
-    border-left: 50px solid transparent;
-    border-right: 50px solid transparent;
-    border-bottom: 100px solid white;
-    animation: loadingAnimation;
-    animation-duration: 4s;
-    animation-iteration-count: infinite;
+@keyframes stroke-spacing {
+    0% {
+        stroke-dasharray: 0 200;
+    }
+    45% {
+        stroke-dashoffset: 0;
+        stroke-dasharray: 200 200;
+    }
+    90% {
+        stroke-dashoffset: -200;
+        stroke-dasharray: 200 200;
+    }
+    100% {
+        stroke-dashoffset: -200;
+        stroke-dasharray: 200 200;
+    }
+}
+
+@-webkit-keyframes stroke-color {
+    0%  { stroke: #3498DB; }
+    24% { stroke: #643232; }
+    25% { stroke: #327864; }
+    49% { stroke: #327864; }
+    50% { stroke: #32326e; }
+    74% { stroke: #32326e; }
+    75% { stroke: #78325a; }
+    99% { stroke: #78325a; }
+}
+
+@keyframes stroke-color {
+    0%  { stroke: #3498DB; }
+    24% { stroke: #643232; }
+    25% { stroke: #327864; }
+    49% { stroke: #327864; }
+    50% { stroke: #32326e; }
+    74% { stroke: #32326e; }
+    75% { stroke: #78325a; }
+    99% { stroke: #78325a; }
 }
