@@ -150,16 +150,16 @@ function initPineTree(gltf) {
     let treeGeometry = pinetree.children[0].geometry;
     let treeMaterial = pinetree.children[0].material;
 
-    let cluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 330);
+    let cluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 340);
     let clusterTemp = new THREE.Object3D();
 
     let clusterX;
     let clusterZ;
 
-    for (let i = 0; i < 330; i++) {
+    for (let i = 0; i < 340; i++) {
         let scalingFactor = Math.random() * 0.3 + 0.7;
-        if(i < 180) {
-            if(i < 60) { // First row
+        if(i < 180) { // Left rows
+            if(i >= 0 && i < 60) { // First row
                 clusterX = Math.random() * 10 - 55; // x positions between -45 and -55
             }
             else if(i >= 60 && i < 120) { // Second row
@@ -170,15 +170,30 @@ function initPineTree(gltf) {
             }
             clusterZ = Math.random() * 600 - 550; // z positions between 50 and -550  
         }
-        else if(i >= 210 && i < 330) {
+        else if(i >= 180 && i < 220) { // Back rows
+            if(i < 190) { // First row
+                clusterZ = Math.random() * 10 + 40; // z positions between 40 and 50
+            }
+            else if(i >= 190 && i < 200) { // Second row
+                clusterZ = Math.random() * 10 + 60; // z positions between 60 and 70
+            }
+            else if(i >= 200 && i < 210){ // Third row
+                clusterZ = Math.random() * 10 + 80; // z positions between 80 and 90
+            }
+            else { // Fourth row
+                clusterZ = Math.random() * 10 + 90; // z positions between 90 and 100
+            }
+            clusterX = Math.random() * 130 - 65; // x positions between -65 and 65  
+        }
+        else if(i >= 220 && i < 340) { // First right rows
             if(i < 250) { // First row
-                clusterX = Math.random() * 10 + 55; // x positions between 45 and 55
+                clusterX = Math.random() * 10 + 45; // x positions between 45 and 55
             }
             else if(i >= 250 && i < 290) { // Second row
-                clusterX = Math.random() * 10 + 75; // x positions between 65 and 75
+                clusterX = Math.random() * 10 + 65; // x positions between 65 and 75
             }
             else { // Third row
-                clusterX = Math.random() * 10 + 95; // x positions between 85 and 95
+                clusterX = Math.random() * 10 + 85; // x positions between 85 and 95
             }
             clusterZ = Math.random() * 450 - 400; // z positions between 50 and -400 
         }
@@ -225,18 +240,34 @@ function drawTrees() {
 }
 
 function drawGround() {
-    let groundGeom = new THREE.PlaneBufferGeometry(1000, 2000, 100, 100);
-    let groundTexture = loadTexture("textures/texture_grass_seamless.jpg");
+    let pathGeom = new THREE.PlaneBufferGeometry(100, 250, 100, 100);
+    let pathTexture = loadTexture("textures/texture_grass_seamless.jpg");
+    pathTexture.wrapS = THREE.RepeatWrapping;
+    pathTexture.wrapT = THREE.RepeatWrapping;
+    pathTexture.repeat.set(10, 25);
+    let path = new THREE.Mesh(pathGeom,
+                                    new THREE.MeshLambertMaterial({
+                                        // color: "white",
+                                        side: THREE.DoubleSide,
+                                        map: pathTexture
+                                    }));
+    path.rotation.x = -Math.PI/2;
+    path.position.set(70, 0.01, -525);
+    scene.add(path);
+
+    let groundGeom = new THREE.PlaneBufferGeometry(400, 1000, 100, 100);
+    let groundTexture = loadTexture("textures/texture_path_outline.jpg");
     groundTexture.wrapS = THREE.RepeatWrapping;
     groundTexture.wrapT = THREE.RepeatWrapping;
-    groundTexture.repeat.set(100, 100);
+    groundTexture.repeat.set(40, 100);
     let ground = new THREE.Mesh(groundGeom,
                                     new THREE.MeshLambertMaterial({
-                                        color: "#aa3e13", 
+                                        // color: "lightyellow",
                                         side: THREE.DoubleSide,
                                         map: groundTexture
                                     }));
     ground.rotation.x = -Math.PI/2;
+    ground.position.set(0, 0, -350);
     scene.add(ground);
 }
 
@@ -254,14 +285,11 @@ function gameLoop() {
 
         requestAnimationFrame(gameLoop);
 
-    }, 1000 / 120);
+    }, 1000 / 180);
 
     //requestAnimationFrame(gameLoop);
 
     if(controls.isLocked) {
-
-        console.clear();
-        console.log(controls.getObject().position.x);
 
         clock.timeNow = performance.now();
         clock.delta = (clock.timeNow - clock.timeBefore) / 1000;
@@ -561,7 +589,7 @@ function loadModel(url, key) {
                 initPlayerModel(gltf);
                 break;
             case "alien":
-                initAlienModel(gltf);
+                // initAlienModel(gltf);
                 break;
             case "pinetree":
                 initPineTree(gltf);
