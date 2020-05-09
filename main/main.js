@@ -154,8 +154,8 @@ function initPineTree(gltf) {
     let clusterX;
     let clusterZ;
 
-    for (let i = 0; i < 430; i++) {
-        
+    for(let i = 0; i < 340; i++) {
+
         if(i < 180) { // Left rows
             if(i < 60) { // First row
                 clusterX = Math.random() * 10 - 55; // x positions between -45 and -55
@@ -299,15 +299,54 @@ function drawTrees() {
     loadModel("models/environment/trees/broadleaf.glb", "broadleaf");
 }
 
+function initBushTypeOne(gltf) {
+    let bush = gltf.scene;
+    let leafGeometry = bush.children[0].children[0].geometry;
+    let leafMaterial = bush.children[0].children[0].material;
+
+    let barkGeometry = bush.children[0].children[1].geometry;
+    let barkMaterial = bush.children[0].children[1].material;
+
+    let leafCluster = new THREE.InstancedMesh(leafGeometry, leafMaterial, 40);
+    let barkCluster = new THREE.InstancedMesh(barkGeometry, barkMaterial, 40);
+    let tempCluster = new THREE.Object3D();
+
+    let clusterX;
+    let clusterZ;
+
+    for(let i = 0; i < 40; i++) {
+        let scalingFactor = Math.random() * 0.03 + 0.07; // set scale to between 0.07 and 0.1
+        if(i < 40) { // Left row
+            clusterX = Math.random() * 10 - 35; // x positions between -25 and -35
+            clusterZ = Math.random() * 570 - 550; // z positions between 30 and -550
+        }
+
+        tempCluster.position.set(clusterX, -4, clusterZ);
+        tempCluster.scale.set(scalingFactor, scalingFactor, scalingFactor);
+        tempCluster.rotation.set(Math.PI/2, 0, 0);
+
+        tempCluster.updateMatrix();
+
+        leafCluster.setMatrixAt(i, tempCluster.matrix);             
+        barkCluster.setMatrixAt(i, tempCluster.matrix);
+    }
+    scene.add(leafCluster);
+    scene.add(barkCluster);
+}
+
+function drawBushes() {
+    loadModel("models/environment/bushes/Bush_Mediteranean.glb", "bushOne");
+}
+
 function drawGround() {
     let pathGeom = new THREE.PlaneBufferGeometry(100, 250, 100, 100);
-    let pathTexture = loadTexture("textures/texture_grass_seamless.jpg");
+    let pathTexture = loadTexture("textures/texture_grass_dead.jpg");
     pathTexture.wrapS = THREE.RepeatWrapping;
     pathTexture.wrapT = THREE.RepeatWrapping;
     pathTexture.repeat.set(10, 25);
     let path = new THREE.Mesh(pathGeom,
                                     new THREE.MeshLambertMaterial({
-                                        // color: "white",
+                                        color: "#454545",
                                         side: THREE.DoubleSide,
                                         map: pathTexture
                                     }));
@@ -322,7 +361,7 @@ function drawGround() {
     groundTexture.repeat.set(40, 100);
     let ground = new THREE.Mesh(groundGeom,
                                     new THREE.MeshLambertMaterial({
-                                        // color: "lightyellow",
+                                        color: "#5e503e",
                                         side: THREE.DoubleSide,
                                         map: groundTexture
                                     }));
@@ -670,6 +709,9 @@ function loadModel(url, key) {
             case "rock_three":
                 initRockThree(gltf);
                 break;
+            case "bushOne":
+                initBushTypeOne(gltf);
+                break;
         }
     }
     gltfLoader.load(url, callback, progress, (error) => console.log(error));
@@ -888,6 +930,7 @@ function initWorld() {
     scene.add(box);
 
     drawTrees();
+    drawBushes();
     drawGround();
     drawRocks();
     drawStars();
