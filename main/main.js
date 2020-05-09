@@ -154,8 +154,7 @@ function initPineTree(gltf) {
     let clusterX;
     let clusterZ;
 
-    for(let i = 0; i < 340; i++) {
-
+    for(let i = 0; i < 430; i++) {
         if(i < 180) { // Left rows
             if(i < 60) { // First row
                 clusterX = Math.random() * 10 - 55; // x positions between -45 and -55
@@ -209,8 +208,11 @@ function initPineTree(gltf) {
         }
 
         let scalingFactor = Math.random() * 0.3 + 0.7;
+        let rotationFactor = Math.random() * Math.PI/2; // set rotation to between 0 and PI/2
+
         tempCluster.scale.set(scalingFactor, scalingFactor, scalingFactor);
         tempCluster.position.set(clusterX, -8, clusterZ);
+        tempCluster.rotation.set(0, rotationFactor, 0);
     
         tempCluster.updateMatrix();
     
@@ -299,7 +301,7 @@ function drawTrees() {
     loadModel("models/environment/trees/broadleaf.glb", "broadleaf");
 }
 
-function initBushTypeOne(gltf) {
+function initBushOne(gltf) {
     let bush = gltf.scene;
     let leafGeometry = bush.children[0].children[0].geometry;
     let leafMaterial = bush.children[0].children[0].material;
@@ -307,23 +309,32 @@ function initBushTypeOne(gltf) {
     let barkGeometry = bush.children[0].children[1].geometry;
     let barkMaterial = bush.children[0].children[1].material;
 
-    let leafCluster = new THREE.InstancedMesh(leafGeometry, leafMaterial, 40);
-    let barkCluster = new THREE.InstancedMesh(barkGeometry, barkMaterial, 40);
+    let leafCluster = new THREE.InstancedMesh(leafGeometry, leafMaterial, 45);
+    let barkCluster = new THREE.InstancedMesh(barkGeometry, barkMaterial, 45);
     let tempCluster = new THREE.Object3D();
 
     let clusterX;
     let clusterZ;
 
-    for(let i = 0; i < 40; i++) {
-        let scalingFactor = Math.random() * 0.03 + 0.07; // set scale to between 0.07 and 0.1
-        if(i < 40) { // Left row
+    for(let i = 0; i < 45; i++) {
+        if(i < 20) { // Left row
             clusterX = Math.random() * 10 - 35; // x positions between -25 and -35
             clusterZ = Math.random() * 570 - 550; // z positions between 30 and -550
         }
+        else if(i >= 20 && i < 40) { // Right row
+            clusterX = Math.random() * 10 + 25; // x positions between 25 and 35
+            clusterZ = Math.random() * 570 - 550; // z positions between 30 and -550
+        }
+        else if(i >= 40 && i < 45) { // Back row
+            clusterX = Math.random() * 70 - 35; // x positions between -35 and 35
+            clusterZ = Math.random() * 15 + 15; // z positions between 15 and 30
+        }
+        let scalingFactor = Math.random() * 0.02 + 0.08; // set scale to between 0.08 and 0.1
+        let rotationFactor = Math.random() * Math.PI/2; // set rotation to between 0 and PI/2
 
         tempCluster.position.set(clusterX, -4, clusterZ);
         tempCluster.scale.set(scalingFactor, scalingFactor, scalingFactor);
-        tempCluster.rotation.set(Math.PI/2, 0, 0);
+        tempCluster.rotation.set(Math.PI/2, rotationFactor, 0);
 
         tempCluster.updateMatrix();
 
@@ -334,8 +345,104 @@ function initBushTypeOne(gltf) {
     scene.add(barkCluster);
 }
 
+function initBushTwo(gltf) {
+    let bush = gltf.scene;
+    let leafGeometry = bush.children[0].children[0].geometry;
+    let leafMaterial = bush.children[0].children[0].material;
+
+    let barkGeometry = bush.children[0].children[1].geometry;
+    let barkMaterial = bush.children[0].children[1].material;
+
+    let leafCluster = new THREE.InstancedMesh(leafGeometry, leafMaterial, 105);
+    let barkCluster = new THREE.InstancedMesh(barkGeometry, barkMaterial, 105);
+    let tempCluster = new THREE.Object3D();
+
+    let clusterX;
+    let clusterZ;
+
+    for(let i = 0; i < 105; i++) {
+        if(i < 50) { // Left row
+            clusterX = Math.random() * 10 - 35; // x positions between -25 and -35
+            clusterZ = Math.random() * 570 - 550; // z positions between 30 and -550
+        }
+        else if(i >= 50 && i < 100) { // Right row
+            clusterX = Math.random() * 10 + 25; // x positions between 25 and 35
+            clusterZ = Math.random() * 570 - 550; // z positions between 30 and -550
+        }
+        else if(i >= 100 && i < 105) { // Back row
+            clusterX = Math.random() * 70 - 35; // x positions between -35 and 35
+            clusterZ = Math.random() * 15 + 15; // z positions between 15 and 30
+        }
+        let scalingFactor = Math.random() * 1 + 1; // set scale to between 1 and 2
+        let rotationFactor = Math.random() * Math.PI/2; // set rotation to between 0 and PI/2
+
+        tempCluster.position.set(clusterX, 0, clusterZ);
+        tempCluster.scale.set(scalingFactor, scalingFactor, scalingFactor);
+        tempCluster.rotation.set(0, rotationFactor, 0);
+
+        tempCluster.updateMatrix();
+
+        leafCluster.setMatrixAt(i, tempCluster.matrix);             
+        barkCluster.setMatrixAt(i, tempCluster.matrix);
+    }
+    scene.add(leafCluster);
+    scene.add(barkCluster);
+}
+
+function initBushThree(gltf) {
+    let bush = gltf.scene;
+    let barkGeometry = bush.children[0].children[0].geometry;
+    let barkMaterial = bush.children[0].children[0].material;
+
+    let capGeometry = bush.children[0].children[1].geometry;
+    let capMaterial = bush.children[0].children[1].material;
+
+    let leafGeometry = bush.children[0].children[2].geometry;
+    let leafMaterial = bush.children[0].children[2].material;
+
+    let barkCluster = new THREE.InstancedMesh(barkGeometry, barkMaterial, 105);
+    let capCluster = new THREE.InstancedMesh(capGeometry, capMaterial, 105);
+    let leafCluster = new THREE.InstancedMesh(leafGeometry, leafMaterial, 105);    
+    let tempCluster = new THREE.Object3D();
+
+    let clusterX;
+    let clusterZ;
+
+    for(let i = 0; i < 105; i++) {
+        if(i < 50) { // Left row
+            clusterX = Math.random() * 10 - 35; // x positions between -25 and -35
+            clusterZ = Math.random() * 570 - 550; // z positions between 30 and -550
+        }
+        else if(i >= 50 && i < 100) { // Right row
+            clusterX = Math.random() * 10 + 25; // x positions between 25 and 35
+            clusterZ = Math.random() * 570 - 550; // z positions between 30 and -550
+        }
+        else if(i >= 100 && i < 105) { // Back row
+            clusterX = Math.random() * 70 - 35; // x positions between -35 and 35
+            clusterZ = Math.random() * 15 + 15; // z positions between 15 and 30
+        }
+        let scalingFactor = Math.random() * 1 + 2; // set scale to between 2 and 3
+        let rotationFactor = Math.random() * Math.PI/2; // set rotation to between 0 and PI/2
+
+        tempCluster.position.set(clusterX, 0, clusterZ);
+        tempCluster.scale.set(scalingFactor, scalingFactor, scalingFactor);
+        tempCluster.rotation.set(0, rotationFactor, 0);
+
+        tempCluster.updateMatrix();
+
+        barkCluster.setMatrixAt(i, tempCluster.matrix);
+        capCluster.setMatrixAt(i, tempCluster.matrix);
+        leafCluster.setMatrixAt(i, tempCluster.matrix);             
+    }
+    scene.add(barkCluster);
+    scene.add(capCluster);
+    scene.add(leafCluster);
+}
+
 function drawBushes() {
-    loadModel("models/environment/bushes/Bush_Mediteranean.glb", "bushOne");
+    loadModel("models/environment/bushes/bush_one.glb", "bush_one");
+    loadModel("models/environment/bushes/bush_two.glb", "bush_two");
+    loadModel("models/environment/bushes/bush_three.glb", "bush_three");
 }
 
 function drawGround() {
@@ -351,7 +458,7 @@ function drawGround() {
                                         map: pathTexture
                                     }));
     path.rotation.x = -Math.PI/2;
-    path.position.set(70, 0.01, -525);
+    path.position.set(70, 0.01, -545);
     scene.add(path);
 
     let groundGeom = new THREE.PlaneBufferGeometry(400, 1000, 100, 100);
@@ -498,7 +605,7 @@ function levelZeroBoundingBox() {
     // let boxFourBottom = -585;
     // let boxFourTop = boxThreeTop;
 
-    // let xtempClusterleEntrance = 40;
+    // let xTempleEntrance = 40;
     // let boundaryFactor = 5; // Account for skipped frames and fucked behaviour with game loop
 
     if(xPos >= boxOneLeft && xPos <= boxOneRight) {
@@ -510,7 +617,7 @@ function levelZeroBoundingBox() {
     else if(xPos > boxThreeLeft && xPos <= boxThreeRight) {
         setBox(3);
     }
-    else if(xPos >= xtempClusterleEntrance && xPos <= boxThreeLeft && zPos <= boxFourBottom && zPos >= boxFourTop) {
+    else if(xPos >= xTempleEntrance && xPos <= boxThreeLeft && zPos <= boxFourBottom && zPos >= boxFourTop) {
         setBox(4);
     }
 
@@ -561,7 +668,7 @@ function levelZeroBoundingBox() {
         if(zPos < boxFourTop + boundaryFactor) { // Place top boundary
             controls.getObject().position.z = boxFourTop + boundaryFactor;
         }
-        if(xPos < xtempClusterleEntrance) { // Enter first tempClusterle
+        if(xPos < xTempleEntrance) { // Enter first temple
             currentLevel = 1;
             // loadFirstLevel();
         }
@@ -596,17 +703,17 @@ function levelZeroBoundingBox() {
         }
     }
 
-    //boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xtempClusterleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
+    //boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
 }
 
-function boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xtempClusterleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop) {
+function boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop) {
     let linematerial = new THREE.LineBasicMaterial({
         color: 0xffff00
     });
 
     let points = [];
 
-    points.push(new THREE.Vector3(xtempClusterleEntrance, .1, boxFourTop));
+    points.push(new THREE.Vector3(xTempleEntrance, .1, boxFourTop));
     points.push(new THREE.Vector3(boxThreeRight, .1, boxFourTop));
     points.push(new THREE.Vector3(boxThreeRight, .1, boxTwoBottom));
 
@@ -618,7 +725,7 @@ function boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxT
     points.push(new THREE.Vector3(boxOneRight, .1, boxTwoTop));
     points.push(new THREE.Vector3(boxThreeLeft, .1, boxTwoTop));
     points.push(new THREE.Vector3(boxThreeLeft, .1, boxFourBottom));
-    points.push(new THREE.Vector3(xtempClusterleEntrance, .1, boxFourBottom));
+    points.push(new THREE.Vector3(xTempleEntrance, .1, boxFourBottom));
 
     let geometry = new THREE.BufferGeometry().setFromPoints(points);
 
@@ -632,7 +739,7 @@ function boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxT
  */
 function handleJumpAnimation() { 
     player.jumpAnim.enabled = true;
-    let tempClusterAnimation = player.currentAnimation;
+    let tempAnimation = player.currentAnimation;
     player.currentAnimation.enabled = false;
     player.currentAnimation = player.jumpAnim;
 
@@ -643,11 +750,11 @@ function handleJumpAnimation() {
             idleCalled = false;
         }
         else {
-            if(tempClusterAnimation == player.runAnim && player.movingForward && !player.running) {
+            if(tempAnimation == player.runAnim && player.movingForward && !player.running) {
                 updatePlayerAnimation(player.walkAnim);
             }
             else {
-                updatePlayerAnimation(tempClusterAnimation);
+                updatePlayerAnimation(tempAnimation);
             }
         }
     }, 600);
@@ -709,8 +816,14 @@ function loadModel(url, key) {
             case "rock_three":
                 initRockThree(gltf);
                 break;
-            case "bushOne":
-                initBushTypeOne(gltf);
+            case "bush_one":
+                initBushOne(gltf);
+                break;
+            case "bush_two":
+                initBushTwo(gltf);
+                break;
+            case "bush_three":
+                initBushThree(gltf);
                 break;
         }
     }
