@@ -72,8 +72,6 @@ let starFieldOne;
 let starFieldTwo;
 let box;
 
-let savedPosition;
-
 function modelTests(gltf) {
     
 }
@@ -150,16 +148,16 @@ function initPineTree(gltf) {
     let treeGeometry = pinetree.children[0].geometry;
     let treeMaterial = pinetree.children[0].material;
 
-    let cluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 340);
-    let clusterTemp = new THREE.Object3D();
+    let cluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 430);
+    let tempCluster = new THREE.Object3D();
 
     let clusterX;
     let clusterZ;
 
-    for (let i = 0; i < 340; i++) {
-        let scalingFactor = Math.random() * 0.3 + 0.7;
+    for (let i = 0; i < 430; i++) {
+        
         if(i < 180) { // Left rows
-            if(i >= 0 && i < 60) { // First row
+            if(i < 60) { // First row
                 clusterX = Math.random() * 10 - 55; // x positions between -45 and -55
             }
             else if(i >= 60 && i < 120) { // Second row
@@ -195,20 +193,70 @@ function initPineTree(gltf) {
             else { // Third row
                 clusterX = Math.random() * 10 + 85; // x positions between 85 and 95
             }
-            clusterZ = Math.random() * 450 - 400; // z positions between 50 and -400 
+            clusterZ = Math.random() * 460 - 410; // z positions between 50 and -410
+        }
+        else if(i >= 340 && i < 430) {
+            if(i < 370) { // First row
+                clusterX = Math.random() * 10 + 105; // x positions between 105 and 115
+            }
+            else if(i >= 370 && i < 400) { // Second row
+                clusterX = Math.random() * 10 + 125; // x positions between 125 and 135
+            }
+            else { // Third row
+                clusterX = Math.random() * 10 + 145; // x positions between 145 and 155
+            }
+            clusterZ = Math.random() * 300 - 650; // z positions between -350 and -650 
         }
 
-        clusterTemp.scale.set(scalingFactor, scalingFactor, scalingFactor);
-        clusterTemp.position.set(clusterX, -8, clusterZ);
+        let scalingFactor = Math.random() * 0.3 + 0.7;
+        tempCluster.scale.set(scalingFactor, scalingFactor, scalingFactor);
+        tempCluster.position.set(clusterX, -8, clusterZ);
     
-        clusterTemp.updateMatrix();
+        tempCluster.updateMatrix();
     
-        cluster.setMatrixAt(i, clusterTemp.matrix);
+        cluster.setMatrixAt(i, tempCluster.matrix);
     }
     scene.add(cluster);
 }
 
 function initBroadLeaf(gltf) {
+    /* let broadleaf = gltf.scene;
+
+    let shellBarkGeometry = broadleaf.children[0].children[0].geometry;
+    let shellBarkMaterial = broadleaf.children[0].children[0].material;
+
+    let branchGeometry = broadleaf.children[0].children[1].geometry;
+    let branchMaterial = broadleaf.children[0].children[1].material;
+
+    let leafGeometry = broadleaf.children[0].children[2].geometry;
+    let leafMaterial = broadleaf.children[0].children[2].material;
+
+    let barkGeometry = broadleaf.children[0].children[3].geometry;
+    let barkMaterial = broadleaf.children[0].children[3].material;
+
+    let shellCluster = new THREE.InstancedMesh(shellBarkGeometry, shellBarkMaterial, 4);
+    let branchCluster = new THREE.InstancedMesh(branchGeometry, branchMaterial, 4);
+    let leafCluster = new THREE.InstancedMesh(leafGeometry, leafMaterial, 4);
+    let barkCluster = new THREE.InstancedMesh(barkGeometry, barkMaterial, 4);
+
+    let tempCluster = new THREE.Object3D();
+
+    for(let i = 0; i < 4; i++) {
+        tempCluster.scale.set(50, 50, 50);
+        tempCluster.position.set(0, 0, -10);
+
+        tempCluster.updateMatrix();
+        
+        shellCluster.setMatrixAt(i, tempCluster.matrix);
+        branchCluster.setMatrixAt(i, tempCluster.matrix);
+        leafCluster.setMatrixAt(i, tempCluster.matrix);
+        barkCluster.setMatrixAt(i, tempCluster.matrix);
+    }
+    scene.add(shellCluster);
+    scene.add(branchCluster);
+    scene.add(leafCluster);
+    scene.add(barkCluster); */
+
     let broadLeafGroup = new THREE.Object3D();
 
     let broadleaf_one = gltf.scene;
@@ -234,6 +282,18 @@ function initBroadLeaf(gltf) {
     scene.add(broadLeafGroup);
 }
 
+function initRockOne(gltf) {
+   
+}
+
+function initRockTwo(gltf) {
+   
+}
+
+function initRockThree(gltf) {
+
+}
+
 function drawTrees() {
     loadModel("models/environment/trees/pinetree.glb", "pinetree");
     loadModel("models/environment/trees/broadleaf.glb", "broadleaf");
@@ -255,6 +315,10 @@ function drawGround() {
     scene.add(ground);
 }
 
+function drawRocks() {
+    loadModel("models/environment/rocks/type_one/rock_one.glb", "rock_one");
+}
+
 function drawStars() {
     starFieldOne = new Starfield("black");
     starFieldTwo = new Starfield("white");
@@ -265,18 +329,15 @@ function drawStars() {
 
 function gameLoop() {
 
-    setTimeout( function() {
+    // setTimeout( function() {
 
-        requestAnimationFrame(gameLoop);
+    //     requestAnimationFrame(gameLoop);
 
-    }, 1000 / 180);
+    // }, 1000 / 180);
 
-    //requestAnimationFrame(gameLoop);
+    requestAnimationFrame(gameLoop);
 
     if(controls.isLocked) {
-
-        console.clear();
-        console.log(controls.getObject().position.x);
 
         clock.timeNow = performance.now();
         clock.delta = (clock.timeNow - clock.timeBefore) / 1000;
@@ -382,7 +443,7 @@ function levelZeroBoundingBox() {
     // let boxFourBottom = -585;
     // let boxFourTop = boxThreeTop;
 
-    // let xclusterTempleEntrance = 40;
+    // let xtempClusterleEntrance = 40;
     // let boundaryFactor = 5; // Account for skipped frames and fucked behaviour with game loop
 
     if(xPos >= boxOneLeft && xPos <= boxOneRight) {
@@ -394,7 +455,7 @@ function levelZeroBoundingBox() {
     else if(xPos > boxThreeLeft && xPos <= boxThreeRight) {
         setBox(3);
     }
-    else if(xPos >= xclusterTempleEntrance && xPos <= boxThreeLeft && zPos <= boxFourBottom && zPos >= boxFourTop) {
+    else if(xPos >= xtempClusterleEntrance && xPos <= boxThreeLeft && zPos <= boxFourBottom && zPos >= boxFourTop) {
         setBox(4);
     }
 
@@ -445,7 +506,7 @@ function levelZeroBoundingBox() {
         if(zPos < boxFourTop + boundaryFactor) { // Place top boundary
             controls.getObject().position.z = boxFourTop + boundaryFactor;
         }
-        if(xPos < xclusterTempleEntrance) { // Enter first clusterTemple
+        if(xPos < xtempClusterleEntrance) { // Enter first tempClusterle
             currentLevel = 1;
             // loadFirstLevel();
         }
@@ -480,17 +541,17 @@ function levelZeroBoundingBox() {
         }
     }
 
-    //boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xclusterTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
+    //boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xtempClusterleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
 }
 
-function boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xclusterTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop) {
+function boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xtempClusterleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop) {
     let linematerial = new THREE.LineBasicMaterial({
         color: 0xffff00
     });
 
     let points = [];
 
-    points.push(new THREE.Vector3(xclusterTempleEntrance, .1, boxFourTop));
+    points.push(new THREE.Vector3(xtempClusterleEntrance, .1, boxFourTop));
     points.push(new THREE.Vector3(boxThreeRight, .1, boxFourTop));
     points.push(new THREE.Vector3(boxThreeRight, .1, boxTwoBottom));
 
@@ -502,7 +563,7 @@ function boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxT
     points.push(new THREE.Vector3(boxOneRight, .1, boxTwoTop));
     points.push(new THREE.Vector3(boxThreeLeft, .1, boxTwoTop));
     points.push(new THREE.Vector3(boxThreeLeft, .1, boxFourBottom));
-    points.push(new THREE.Vector3(xclusterTempleEntrance, .1, boxFourBottom));
+    points.push(new THREE.Vector3(xtempClusterleEntrance, .1, boxFourBottom));
 
     let geometry = new THREE.BufferGeometry().setFromPoints(points);
 
@@ -516,7 +577,7 @@ function boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxT
  */
 function handleJumpAnimation() { 
     player.jumpAnim.enabled = true;
-    let clusterTempAnimation = player.currentAnimation;
+    let tempClusterAnimation = player.currentAnimation;
     player.currentAnimation.enabled = false;
     player.currentAnimation = player.jumpAnim;
 
@@ -527,11 +588,11 @@ function handleJumpAnimation() {
             idleCalled = false;
         }
         else {
-            if(clusterTempAnimation == player.runAnim && player.movingForward && !player.running) {
+            if(tempClusterAnimation == player.runAnim && player.movingForward && !player.running) {
                 updatePlayerAnimation(player.walkAnim);
             }
             else {
-                updatePlayerAnimation(clusterTempAnimation);
+                updatePlayerAnimation(tempClusterAnimation);
             }
         }
     }, 600);
@@ -576,13 +637,23 @@ function loadModel(url, key) {
                 initPlayerModel(gltf);
                 break;
             case "alien":
-                initAlienModel(gltf);
+               // initAlienModel(gltf);
                 break;
             case "pinetree":
                 initPineTree(gltf);
                 break;
             case "broadleaf":
                 initBroadLeaf(gltf);
+                break;
+            case "rock_one":
+                initRockOne(gltf);
+                break;
+            case "rock_two":
+                initRockTwo(gltf);
+                break;
+            case "rock_three":
+                initRockThree(gltf);
+                break;
         }
     }
     gltfLoader.load(url, callback, progress, (error) => console.log(error));
@@ -802,6 +873,7 @@ function initWorld() {
 
     drawTrees();
     drawGround();
+    drawRocks();
     drawStars();
 
     boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
