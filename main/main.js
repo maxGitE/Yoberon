@@ -9,6 +9,24 @@ const playButton = document.getElementById("play");
 const loadingInfo = document.getElementById("loadinginfo");
 const loadingSymbol = document.getElementById("loadingsymbol");
 
+// window.addEventListener("load", () => {
+//     let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+//     let xhr = new XMLHttpRequest();
+//     xhr.open("GET", "audio/menu/Lyssna.mp3");
+//     xhr.responseType = "arraybuffer";
+//     xhr.addEventListener("load", () => {
+//         let playsound = (audioBuffer) => {
+//             menuAudioSource = audioContext.createBufferSource();
+//             menuAudioSource.buffer = audioBuffer;
+//             menuAudioSource.connect(audioContext.destination);
+//             menuAudioSource.loop = true;
+//             //menuAudioSource.start();
+//         };
+//         audioContext.decodeAudioData(xhr.response).then(playsound);
+//     });
+//     xhr.send();
+// });
+
 window.onload = menu;
 
 /** TEST VARIABLES */
@@ -36,12 +54,19 @@ let boundaryFactor = 5; // Account for skipped frames and fucked behaviour with 
 let canvas;
 let renderer;
 let scene;
+
+/** CAMERAS */
 let camera;
 let thirdPersonCamera;
 let birdsEyeViewCamera;
 let cameraType;
+
+/** LIGHTS */
 let ambientLight;
 let pointLight;
+
+/** AUDIO */
+let menuAudioSource;
 
 /** PLAYER MISC */
 let controls;
@@ -56,8 +81,6 @@ let alien;
 let textureLoader;
 let gltfLoader;
 let loadingManager;
-let numModels = 0;
-let numModelsLoaded = 0;
 
 /** ANIMATION */
 let mixers = [];
@@ -933,6 +956,11 @@ function initCameras() {
     scene.add(birdsEyeViewCamera);
 }
 
+function initAudioListener() {
+    listener = new THREE.AudioListener();
+    camera.add(listener);
+}
+
 function initLights() {
     ambientLight = new THREE.AmbientLight("white", 0.15);
     scene.add(ambientLight);
@@ -1131,12 +1159,14 @@ function render() {
 }
 
 function init() {
+    //menuAudioSource.stop();
     menuBlock.style.display = "none";
     loadingSymbol.style.display = "block";
-
+    
     initRenderer();
     initScene();
     initCameras();
+    //initAudioListener();
     initLights();
     initTime();
     initSkybox();
@@ -1147,6 +1177,25 @@ function init() {
     initWorld();
 }
 
+function initMenuAudio() {
+    let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", "audio/menu/Lyssna.mp3");
+    xhr.responseType = "arraybuffer";
+    xhr.addEventListener("load", () => {
+        let playsound = (audioBuffer) => {
+            menuAudioSource = audioContext.createBufferSource();
+            menuAudioSource.buffer = audioBuffer;
+            menuAudioSource.connect(audioContext.destination);
+            menuAudioSource.loop = true;
+            //menuAudioSource.start();
+        };
+        audioContext.decodeAudioData(xhr.response).then(playsound);
+    });
+    xhr.send();
+}
+
 function menu() {
+    initMenuAudio();
     playButton.addEventListener("click", () => init());
 }

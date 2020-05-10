@@ -9,43 +9,59 @@ html, body {
 }
 
 #menu {
-    position: absolute;
-    width: 50%;
-    height: 50%;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    border-radius: 10px;
-    background-color: #8c817e;
+    position: fixed;
+    bottom: 50%;
+    left: 10%;
+    width: 25%;
+    height: 25%;
+    background-color: blanchedalmond;
+    padding: 1% 0;
+    visibility: hidden;
 }
 
 .menuButton {
-    position: relative;
-    left: 50%;
-    transform: translateX(-50%);
     display: block;
-    width: 250px;
-    height: 80px;
-    margin-top: 3%;
-    background-color: #000000;
-    color: #ffffff;
-    font-size: x-large;
-    font-weight: bolder;
-    cursor: pointer;
-    outline: none;
+    width: 75%;
+    height: 25%;
+    margin: 5px auto;
+    visibility: visible;
     border: none;
-    box-shadow: 0 6px #635959;
+    outline: none;
+    font-size: 25px;
+    font-family: monospace;
+    font-weight: bold;
+    cursor: pointer;
+    background: rgba(0,0,0,0.3); 
+    color:rgba(255,255,255,0.5);
+    transition: 0.6s;
 }
 
 button::-moz-focus-inner {
     border: 0;
 }
 
-button:active {
-    padding: 0px;
-    box-shadow: 0 2px #635959;
-    transform: translate(-50%, 4px);
+button:hover {
+    background: rgba(255,255,255,0.6); 
+    color: white;
 }
+
+button:active {
+    background: white; 
+    color: black;
+ }
+
+ #audioicon {
+    position: fixed;
+    top: 1%;
+    left: 1%;
+    width: 1%;
+    height: 1%;
+    background-color: black;
+    color: white;
+    font-size: 50px;
+    text-decoration: line-through;
+    cursor: pointer;
+ }
 
 #loadinginfo {
     position: fixed;
