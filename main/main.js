@@ -4,34 +4,17 @@ import Stats from 'https://cdn.rawgit.com/mrdoob/stats.js/master/src/Stats.js';
 let stats = new Stats();
 stats.showPanel(0);
 
+const title = document.getElementById("title");
 const menuBlock = document.getElementById("menu");
 const playButton = document.getElementById("play");
 const loadingInfo = document.getElementById("loadinginfo");
 const loadingSymbol = document.getElementById("loadingsymbol");
 
-// window.addEventListener("load", () => {
-//     let audioContext = new (window.AudioContext || window.webkitAudioContext)();
-//     let xhr = new XMLHttpRequest();
-//     xhr.open("GET", "audio/menu/Lyssna.mp3");
-//     xhr.responseType = "arraybuffer";
-//     xhr.addEventListener("load", () => {
-//         let playsound = (audioBuffer) => {
-//             menuAudioSource = audioContext.createBufferSource();
-//             menuAudioSource.buffer = audioBuffer;
-//             menuAudioSource.connect(audioContext.destination);
-//             menuAudioSource.loop = true;
-//             //menuAudioSource.start();
-//         };
-//         audioContext.decodeAudioData(xhr.response).then(playsound);
-//     });
-//     xhr.send();
-// });
-
 window.onload = menu;
 
 /** TEST VARIABLES */
 // Boundary values for the respective box divisions
-let boxOneBottom = 10;
+let boxOneBottom = 30;
 let boxOneTop = -550;
 let boxOneLeft = -40;
 let boxOneRight = -boxOneLeft;
@@ -66,7 +49,9 @@ let ambientLight;
 let pointLight;
 
 /** AUDIO */
-let menuAudioSource;
+let listener;
+let audioCollection;
+let menuAudioSource; // Buffer source for the menu audio
 
 /** PLAYER MISC */
 let controls;
@@ -80,6 +65,7 @@ let alien;
 /** LOADERS */
 let textureLoader;
 let gltfLoader;
+let audioLoader;
 let loadingManager;
 
 /** ANIMATION */
@@ -92,8 +78,8 @@ let skyboxURLs = ["cubemap/space_one/px.png", "cubemap/space_one/nx.png",
                   "cubemap/space_one/pz.png", "cubemap/space_one/nz.png"]
 
 /** OBJECTS */
-let starFieldOne;
-let starFieldTwo;
+let starFieldA;
+let starFieldB;
 let box;
 
 function modelTests(gltf) {
@@ -177,6 +163,8 @@ function initPineTree(gltf) {
 
     let clusterX;
     let clusterZ;
+    let scalingFactor;
+    let rotationFactor;
 
     for(let i = 0; i < 552; i++) {
         if(i < 180) { // Left rows
@@ -240,7 +228,7 @@ function initPineTree(gltf) {
             else { // Third row
                 clusterZ = Math.random() * 10 - 705; // z positions between -695 and -705
             }
-            clusterX = Math.random() * 65 + 40; // x positions between 40 and 105
+            clusterX = Math.random() * 90 + 40; // x positions between 40 and 130
         }
         else if(i >= 520 && i < 550) { // Secret path left
             if(i < 550) { // First row
@@ -257,13 +245,13 @@ function initPineTree(gltf) {
             clusterZ = -470;
         }
 
-        let scalingFactor = Math.random() * 0.3 + 0.7;
-        let rotationFactor = Math.random() * Math.PI/2; // set rotation to between 0 and PI/2
+        scalingFactor = Math.random() * 0.3 + 0.7;
+        rotationFactor = Math.random() * 2*Math.PI; // Set rotation to between 0 and 2*PI
 
         tempCluster.scale.set(scalingFactor, scalingFactor, scalingFactor);
-        tempCluster.position.set(clusterX, -8, clusterZ);
         tempCluster.rotation.set(0, rotationFactor, 0);
-    
+        tempCluster.position.set(clusterX, -8, clusterZ);
+        
         tempCluster.updateMatrix();
     
         cluster.setMatrixAt(i, tempCluster.matrix);
@@ -339,16 +327,67 @@ function initRockOne(gltf) {
 }
 
 function initRockTwo(gltf) {
-   
+    
 }
 
 function initRockThree(gltf) {
+    let rock_three = gltf.scene;
+    let rock_threeGeometry = rock_three.children[0].geometry;
+    let rock_threeMaterial = rock_three.children[0].material;
+    let numInstances = 100;
 
+    let cluster = new THREE.InstancedMesh(rock_threeGeometry, rock_threeMaterial, numInstances);
+    let tempCluster = new THREE.Object3D();
+
+    let clusterX;
+    let clusterZ;
+    let scalingFactor;
+    let rotationFactor;
+
+    for(let i = 0; i < numInstances; i++) {
+        clusterX = Math.random() * 400 - 200;
+        clusterZ = Math.random() * 800 - 700;
+        scalingFactor = Math.random() * 0.15 + 0.1;
+        rotationFactor = Math.random() * 2*Math.PI; // Set rotation between 0 and 2*PI
+
+        tempCluster.scale.set(scalingFactor, scalingFactor, scalingFactor);
+        tempCluster.rotation.set(0, rotationFactor, 0);
+        tempCluster.position.set(clusterX, 0, clusterZ);
+
+        tempCluster.updateMatrix();
+        cluster.setMatrixAt(i, tempCluster.matrix);
+    }
+    scene.add(cluster);
 }
 
-function drawTrees() {
-    loadModel("models/environment/trees/pinetree.glb", "pinetree");
-    loadModel("models/environment/trees/broadleaf.glb", "broadleaf");
+function initRockFour(gltf) {
+    let rock_four = gltf.scene;
+    let rock_fourGeometry = rock_four.children[0].geometry;
+    let rock_fourMaterial = rock_four.children[0].material;
+    let numInstances = 500;
+
+    let cluster = new THREE.InstancedMesh(rock_fourGeometry, rock_fourMaterial, numInstances);
+    let tempCluster = new THREE.Object3D();
+
+    let clusterX;
+    let clusterZ;
+    let scalingFactor;
+    let rotationFactor;
+
+    for(let i = 0; i < numInstances; i++) {
+        clusterX = Math.random() * 400 - 200; // x positions between -200 and 200
+        clusterZ = Math.random() * 800 - 700; // z positions between 100 and -700
+        scalingFactor = Math.random() * 0.0075 + 0.0025;
+        rotationFactor = Math.random() * 2*Math.PI; // Set rotation between 0 and 2*PI
+
+        tempCluster.scale.set(scalingFactor, scalingFactor, scalingFactor);
+        tempCluster.rotation.set(0, rotationFactor, 0);
+        tempCluster.position.set(clusterX, 0, clusterZ);
+
+        tempCluster.updateMatrix();
+        cluster.setMatrixAt(i, tempCluster.matrix);
+    }
+    scene.add(cluster);
 }
 
 function initBushOne(gltf) {
@@ -365,6 +404,8 @@ function initBushOne(gltf) {
 
     let clusterX;
     let clusterZ;
+    let scalingFactor;
+    let rotationFactor;
 
     for(let i = 0; i < 45; i++) {
         if(i < 20) { // Left row
@@ -379,8 +420,8 @@ function initBushOne(gltf) {
             clusterX = Math.random() * 70 - 35; // x positions between -35 and 35
             clusterZ = Math.random() * 15 + 15; // z positions between 15 and 30
         }
-        let scalingFactor = Math.random() * 0.02 + 0.08; // set scale to between 0.08 and 0.1
-        let rotationFactor = Math.random() * Math.PI/2; // set rotation to between 0 and PI/2
+        scalingFactor = Math.random() * 0.02 + 0.08; // set scale to between 0.08 and 0.1
+        rotationFactor = Math.random() * Math.PI/2; // set rotation to between 0 and PI/2
 
         tempCluster.position.set(clusterX, -3, clusterZ);
         tempCluster.scale.set(scalingFactor, scalingFactor, scalingFactor);
@@ -515,6 +556,11 @@ function initBushThree(gltf) {
     scene.add(barkCluster);
 }
 
+function drawTrees() {
+    loadModel("models/environment/trees/pinetree.glb", "pinetree");
+    loadModel("models/environment/trees/broadleaf.glb", "broadleaf");
+}
+
 function drawBushes() {
     loadModel("models/environment/bushes/bush_one.glb", "bush_one");
     loadModel("models/environment/bushes/bush_two.glb", "bush_two");
@@ -539,11 +585,11 @@ function drawGround() {
     scene.add(path);
 
     /** Texture for general path */
-    let groundGeom = new THREE.PlaneBufferGeometry(400, 1000, 100, 100);
+    let groundGeom = new THREE.PlaneBufferGeometry(1000, 1000, 100, 100);
     let groundTexture = loadTexture("textures/texture_path_outline.jpg");
     groundTexture.wrapS = THREE.RepeatWrapping;
     groundTexture.wrapT = THREE.RepeatWrapping;
-    groundTexture.repeat.set(40, 100);
+    groundTexture.repeat.set(100, 100);
     let ground = new THREE.Mesh(groundGeom,
                                     new THREE.MeshLambertMaterial({
                                         color: "#5e503e",
@@ -556,15 +602,16 @@ function drawGround() {
 }
 
 function drawRocks() {
-    loadModel("models/environment/rocks/type_one/rock_one.glb", "rock_one");
+    loadModel("models/environment/rocks/type_three/rock_three.glb", "rock_three")
+    loadModel("models/environment/rocks/type_four/rock_four.glb", "rock_four");
 }
 
 function drawStars() {
-    starFieldOne = new Starfield("black");
-    starFieldTwo = new Starfield("white");
+    starFieldA = new Starfield("black");
+    starFieldB = new Starfield("white");
 
-    scene.add(starFieldOne.starField);
-    scene.add(starFieldTwo.starField);
+    scene.add(starFieldA.starField);
+    scene.add(starFieldB.starField);
 }
 
 function gameLoop() {
@@ -636,8 +683,8 @@ function gameLoop() {
         }
 
         // Update star field colours 
-        starFieldOne.updateColour(0.0025);
-        starFieldTwo.updateColour(0.005);
+        starFieldA.updateColour(0.0035);
+        starFieldB.updateColour(0.0075);
 
         // Update clock time
         clock.timeBefore = clock.timeNow;
@@ -893,6 +940,9 @@ function loadModel(url, key) {
             case "rock_three":
                 initRockThree(gltf);
                 break;
+            case "rock_four":
+                initRockFour(gltf);
+                break;
             case "bush_one":
                 initBushOne(gltf);
                 break;
@@ -905,6 +955,19 @@ function loadModel(url, key) {
         }
     }
     gltfLoader.load(url, callback, undefined, (error) => console.log(error));
+}
+
+function loadAudio(url, key) {
+    switch(key) {
+        case "wildlife":
+            audioCollection.wildlife = new THREE.Audio(listener);
+            audioLoader.load(url, function(buffer) {
+                audioCollection.wildlife.setBuffer(buffer);
+	            audioCollection.wildlife.setLoop(true);
+	            audioCollection.wildlife.setVolume(0.1);
+	            audioCollection.wildlife.play();
+            });
+    }
 }
 
 function onResize() {
@@ -956,9 +1019,13 @@ function initCameras() {
     scene.add(birdsEyeViewCamera);
 }
 
-function initAudioListener() {
+function initAudio() {
     listener = new THREE.AudioListener();
     camera.add(listener);
+
+    audioCollection = new AudioCollection();
+
+    loadAudio("audio/environment/wildlife.wav", "wildlife");
 }
 
 function initLights() {
@@ -966,7 +1033,7 @@ function initLights() {
     scene.add(ambientLight);
 
     pointLight = new THREE.PointLight("white", 1.5);
-    pointLight.distance = 50;
+    pointLight.distance = 40;
     camera.add(pointLight);
     camera.children[1].position.y = 5; // Lower the point light from 8 to 5
 }
@@ -988,6 +1055,7 @@ function initControls() {
     function unlock() {
         controls.isLocked = false;
         controls.disconnect();
+        audioCollection.wildlife.pause();
         menuBlock.style.display = "block";
     }
 
@@ -1120,6 +1188,7 @@ function initLoadingManager() {
 function initLoaders() {
     textureLoader = new THREE.TextureLoader(loadingManager);
     gltfLoader = new GLTFLoader(loadingManager);
+    audioLoader = new THREE.AudioLoader(loadingManager);
 }
 
 function initPlayer() {
@@ -1143,7 +1212,7 @@ function initWorld() {
     drawRocks();
     drawStars();
 
-    boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
+    //boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
 }
 
 function render() {
@@ -1159,14 +1228,14 @@ function render() {
 }
 
 function init() {
-    //menuAudioSource.stop();
+    menuAudioSource.stop();
+    title.style.display = "none";
     menuBlock.style.display = "none";
     loadingSymbol.style.display = "block";
     
     initRenderer();
     initScene();
     initCameras();
-    //initAudioListener();
     initLights();
     initTime();
     initSkybox();
@@ -1174,25 +1243,26 @@ function init() {
     initLoaders();
     initPlayer();
     initAlien();
+    initAudio();
     initWorld();
 }
 
 function initMenuAudio() {
     let audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    let xhr = new XMLHttpRequest();
-    xhr.open("GET", "audio/menu/Lyssna.mp3");
-    xhr.responseType = "arraybuffer";
-    xhr.addEventListener("load", () => {
+    let xmlhr = new XMLHttpRequest();
+    xmlhr.open("GET", "audio/menu/Lyssna.mp3");
+    xmlhr.responseType = "arraybuffer";
+    xmlhr.addEventListener("load", () => {
         let playsound = (audioBuffer) => {
             menuAudioSource = audioContext.createBufferSource();
             menuAudioSource.buffer = audioBuffer;
             menuAudioSource.connect(audioContext.destination);
             menuAudioSource.loop = true;
-            //menuAudioSource.start();
+            menuAudioSource.start();
         };
-        audioContext.decodeAudioData(xhr.response).then(playsound);
+        audioContext.decodeAudioData(xmlhr.response).then(playsound);
     });
-    xhr.send();
+    xmlhr.send();
 }
 
 function menu() {

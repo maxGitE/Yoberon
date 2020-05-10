@@ -8,13 +8,25 @@ html, body {
     display: block;
 }
 
+#title {
+    position: fixed;
+    top: 10%;
+    left: 10%;
+    width: 25%;
+    height: 10%;
+    color: white;
+    text-align: center;
+    font-size: 80px;
+    font-family: monospace;
+    font-weight: bolder;
+}
+
 #menu {
     position: fixed;
     bottom: 50%;
     left: 10%;
     width: 25%;
     height: 25%;
-    background-color: blanchedalmond;
     padding: 1% 0;
     visibility: hidden;
 }
