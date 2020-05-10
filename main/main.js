@@ -23,8 +23,8 @@ let boxTwoTop = -450;
 
 let boxThreeBottom = boxTwoBottom;
 let boxThreeTop = -605;
-let boxThreeLeft = 50;
-let boxThreeRight = 100;
+let boxThreeLeft = 60;
+let boxThreeRight = 130;
 
 let boxFourBottom = -585;
 let boxFourTop = boxThreeTop;
@@ -149,13 +149,13 @@ function initPineTree(gltf) {
     let treeGeometry = pinetree.children[0].geometry;
     let treeMaterial = pinetree.children[0].material;
 
-    let cluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 551);
+    let cluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 552);
     let tempCluster = new THREE.Object3D();
 
     let clusterX;
     let clusterZ;
 
-    for(let i = 0; i < 551; i++) {
+    for(let i = 0; i < 552; i++) {
         if(i < 180) { // Left rows
             if(i < 60) { // First row
                 clusterX = Math.random() * 10 - 55; // x positions between -45 and -55
@@ -193,21 +193,21 @@ function initPineTree(gltf) {
             else { // Third row
                 clusterX = Math.random() * 10 + 85; // x positions between 85 and 95
             }
-            clusterZ = Math.random() * 460 - 410; // z positions between 50 and -410
+            clusterZ = Math.random() * 450 - 400; // z positions between 50 and -400
         }
-        else if(i >= 340 && i < 430) {
+        else if(i >= 340 && i < 430) { // Secret path right
             if(i < 370) { // First row
-                clusterX = Math.random() * 10 + 105; // x positions between 105 and 115
+                clusterX = Math.random() * 10 + 135; // x positions between 135 and 145
             }
             else if(i >= 370 && i < 400) { // Second row
-                clusterX = Math.random() * 10 + 125; // x positions between 125 and 135
+                clusterX = Math.random() * 10 + 155; // x positions between 155 and 165
             }
             else { // Third row
-                clusterX = Math.random() * 10 + 145; // x positions between 145 and 155
+                clusterX = Math.random() * 10 + 185; // x positions between 175 and 185
             }
             clusterZ = Math.random() * 300 - 650; // z positions between -350 and -650 
         }
-        else if(i >= 430 && i < 520) {
+        else if(i >= 430 && i < 520) { // Secret path top
             if(i < 460) { // First row
                 clusterZ = Math.random() * 10 - 645; // z positions between -635 and -645
             }
@@ -219,15 +219,19 @@ function initPineTree(gltf) {
             }
             clusterX = Math.random() * 65 + 40; // x positions between 40 and 105
         }
-        else if(i >= 520 && i < 550) {
+        else if(i >= 520 && i < 550) { // Secret path left
             if(i < 550) { // First row
-                clusterX = Math.random() * 10 + 30; // x positions between 30 and 40
+                clusterX = Math.random() * 5 + 45; // x positions between 40 and 45
             }
-            clusterZ = Math.random() * 115 - 585; // z positions between -470 and -585
+            clusterZ = Math.random() * 105 - 575; // z positions between -470 and -575
         }
-        else if(i == 550) {
-            clusterX = 40;
-            clusterZ = -410;
+        else if(i == 550) { // Left side of secret path entrance
+            clusterX = 50;
+            clusterZ = -400;
+        }
+        else if(i == 551) { // Right side of secret path entrance
+            clusterX = 50;
+            clusterZ = -470;
         }
 
         let scalingFactor = Math.random() * 0.3 + 0.7;
@@ -333,7 +337,7 @@ function initBushOne(gltf) {
     let barkMaterial = bush.children[0].children[1].material;
 
     let leafCluster = new THREE.InstancedMesh(leafGeometry, leafMaterial, 45);
-    let barkCluster = new THREE.InstancedMesh(barkGeometry, barkMaterial, 45);
+    let barkCluster = new THREE.InstancedMesh(barkGeometry, barkMaterial, 55);
     let tempCluster = new THREE.Object3D();
 
     let clusterX;
@@ -341,12 +345,12 @@ function initBushOne(gltf) {
 
     for(let i = 0; i < 45; i++) {
         if(i < 20) { // Left row
-            clusterX = Math.random() * 10 - 35; // x positions between -25 and -35
+            clusterX = Math.random() * 15 - 35; // x positions between -20 and -35
             clusterZ = Math.random() * 570 - 550; // z positions between 30 and -550
         }
         else if(i >= 20 && i < 40) { // Right row
-            clusterX = Math.random() * 10 + 25; // x positions between 25 and 35
-            clusterZ = Math.random() * 570 - 550; // z positions between 30 and -550
+            clusterX = Math.random() * 15 + 20; // x positions between 20 and 35
+            clusterZ = Math.random() * 440 - 410; // z positions between 30 and -410
         }
         else if(i >= 40 && i < 45) { // Back row
             clusterX = Math.random() * 70 - 35; // x positions between -35 and 35
@@ -355,9 +359,9 @@ function initBushOne(gltf) {
         let scalingFactor = Math.random() * 0.02 + 0.08; // set scale to between 0.08 and 0.1
         let rotationFactor = Math.random() * Math.PI/2; // set rotation to between 0 and PI/2
 
-        tempCluster.position.set(clusterX, -4, clusterZ);
+        tempCluster.position.set(clusterX, -3, clusterZ);
         tempCluster.scale.set(scalingFactor, scalingFactor, scalingFactor);
-        tempCluster.rotation.set(Math.PI/2, rotationFactor, 0);
+        tempCluster.rotation.set(Math.PI/3, rotationFactor, 0);
 
         tempCluster.updateMatrix();
 
@@ -376,25 +380,41 @@ function initBushTwo(gltf) {
     let barkGeometry = bush.children[0].children[1].geometry;
     let barkMaterial = bush.children[0].children[1].material;
 
-    let leafCluster = new THREE.InstancedMesh(leafGeometry, leafMaterial, 105);
-    let barkCluster = new THREE.InstancedMesh(barkGeometry, barkMaterial, 105);
+    let leafCluster = new THREE.InstancedMesh(leafGeometry, leafMaterial, 220);
+    let barkCluster = new THREE.InstancedMesh(barkGeometry, barkMaterial, 220);
     let tempCluster = new THREE.Object3D();
 
     let clusterX;
     let clusterZ;
 
-    for(let i = 0; i < 105; i++) {
-        if(i < 50) { // Left row
-            clusterX = Math.random() * 10 - 35; // x positions between -25 and -35
+    for(let i = 0; i < 220; i++) {
+        if(i < 60) { // Left row
+            clusterX = Math.random() * 15 - 35; // x positions between -20 and -35
             clusterZ = Math.random() * 570 - 550; // z positions between 30 and -550
         }
-        else if(i >= 50 && i < 100) { // Right row
-            clusterX = Math.random() * 10 + 25; // x positions between 25 and 35
-            clusterZ = Math.random() * 570 - 550; // z positions between 30 and -550
+        else if(i >= 60 && i < 120) { // Right row before secret path
+            clusterX = Math.random() * 15 + 20; // x positions between 20 and 35
+            clusterZ = Math.random() * 440 - 410; // z positions between 30 and -410
         }
-        else if(i >= 100 && i < 105) { // Back row
+        else if(i >= 120 && i < 125) { // Back row
             clusterX = Math.random() * 70 - 35; // x positions between -35 and 35
             clusterZ = Math.random() * 15 + 15; // z positions between 15 and 30
+        }
+        else if(i >= 125 && i < 130) { // Secret path 
+            clusterX = Math.random() * 15 + 35; // x positions between 35 and 50
+            clusterZ = Math.random() * 30 - 450; // z positions between -420 and -450
+        }
+        else if(i >= 130 && i < 150) { // Secret path bottom
+            clusterX = Math.random() * 80 + 50; // x positions between 50 and 130
+            clusterZ = Math.random() * 15 - 425; // z positions between -410 and -425
+        }
+        else if(i >= 150 && i < 200) { // Secret path right
+            clusterX = Math.random() * 10 + 120; // x positions between 120 and 130
+            clusterZ = Math.random() * 185 - 605; // z positions between -420 and -605
+        }
+        else if(i >= 200 && i < 220) { // Right row after secret path
+            clusterX = Math.random() * 15 + 20; // x positions between 20 and 35
+            clusterZ = Math.random() * -90 - 460; // z positions between -460 and -550
         }
         let scalingFactor = Math.random() * 1 + 1; // set scale to between 1 and 2
         let rotationFactor = Math.random() * Math.PI/2; // set rotation to between 0 and PI/2
@@ -413,36 +433,48 @@ function initBushTwo(gltf) {
 }
 
 function initBushThree(gltf) {
-    let bush = gltf.scene;
-    let barkGeometry = bush.children[0].children[0].geometry;
-    let barkMaterial = bush.children[0].children[0].material;
-
-    let capGeometry = bush.children[0].children[1].geometry;
-    let capMaterial = bush.children[0].children[1].material;
-
+    let bush = gltf.scene;    
     let leafGeometry = bush.children[0].children[2].geometry;
     let leafMaterial = bush.children[0].children[2].material;
 
-    let barkCluster = new THREE.InstancedMesh(barkGeometry, barkMaterial, 105);
-    let capCluster = new THREE.InstancedMesh(capGeometry, capMaterial, 105);
-    let leafCluster = new THREE.InstancedMesh(leafGeometry, leafMaterial, 105);    
+    let barkGeometry = bush.children[0].children[0].geometry;
+    let barkMaterial = bush.children[0].children[0].material;
+
+    let leafCluster = new THREE.InstancedMesh(leafGeometry, leafMaterial, 220);  
+    let barkCluster = new THREE.InstancedMesh(barkGeometry, barkMaterial, 220);  
     let tempCluster = new THREE.Object3D();
 
     let clusterX;
     let clusterZ;
 
-    for(let i = 0; i < 105; i++) {
-        if(i < 50) { // Left row
-            clusterX = Math.random() * 10 - 35; // x positions between -25 and -35
+    for(let i = 0; i < 220; i++) {
+        if(i < 60) { // Left row
+            clusterX = Math.random() * 15 - 35; // x positions between -20 and -35
             clusterZ = Math.random() * 570 - 550; // z positions between 30 and -550
         }
-        else if(i >= 50 && i < 100) { // Right row
-            clusterX = Math.random() * 10 + 25; // x positions between 25 and 35
-            clusterZ = Math.random() * 570 - 550; // z positions between 30 and -550
+        else if(i >= 60 && i < 120) { // Right row before secret path
+            clusterX = Math.random() * 15 + 20; // x positions between 20 and 35
+            clusterZ = Math.random() * 440 - 410; // z positions between 30 and -410
         }
-        else if(i >= 100 && i < 105) { // Back row
+        else if(i >= 120 && i < 125) { // Back row
             clusterX = Math.random() * 70 - 35; // x positions between -35 and 35
             clusterZ = Math.random() * 15 + 15; // z positions between 15 and 30
+        }
+        else if(i >= 125 && i < 130) { // Secret path 
+            clusterX = Math.random() * 15 + 35; // x positions between 35 and 50
+            clusterZ = Math.random() * 30 - 450; // z positions between -420 and -450
+        }
+        else if(i >= 130 && i < 150) { // Secret path bottom
+            clusterX = Math.random() * 80 + 50; // x positions between 50 and 130
+            clusterZ = Math.random() * 15 - 425; // z positions between -410 and -425
+        }
+        else if(i >= 150 && i < 200) { // Secret path right
+            clusterX = Math.random() * 10 + 120; // x positions between 120 and 130
+            clusterZ = Math.random() * 185 - 605; // z positions between -420 and -605
+        }
+        else if(i >= 200 && i < 220) { // Right row after secret path
+            clusterX = Math.random() * 15 + 20; // x positions between 20 and 35
+            clusterZ = Math.random() * -90 - 460; // z positions between -460 and -550
         }
         let scalingFactor = Math.random() * 1 + 2; // set scale to between 2 and 3
         let rotationFactor = Math.random() * Math.PI/2; // set rotation to between 0 and PI/2
@@ -453,13 +485,11 @@ function initBushThree(gltf) {
 
         tempCluster.updateMatrix();
 
-        barkCluster.setMatrixAt(i, tempCluster.matrix);
-        capCluster.setMatrixAt(i, tempCluster.matrix);
-        leafCluster.setMatrixAt(i, tempCluster.matrix);             
+        leafCluster.setMatrixAt(i, tempCluster.matrix);  
+        barkCluster.setMatrixAt(i, tempCluster.matrix);    
     }
-    scene.add(barkCluster);
-    scene.add(capCluster);
     scene.add(leafCluster);
+    scene.add(barkCluster);
 }
 
 function drawBushes() {
@@ -469,7 +499,8 @@ function drawBushes() {
 }
 
 function drawGround() {
-    let pathGeom = new THREE.PlaneBufferGeometry(100, 250, 100, 100);
+    /** Texture for the secret path */
+    let pathGeom = new THREE.PlaneBufferGeometry(90, 250, 100, 100);
     let pathTexture = loadTexture("textures/texture_grass_dead.jpg");
     pathTexture.wrapS = THREE.RepeatWrapping;
     pathTexture.wrapT = THREE.RepeatWrapping;
@@ -481,9 +512,10 @@ function drawGround() {
                                         map: pathTexture
                                     }));
     path.rotation.x = -Math.PI/2;
-    path.position.set(70, 0.01, -545);
+    path.position.set(80, 0.01, -545);
     scene.add(path);
 
+    /** Texture for general path */
     let groundGeom = new THREE.PlaneBufferGeometry(400, 1000, 100, 100);
     let groundTexture = loadTexture("textures/texture_path_outline.jpg");
     groundTexture.wrapS = THREE.RepeatWrapping;
@@ -1069,7 +1101,7 @@ function initPlayer() {
 
 function initAlien() {
     alien = new Alien();
-    //loadModel("models/characters/enemy/alien.glb", "alien");
+    // loadModel("models/characters/enemy/alien.glb", "alien");
 }
 
 function initWorld() {
