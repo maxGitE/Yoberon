@@ -4,6 +4,12 @@ import Stats from 'https://cdn.rawgit.com/mrdoob/stats.js/master/src/Stats.js';
 let stats = new Stats();
 stats.showPanel(0);
 
+let rendererStats = new THREEx.RendererStats();
+rendererStats.domElement.style.position	= 'fixed'
+rendererStats.domElement.style.right = '0px'
+rendererStats.domElement.style.bottom = '0px'
+document.body.appendChild(rendererStats.domElement);
+
 const title = document.getElementById("title");
 const menuBlock = document.getElementById("menu");
 const playButton = document.getElementById("play");
@@ -828,7 +834,7 @@ function levelZeroBoundingBox() {
         }
     }
 
-    //boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
+    // boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
 }
 
 function boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop) {
@@ -1212,11 +1218,12 @@ function initWorld() {
     drawRocks();
     drawStars();
 
-    //boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
+    // boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
 }
 
 function render() {
     stats.update();
+    rendererStats.update(renderer);
 
     //let cameraToRender = cameraType == "fp" ? camera : thirdPersonCamera;
     switch(cameraType) {
@@ -1228,7 +1235,7 @@ function render() {
 }
 
 function init() {
-    menuAudioSource.stop();
+    // menuAudioSource.stop();
     title.style.display = "none";
     menuBlock.style.display = "none";
     loadingSymbol.style.display = "block";
@@ -1258,7 +1265,7 @@ function initMenuAudio() {
             menuAudioSource.buffer = audioBuffer;
             menuAudioSource.connect(audioContext.destination);
             menuAudioSource.loop = true;
-            menuAudioSource.start();
+            // menuAudioSource.start();
         };
         audioContext.decodeAudioData(xmlhr.response).then(playsound);
     });
