@@ -2,6 +2,7 @@ class AudioCollection {
     constructor() {
         this._wildlife;
         this._weapon;
+        this._jumpboost;
     }
 
     get wildlife() {
@@ -18,5 +19,13 @@ class AudioCollection {
 
     set weapon(audio) {
         this._weapon = audio;
+    }
+
+    get jumpBoost() {
+        return this._jumpboost;
+    }
+
+    set jumpBoost(audio) {
+        this._jumpboost = audio;
     }
 }

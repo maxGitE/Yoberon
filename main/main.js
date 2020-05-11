@@ -94,6 +94,7 @@ let starFieldB;
 let box;
 
 let lockingClick = true;
+let collidableMeshList = [];
 
 function modelTests(gltf) {
     
@@ -737,20 +738,29 @@ function gameLoop() {
         // console.log(camera.position.x, camera.position.y, camera.position.z); // save two previous positions?
 
         if(player.weapon.bullets.length > 5) {
+            scene.remove(player.weapon.bullets[0].bullet);
             player.weapon.bullets.shift();
         }
 
-        player.weapon.bullets.forEach(singleBullet => {
-            singleBullet.translateZ(-300 * clock.delta);
+        let newOrigin = new THREE.Vector3();
+        player.weapon.bullets.forEach(item => {
+            item.bullet.translateZ(-300 * clock.delta);
+            item.bullet.getWorldPosition(newOrigin);
+            item.raycaster.ray.set(newOrigin, item.raycaster.ray.direction);
+
+            // scene.add(new THREE.ArrowHelper(item.raycaster.ray.direction, item.raycaster.ray.origin, 1));
+
+            let intersects = item.raycaster.intersectObjects(collidableMeshList, true);
+
+            if(intersects.length > 0) {
+               console.log(intersects[0]);
+            }
         });
         
         if(player.weapon.cooldown > 0) {
             player.weapon.cooldown -= 1;
             weaponCooldownBar.setAttribute("style", "width:" + player.weapon.cooldown / 50.0 + "%");
         }
-
-        console.clear();
-        console.log(player.weapon.cooldown);
 
         // Update clock time
         clock.timeBefore = clock.timeNow;
@@ -930,12 +940,14 @@ function boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxT
  */
 function handleJumpAnimation() { 
     player.jumpAnim.enabled = true;
+    audioCollection.jumpBoost.play();
     let tempAnimation = player.currentAnimation;
     player.currentAnimation.enabled = false;
     player.currentAnimation = player.jumpAnim;
 
     setTimeout(function() {
         player.jumping = false;
+        audioCollection.jumpBoost.stop();
         if(idleCalled == true) {
             updatePlayerAnimation(player.idleAnim);
             idleCalled = false;
@@ -1042,7 +1054,15 @@ function loadAudio(url, key) {
             audioLoader.load(url, function(buffer) {
                 audioCollection.weapon.setBuffer(buffer);
                 audioCollection.weapon.setLoop(false);
-                audioCollection.weapon.setVolume(0.5);
+                audioCollection.weapon.setVolume(0.3);
+            });
+            break;
+        case "jump_boost":
+            audioCollection.jumpBoost = new THREE.Audio(listener);
+            audioLoader.load(url, function(buffer) {
+                audioCollection.jumpBoost.setBuffer(buffer);
+                audioCollection.jumpBoost.setLoop(false);
+                audioCollection.jumpBoost.setVolume(0.3);
             });
             break;
     }
@@ -1124,7 +1144,8 @@ function initControls() {
     controls.addEventListener("unlock", unlock);
 
     function lock() {
-        audioCollection.wildlife.play();
+        if(!audioCollection.wildlife.isPlaying)
+            audioCollection.wildlife.play();
         crosshair.style.visibility = "visible";
         pauseBlock.style.display = "none";
         lockingClick = false;
@@ -1298,7 +1319,7 @@ function initPlayer() {
 
 function initAlien() {
     alien = new Alien();
-    // loadModel("models/characters/enemy/alien.glb", "alien");
+    loadModel("models/characters/enemy/alien.glb", "alien");
 }
 
 function initWeaponModel() {
@@ -1316,19 +1337,32 @@ function initWeapon(gltf) {
     camera.add(player.weapon.bulletStart);
 
     player.weapon.bullets = [];
+
     document.addEventListener("mousedown", onMouseDown);
 
     function onMouseDown() {
-        if(lockingClick) return;
-        if(player.weapon.cooldown != 0) return;
+        if(lockingClick || player.weapon.cooldown != 0) return;
 
-        let cylinderGeometry = new THREE.CylinderGeometry(0.05, 0.05, 5);
+        let cylinderGeometry = new THREE.CylinderBufferGeometry(0.05, 0.05, 5);
         cylinderGeometry.rotateX(-Math.PI/2);
         let singleBullet = new THREE.Mesh(cylinderGeometry, new THREE.MeshBasicMaterial( {color: "#03c3fb"} ));
-        singleBullet.position.copy(player.weapon.bulletStart.getWorldPosition());
+        //let singleBulletPosition = new THREE.Vector3();
+        player.weapon.bulletStart.getWorldPosition(singleBullet.position);
+        //singleBullet.position = singleBulletPosition;
         singleBullet.rotation.copy(camera.rotation);
 
-        player.weapon.bullets.push(singleBullet);
+        let direction = new THREE.Vector3();
+        direction.normalize();
+        controls.getDirection(direction);
+
+        let origin = new THREE.Vector3();
+        singleBullet.getWorldPosition(origin);
+
+        let raycaster = new THREE.Raycaster(origin, direction);
+
+        //scene.add(new THREE.ArrowHelper(raycaster.ray.direction, raycaster.ray.origin, 1));
+
+        player.weapon.bullets.push({bullet: singleBullet, raycaster: raycaster});
         scene.add(singleBullet);
         audioCollection.weapon.play();
         player.weapon.cooldown = 50;
@@ -1342,9 +1376,9 @@ function initAudio() {
     audioCollection = new AudioCollection();
 
     loadAudio("audio/environment/wildlife.wav", "wildlife");
-    loadAudio("audio/gun/gun_shot.mp3", "weapon");
+    loadAudio("audio/weapon/weapon_shot.mp3", "weapon");
+    loadAudio("audio/character/jump_boost.wav", "jump_boost");
 }
-
 
 function initWorld() {
     box = new THREE.Mesh(new THREE.CubeGeometry(5, 5, 5), new THREE.MeshBasicMaterial( {color: "white"} ));
