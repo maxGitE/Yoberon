@@ -12,6 +12,11 @@ document.body.appendChild(rendererStats.domElement);
 
 const title = document.getElementById("title");
 const menuBlock = document.getElementById("menu");
+const pauseBlock = document.getElementById("pause");
+const resume = document.getElementById("resume");
+const controlspause = document.getElementById("controlspause");
+const crosshair = document.getElementById("crosshair");
+const weaponCooldownBar = document.getElementById("weaponcooldown");
 const playButton = document.getElementById("play");
 const loadingInfo = document.getElementById("loadinginfo");
 const loadingSymbol = document.getElementById("loadingsymbol");
@@ -88,8 +93,7 @@ let starFieldA;
 let starFieldB;
 let box;
 
-let singleBullets;
-let weaponCooldown = 0;
+let lockingClick = true;
 
 function modelTests(gltf) {
     
@@ -718,12 +722,17 @@ function gameLoop() {
         // console.clear();
         // console.log(camera.position.x, camera.position.y, camera.position.z); // save two previous positions?
 
+        if(player.weapon.bullets.length > 5) {
+            player.weapon.bullets.shift();
+        }
+
         player.weapon.bullets.forEach(singleBullet => {
             singleBullet.translateZ(-300 * clock.delta);
         });
         
         if(player.weapon.cooldown > 0) {
             player.weapon.cooldown -= 1;
+            weaponCooldownBar.setAttribute("style", "width:" + player.weapon.cooldown / 50.0 + "%");
         }
 
         console.clear();
@@ -1019,7 +1028,7 @@ function loadAudio(url, key) {
             audioLoader.load(url, function(buffer) {
                 audioCollection.weapon.setBuffer(buffer);
                 audioCollection.weapon.setLoop(false);
-                audioCollection.weapon.setVolume(1);
+                audioCollection.weapon.setVolume(0.5);
             });
             break;
     }
@@ -1088,21 +1097,30 @@ function initControls() {
     controls = new THREE.PointerLockControls(camera, renderer.domElement);
     scene.add(controls.getObject());
 
-    document.addEventListener("click", () => controls.lock());
+    document.addEventListener("click", initialPointerLock);
+
+    function initialPointerLock() {
+        controls.lock();
+        document.removeEventListener("click", initialPointerLock);
+        resume.addEventListener("click", () => controls.lock());
+        lockingClick = false;
+    }
 
     controls.addEventListener("lock", lock);
     controls.addEventListener("unlock", unlock);
 
     function lock() {
-        controls.connect();
-        menuBlock.style.display = "none";
+        audioCollection.wildlife.play();
+        crosshair.style.visibility = "visible";
+        pauseBlock.style.display = "none";
+        lockingClick = false;
     }
 
     function unlock() {
-        controls.isLocked = false;
-        controls.disconnect();
+        lockingClick = true;
         audioCollection.wildlife.pause();
-        menuBlock.style.display = "block";
+        crosshair.style.visibility = "hidden";
+        pauseBlock.style.display = "block";
     }
 
     document.addEventListener("keydown", onKeyDown);
@@ -1265,11 +1283,12 @@ function initWeapon(gltf) {
     document.addEventListener("mousedown", onMouseDown);
 
     function onMouseDown() {
+        if(lockingClick) return;
         if(player.weapon.cooldown != 0) return;
 
         let cylinderGeometry = new THREE.CylinderGeometry(0.05, 0.05, 5);
         cylinderGeometry.rotateX(-Math.PI/2);
-        let singleBullet = new THREE.Mesh(cylinderGeometry, new THREE.MeshBasicMaterial( {color: "green"} ));
+        let singleBullet = new THREE.Mesh(cylinderGeometry, new THREE.MeshBasicMaterial( {color: "#03c3fb"} ));
         singleBullet.position.copy(player.weapon.bulletStart.getWorldPosition());
         singleBullet.rotation.copy(camera.rotation);
 
@@ -1319,7 +1338,7 @@ function render() {
 }
 
 function init() {
-    menuAudioSource.stop();
+    //menuAudioSource.stop();
     title.style.display = "none";
     menuBlock.style.display = "none";
     loadingSymbol.style.display = "block";
@@ -1350,7 +1369,7 @@ function initMenuAudio() {
             menuAudioSource.buffer = audioBuffer;
             menuAudioSource.connect(audioContext.destination);
             menuAudioSource.loop = true;
-            menuAudioSource.start();
+           // menuAudioSource.start();
         };
         audioContext.decodeAudioData(xmlhr.response).then(playsound);
     });
