@@ -968,6 +968,9 @@ function loadModel(url, key) {
             case "alien":
                 initAlienModel(gltf);
                 break;
+            case "weapon":
+                initWeapon(gltf);
+                break;
             case "pinetree":
                 initPineTree(gltf);
                 break;
@@ -1009,6 +1012,14 @@ function loadAudio(url, key) {
 	            audioCollection.wildlife.setLoop(true);
 	            audioCollection.wildlife.setVolume(0.1);
 	            audioCollection.wildlife.play();
+            });
+            break;
+        case "weapon":
+            audioCollection.weapon = new THREE.Audio(listener);
+            audioLoader.load(url, function(buffer) {
+                audioCollection.weapon.setBuffer(buffer);
+                audioCollection.weapon.setLoop(false);
+                audioCollection.weapon.setVolume(1);
             });
             break;
     }
@@ -1061,15 +1072,6 @@ function initCameras() {
     birdsEyeViewCamera.position.set(-100, 300, 100);
     birdsEyeViewCamera.lookAt(0, 0, 0);
     scene.add(birdsEyeViewCamera);
-}
-
-function initAudio() {
-    listener = new THREE.AudioListener();
-    camera.add(listener);
-
-    audioCollection = new AudioCollection();
-
-    loadAudio("audio/environment/wildlife.wav", "wildlife");
 }
 
 function initLights() {
@@ -1245,13 +1247,18 @@ function initAlien() {
     // loadModel("models/characters/enemy/alien.glb", "alien");
 }
 
-function initWeapon() {
-    player.weapon.model = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.25, 2), new THREE.MeshBasicMaterial( {color: "#696161"} ));
-    player.weapon.model.position.set(0, -1, -2);
+function initWeaponModel() {
+    loadModel("models/gun/pistol.glb", "weapon");
+}
+
+function initWeapon(gltf) {
+    player.weapon.model = gltf.scene;
+    player.weapon.model.scale.set(0.75, 0.75, -0.75);
+    player.weapon.model.position.set(0, -3, -4);
     camera.add(player.weapon.model);
 
     player.weapon.bulletStart = new THREE.Object3D();
-    player.weapon.bulletStart.position.set(0, -1, -2);
+    player.weapon.bulletStart.position.set(0, -0.5, -1);
     camera.add(player.weapon.bulletStart);
 
     player.weapon.bullets = [];
@@ -1268,9 +1275,21 @@ function initWeapon() {
 
         player.weapon.bullets.push(singleBullet);
         scene.add(singleBullet);
+        audioCollection.weapon.play();
         player.weapon.cooldown = 50;
     }
 }
+
+function initAudio() {
+    listener = new THREE.AudioListener();
+    camera.add(listener);
+
+    audioCollection = new AudioCollection();
+
+    loadAudio("audio/environment/wildlife.wav", "wildlife");
+    loadAudio("audio/gun/gun_shot.mp3", "weapon");
+}
+
 
 function initWorld() {
     box = new THREE.Mesh(new THREE.CubeGeometry(5, 5, 5), new THREE.MeshBasicMaterial( {color: "white"} ));
@@ -1315,8 +1334,8 @@ function init() {
     initLoaders();
     initPlayer();
     initAlien();
+    initWeaponModel();
     initAudio();
-    initWeapon();
     initWorld();
 }
 
