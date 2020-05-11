@@ -23,6 +23,8 @@ class Player {
         this._jumpAnim = undefined;
         this._runAnim = undefined;
         this._shootAnim = undefined;
+        this._strafeLAnim = undefined;
+        this._strafeRAnim = undefined;
     }
 
     get name() {
@@ -149,6 +151,14 @@ class Player {
         return this._shootAnim;
     }
 
+    get strafeLAnim() {
+        return this._strafeLAnim;
+    }
+
+    get strafeRAnim() {
+        return this._strafeRAnim;
+    }
+
     set currentHealth(health) {
         this._currentHealth = health;
     }
@@ -251,6 +261,14 @@ class Player {
 
     set shootAnim(animation) {
         this._shootAnim = animation;
+    }
+
+    set strafeLAnim(animation) {
+        this._strafeLAnim = animation;
+    }
+
+    set strafeRAnim(animation) {
+        this._strafeRAnim = animation;
     }
 
     addItem(item) {

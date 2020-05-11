@@ -98,6 +98,7 @@ function modelTests(gltf) {
 function initPlayerModel(gltf) {
     player.playerModel = gltf.scene; // ** TODO **
     let animations = gltf.animations;
+    console.log(animations);
  
     player.playerModel.scale.set(-0.5, 0.5, -0.5);
     scene.add(player.playerModel);
@@ -105,12 +106,22 @@ function initPlayerModel(gltf) {
     let mixer = new THREE.AnimationMixer(player.playerModel);
     mixers.push(mixer);
 
-    player.walkAnim = mixer.clipAction(animations[0]);
+    /** Animations without gun */
+    // player.walkAnim = mixer.clipAction(animations[0]);
+    // player.idleAnim = mixer.clipAction(animations[1]);
+    // player.backwardsAnim = mixer.clipAction(animations[2]);
+    // player.runAnim = mixer.clipAction(animations[3]);
+    // player.jumpAnim = mixer.clipAction(animations[4]);
+
+    /** Animations with gun */    
+    player.shootAnim = mixer.clipAction(animations[0]);    
     player.idleAnim = mixer.clipAction(animations[1]);
-    player.backwardsAnim = mixer.clipAction(animations[2]);
+    player.walkAnim = mixer.clipAction(animations[2]);
     player.runAnim = mixer.clipAction(animations[3]);
     player.jumpAnim = mixer.clipAction(animations[4]);
-    player.shootAnim = mixer.clipAction(animations[5]);
+    player.backwardsAnim = mixer.clipAction(animations[5]);
+    player.strafeLAnim = mixer.clipAction(animations[6]);
+    player.strafeRAnim = mixer.clipAction(animations[7]);
 
     player.walkAnim.play();
     player.idleAnim.play();
@@ -118,6 +129,8 @@ function initPlayerModel(gltf) {
     player.jumpAnim.play();
     player.runAnim.play();
     player.shootAnim.play();
+    player.strafeLAnim.play();
+    player.strafeRAnim.play();
 
     player.walkAnim.enabled = false;
     player.idleAnim.enabled = true;
@@ -125,6 +138,8 @@ function initPlayerModel(gltf) {
     player.jumpAnim.enabled = false;
     player.runAnim.enabled = false;
     player.shootAnim.enabled = false;
+    player.strafeLAnim.enabled = false;
+    player.strafeRAnim.enabled = false;
     
     player.currentAnimation = player.idleAnim;
 }
@@ -1115,16 +1130,16 @@ function initControls() {
                 updatePlayerAnimation(player.walkAnim);
                 break;
             case 65:    // A
-                if(cameraType == "fp")
-                    player.movingLeft = true;
+                player.movingLeft = true;
+                updatePlayerAnimation(player.strafeLAnim);
                 break;
             case 83:    // S
                 player.movingBackward = true;
                 updatePlayerAnimation(player.backwardsAnim);
                 break;
             case 68:    // D
-                if(cameraType == "fp")
-                    player.movingRight = true;
+                player.movingRight = true;
+                updatePlayerAnimation(player.strafeRAnim);
                 break;
             case 32:    // Space
                 if(!player.jumping) {
@@ -1174,6 +1189,7 @@ function initControls() {
                 break;
             case 65:    // A
                 player.movingLeft  = false;
+                updatePlayerAnimation(player.idleAnim);
                 break;
             case 83:    // S
                 player.movingBackward = false;
@@ -1182,6 +1198,7 @@ function initControls() {
                 break;
             case 68:    // D
                 player.movingRight = false;
+                updatePlayerAnimation(player.idleAnim);
                 break;
             case 16:    // Shift
                 if(player.running) {
