@@ -22,6 +22,7 @@ class Player {
         this._backwardsAnim = undefined;
         this._jumpAnim = undefined;
         this._runAnim = undefined;
+        this._shootAnim = undefined;
     }
 
     get name() {
@@ -124,6 +125,10 @@ class Player {
         return this._runAnim;
     }
 
+    get shootAnim() {
+        return this._shootAnim;
+    }
+
     set currentHealth(health) {
         this._currentHealth = health;
     }
@@ -206,6 +211,10 @@ class Player {
 
     set runAnim(animation) {
         this._runAnim = animation;
+    }
+
+    set shootAnim(animation) {
+        this._shootAnim = animation;
     }
 
     addItem(item) {
