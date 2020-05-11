@@ -71,18 +71,14 @@ button:active {
     color: black;
  }
 
- #audioicon {
+#crosshair {
     position: fixed;
-    top: 1%;
-    left: 1%;
-    width: 1%;
-    height: 1%;
-    background-color: black;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     color: white;
-    font-size: 50px;
-    text-decoration: line-through;
-    cursor: pointer;
- }
+    font-size: 25px;
+}
 
 #loadinginfo {
     position: fixed;

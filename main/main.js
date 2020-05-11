@@ -1247,11 +1247,11 @@ function initAlien() {
 
 function initWeapon() {
     player.weapon.model = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.25, 2), new THREE.MeshBasicMaterial( {color: "#696161"} ));
-    player.weapon.model.position.set(1, -1, -2);
+    player.weapon.model.position.set(0, -1, -2);
     camera.add(player.weapon.model);
 
     player.weapon.bulletStart = new THREE.Object3D();
-    player.weapon.bulletStart.position.set(1, -1, -2);
+    player.weapon.bulletStart.position.set(0, -1, -2);
     camera.add(player.weapon.bulletStart);
 
     player.weapon.bullets = [];
