@@ -102,7 +102,6 @@ function modelTests(gltf) {
 function initPlayerModel(gltf) {
     player.playerModel = gltf.scene; // ** TODO **
     let animations = gltf.animations;
-    console.log(animations);
  
     player.playerModel.scale.set(-0.5, 0.5, -0.5);
     scene.add(player.playerModel);
@@ -119,13 +118,13 @@ function initPlayerModel(gltf) {
 
     /** Animations with gun */    
     player.shootAnim = mixer.clipAction(animations[0]);    
-    player.idleAnim = mixer.clipAction(animations[1]);
-    player.walkAnim = mixer.clipAction(animations[2]);
-    player.runAnim = mixer.clipAction(animations[3]);
-    player.jumpAnim = mixer.clipAction(animations[4]);
-    player.backwardsAnim = mixer.clipAction(animations[5]);
-    player.strafeLAnim = mixer.clipAction(animations[6]);
-    player.strafeRAnim = mixer.clipAction(animations[7]);
+    player.walkAnim = mixer.clipAction(animations[1]);
+    player.runAnim = mixer.clipAction(animations[2]);
+    player.backwardsAnim = mixer.clipAction(animations[3]);
+    player.strafeLAnim = mixer.clipAction(animations[4]);
+    player.strafeRAnim = mixer.clipAction(animations[5]);
+    player.idleAnim = mixer.clipAction(animations[6]);
+    player.jumpAnim = mixer.clipAction(animations[7]);
 
     player.walkAnim.play();
     player.idleAnim.play();
@@ -1145,18 +1144,28 @@ function initControls() {
         switch(event.keyCode) {
             case 87:    // W
                 player.movingForward = true;
-                updatePlayerAnimation(player.walkAnim);
+                if(!player.movingLeft && !player.movingRight)
+                    updatePlayerAnimation(player.walkAnim);
                 break;
             case 65:    // A
                 player.movingLeft = true;
+                if(player.running) {
+                    player.running = false;
+                    player.runFactor = 1;
+                }
                 updatePlayerAnimation(player.strafeLAnim);
                 break;
             case 83:    // S
                 player.movingBackward = true;
-                updatePlayerAnimation(player.backwardsAnim);
+                if(!player.movingLeft && !player.movingRight)
+                    updatePlayerAnimation(player.backwardsAnim);
                 break;
             case 68:    // D
                 player.movingRight = true;
+                if(player.running) {
+                    player.running = false;
+                    player.runFactor = 1;
+                }
                 updatePlayerAnimation(player.strafeRAnim);
                 break;
             case 32:    // Space
@@ -1169,7 +1178,7 @@ function initControls() {
             case 16:    // Shift
                 if(!player.running) {
                     player.running = true;
-                    if(player.movingForward) {
+                    if(player.movingForward && !player.movingLeft && !player.movingRight) {
                         player.runFactor = 1.5;
                         updatePlayerAnimation(player.runAnim);
                     }
@@ -1202,27 +1211,37 @@ function initControls() {
         switch(event.keyCode) {
             case 87:    // W
                 player.movingForward = false;
-                if(!player.movingBackward)
+                if(!player.movingBackward && !player.movingLeft && !player.movingRight)
                     updatePlayerAnimation(player.idleAnim);
                 break;
             case 65:    // A
                 player.movingLeft  = false;
-                updatePlayerAnimation(player.idleAnim);
+                if(!player.movingRight && !player.movingForward && !player.movingBackward)
+                    updatePlayerAnimation(player.idleAnim);
+                else if(player.movingForward)
+                    updatePlayerAnimation(player.walkAnim);
+                else if(player.movingBackward)
+                    updatePlayerAnimation(player.walkBackwardsAnim);
                 break;
             case 83:    // S
                 player.movingBackward = false;
-                if(!player.movingForward)
+                if(!player.movingForward && !player.movingLeft && !player.movingRight)
                     updatePlayerAnimation(player.idleAnim);
                 break;
             case 68:    // D
                 player.movingRight = false;
-                updatePlayerAnimation(player.idleAnim);
+                if(!player.movingLeft && !player.movingForward && !player.movingBackward)
+                    updatePlayerAnimation(player.idleAnim);
+                else if(player.movingForward)
+                    updatePlayerAnimation(player.walkAnim);
+                else if(player.movingBackward)
+                    updatePlayerAnimation(player.walkBackwardsAnim);
                 break;
             case 16:    // Shift
                 if(player.running) {
                     player.running = false;
                     player.runFactor = 1;
-                    if(player.movingForward)
+                    if(player.movingForward && !player.movingLeft && !player.movingRight)
                         updatePlayerAnimation(player.walkAnim);
                 }
                 break;
