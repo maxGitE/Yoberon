@@ -336,10 +336,6 @@ function initBroadLeaf(gltf) {
     broadLeafGroup.add(broadleaf_three);
     broadLeafGroup.add(broadleaf_four);
 
-    collidableMeshList.push(broadleaf_one);
-    collidableMeshList.push(broadleaf_two);
-    collidableMeshList.push(broadleaf_three);
-    collidableMeshList.push(broadleaf_four);
     scene.add(broadLeafGroup);
 }
 
@@ -741,8 +737,9 @@ function gameLoop() {
             // scene.add(new THREE.ArrowHelper(item.raycaster.ray.direction, item.raycaster.ray.origin, 1));
 
             let intersects = item.raycaster.intersectObjects(collidableMeshList, true);
+
             if(intersects.length > 0) {
-               // console.log(intersects[0]);
+               console.log(intersects[0]);
             }
         });
         
@@ -1286,7 +1283,7 @@ function initPlayer() {
 
 function initAlien() {
     alien = new Alien();
-    //loadModel("models/characters/enemy/alien.glb", "alien");
+    loadModel("models/characters/enemy/alien.glb", "alien");
 }
 
 function initWeaponModel() {
