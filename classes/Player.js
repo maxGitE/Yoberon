@@ -6,7 +6,7 @@ class Player {
         this._currentStamina = 100;
         this._maxStamina = 100;
         this._inventory = [];
-        this._currentAmmo = 0;
+        this._weapon = {model: undefined, bulletStart: undefined, bullets: undefined, ammo: 10, cooldown: 0};
         this._upgrades = [];
         this._velocity = {x: 0, y: 0, z: 0};
         this._movingForward = false;
@@ -49,8 +49,28 @@ class Player {
         return this._inventory;
     }
 
-    get currentAmmo() {
-        return this._currentAmmo;
+    get weapon() {
+        return this._weapon;
+    }
+
+    get weaponModel() {
+        return this._weapon.model;
+    }
+
+    get weaponBulletStart() {
+        return this._weapon.bulletStart;
+    }
+
+    get weaponBullets() {
+        return this._weapon.bullets;
+    }
+
+    get weaponAmmo() {
+        return this._weapon.ammo;
+    }
+
+    get weaponCooldown() {
+        return this._weapon.cooldown;
     }
 
     get upgrades() {
@@ -141,8 +161,24 @@ class Player {
         this._currentStamina = stamina;
     }
 
-    set currentAmmo(ammo) {
-        this._currentAmmo = ammo;
+    set weaponModel(model) {
+        this._weapon.model = model;
+    }
+
+    set weaponBulletStart(vector3) {
+        this._weapon.bulletStart = vector3;
+    }
+
+    set weaponBullets(array) {
+        this._weapon.bullets = array;
+    }
+
+    set weaponAmmo(ammo) {
+        this._weapon.ammo = ammo;
+    }
+
+    set weaponCooldown(cooldown) {
+        this._weapon.cooldown = cooldown;
     }
 
     set velocityX(x) {
