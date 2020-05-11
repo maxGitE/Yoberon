@@ -88,6 +88,9 @@ let starFieldA;
 let starFieldB;
 let box;
 
+let singleBullets;
+let weaponCooldown = 0;
+
 function modelTests(gltf) {
     
 }
@@ -96,7 +99,7 @@ function initPlayerModel(gltf) {
     player.playerModel = gltf.scene; // ** TODO **
     let animations = gltf.animations;
  
-    player.playerModel.scale.set(0.5, 0.5, -0.5);
+    player.playerModel.scale.set(-0.5, 0.5, -0.5);
     scene.add(player.playerModel);
     
     let mixer = new THREE.AnimationMixer(player.playerModel);
@@ -692,6 +695,20 @@ function gameLoop() {
         starFieldA.updateColour(0.0035);
         starFieldB.updateColour(0.0075);
 
+        // console.clear();
+        // console.log(camera.position.x, camera.position.y, camera.position.z); // save two previous positions?
+
+        player.weapon.bullets.forEach(singleBullet => {
+            singleBullet.translateZ(-300 * clock.delta);
+        });
+        
+        if(player.weapon.cooldown > 0) {
+            player.weapon.cooldown -= 1;
+        }
+
+        console.clear();
+        console.log(player.weapon.cooldown);
+
         // Update clock time
         clock.timeBefore = clock.timeNow;
     }
@@ -973,6 +990,7 @@ function loadAudio(url, key) {
 	            audioCollection.wildlife.setVolume(0.1);
 	            audioCollection.wildlife.play();
             });
+            break;
     }
 }
 
@@ -1207,6 +1225,33 @@ function initAlien() {
     // loadModel("models/characters/enemy/alien.glb", "alien");
 }
 
+function initWeapon() {
+    player.weapon.model = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.25, 2), new THREE.MeshBasicMaterial( {color: "#696161"} ));
+    player.weapon.model.position.set(1, -1, -2);
+    camera.add(player.weapon.model);
+
+    player.weapon.bulletStart = new THREE.Object3D();
+    player.weapon.bulletStart.position.set(1, -1, -2);
+    camera.add(player.weapon.bulletStart);
+
+    player.weapon.bullets = [];
+    document.addEventListener("mousedown", onMouseDown);
+
+    function onMouseDown() {
+        if(player.weapon.cooldown != 0) return;
+
+        let cylinderGeometry = new THREE.CylinderGeometry(0.05, 0.05, 5);
+        cylinderGeometry.rotateX(-Math.PI/2);
+        let singleBullet = new THREE.Mesh(cylinderGeometry, new THREE.MeshBasicMaterial( {color: "green"} ));
+        singleBullet.position.copy(player.weapon.bulletStart.getWorldPosition());
+        singleBullet.rotation.copy(camera.rotation);
+
+        player.weapon.bullets.push(singleBullet);
+        scene.add(singleBullet);
+        player.weapon.cooldown = 50;
+    }
+}
+
 function initWorld() {
     box = new THREE.Mesh(new THREE.CubeGeometry(5, 5, 5), new THREE.MeshBasicMaterial( {color: "white"} ));
     box.position.set(0, 2.5, -10);
@@ -1235,7 +1280,7 @@ function render() {
 }
 
 function init() {
-    // menuAudioSource.stop();
+    menuAudioSource.stop();
     title.style.display = "none";
     menuBlock.style.display = "none";
     loadingSymbol.style.display = "block";
@@ -1251,6 +1296,7 @@ function init() {
     initPlayer();
     initAlien();
     initAudio();
+    initWeapon();
     initWorld();
 }
 
@@ -1265,7 +1311,7 @@ function initMenuAudio() {
             menuAudioSource.buffer = audioBuffer;
             menuAudioSource.connect(audioContext.destination);
             menuAudioSource.loop = true;
-            // menuAudioSource.start();
+            menuAudioSource.start();
         };
         audioContext.decodeAudioData(xmlhr.response).then(playsound);
     });
