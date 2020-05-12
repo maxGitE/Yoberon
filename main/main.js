@@ -184,11 +184,24 @@ function initAlienModel(gltf) {
     alien.shootAnim.enabled = true;
 }
 
-function initBountySide(gltf) {
-    let bountyModel = gltf.scene;
-    bountyModel.scale.set(5, 5, 5);
-    bountyModel.position.set(-10, 0, -20);
-    scene.add(bountyModel);
+function initBounterHunterSide(gltf) {
+    let bountyHunterGroup = new THREE.Object3D();
+    
+    let bountyHunterOne = gltf.scene;
+    // let bountyHunterTwo = gltf.scene;
+
+    bountyHunterOne.scale.set(5, 5, 5);
+    // bountyHunterTwo.scale.set(5, 5, 5);
+
+    bountyHunterOne.position.set(-10, 0, -20);
+    // bountyHunterTwo.position.set(15, 0, -25);
+
+    bountyHunterOne.rotation.set(0, Math.PI, 0);
+
+    bountyHunterGroup.add(bountyHunterOne);
+    // bountyHunterGroup.add(bountyHunterTwo);
+
+    scene.add(bountyHunterGroup);
 }
 
 function initPineTree(gltf) {
@@ -1029,7 +1042,7 @@ function loadModel(url, key) {
                 initAlienModel(gltf);
                 break;
             case "bounty_side":
-                initBountySide(gltf);
+                initBounterHunterSide(gltf);
                 break;
             case "weapon":
                 initWeapon(gltf);
