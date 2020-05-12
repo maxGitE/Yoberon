@@ -239,6 +239,8 @@ function initAlienModel(gltf) {
     alien.hitbox = new Hitbox("alien");
     alien.alienModel.add(alien.hitbox.mesh);
 
+    alien.alienModel.name = "alien";
+
     collidableMeshList.push(alien.hitbox.mesh);
 
     let mixer = new THREE.AnimationMixer(alien.alienModel);
@@ -251,6 +253,9 @@ function initAlienModel(gltf) {
     alien.walkBackwardsAnim = mixer.clipAction(animations[4]);
     alien.deathAnim = mixer.clipAction(animations[5]);
     alien.shootAnim = mixer.clipAction(animations[6]);
+
+    alien.deathAnim.setLoop(THREE.LoopOnce);
+    alien.deathAnim.clampWhenFinished = true;
 
     alien.idleAnim.play();
     alien.walkAnim.play();
@@ -897,10 +902,10 @@ function updateBullets() {
         scene.remove(player.weapon.bullets[0].bullet);
         player.weapon.bullets.shift();
     }
-
+    
     player.weapon.bullets.forEach(item => {
         item.bullet.translateZ(-300 * clock.delta);
-        item.bullet.getWorldPosition(item.raycaster.ray.origin); // Make the ray's new origin the bullet's current position
+        item.bullet.getWorldPosition(item.raycaster.ray.origin); // Update the ray's new origin as the bullet's current position
         item.raycaster.ray.set(item.raycaster.ray.origin, item.raycaster.ray.direction);
 
         // scene.add(new THREE.ArrowHelper(item.raycaster.ray.direction, item.raycaster.ray.origin, 1));
@@ -908,10 +913,39 @@ function updateBullets() {
         let intersects = item.raycaster.intersectObjects(collidableMeshList, true);
 
         if(intersects.length > 0) {
-            console.log(intersects[0]);
+            let intersect = intersects[0];
+            console.log(intersect.object.name);
+
+            switch(intersect.object.parent.parent.name) {
+                case "alien":
+                    if(!alien.damaged) {
+                        alien.damaged = true;
+                        alien.damageWindow = 25;
+
+                        if(intersect.object.name == "head") { // Headshot
+                            alien.currentHealth -= 100;
+                            audioCollection.headshot.play();
+                            alien.deathAnim.enabled = true;
+                            alien.shootAnim.enabled = false;
+                        }
+                        else {
+                            alien.currentHealth -= 20;
+                        }
+
+                        console.log(alien.currentHealth);
+                    }
+            }
+
         }
     });
-    
+
+    if(alien.damageWindow > 0) {
+        alien.damageWindow -= 1;
+    }
+    else {
+        alien.damaged = false;
+    }
+
     if(player.weapon.cooldown > 0) {
         player.weapon.cooldown -= 1;
 
@@ -1088,6 +1122,14 @@ function loadAudio(url, key) {
                 audioCollection.weapon.setBuffer(buffer);
                 audioCollection.weapon.setLoop(false);
                 audioCollection.weapon.setVolume(0.3);
+            });
+            break;
+        case "headshot":
+            audioCollection.headshot = new THREE.Audio(listener);
+            audioLoader.load(url, function(buffer) {
+                audioCollection.headshot.setBuffer(buffer);
+                audioCollection.headshot.setLoop(false);
+                audioCollection.headshot.setVolume(0.3);
             });
             break;
         case "jump_boost":
@@ -1354,8 +1396,8 @@ function initPlayer() {
 }
 
 function initAlien() {
-    alien = new Alien();
-    loadModel("models/characters/enemy/alien.min.glb", "alien");
+    alien = new Alien("alien");
+    loadModel("models/characters/enemy/alien.min.notexture.glb", "alien");
 }
 
 function initBountyHunter() {
@@ -1418,6 +1460,7 @@ function initAudio() {
 
     loadAudio("audio/environment/wildlife.wav", "wildlife");
     loadAudio("audio/weapon/weapon_shot.mp3", "weapon");
+    loadAudio("audio/weapon/headshot.mp3", "headshot");
     loadAudio("audio/character/jump_boost.wav", "jump_boost");
 }
 

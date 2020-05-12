@@ -2,6 +2,7 @@ class Alien {
     constructor() {
         this._currentHealth = 100;
         this._maxHealth = 100;
+        this._damaged = false;
         this._inventory = [];
         this._postition = {x: 0, y: 0, z: 0};
         this._alienModel = undefined;
@@ -22,6 +23,10 @@ class Alien {
 
     get maxHealth() {
         return this._maxHealth;
+    }
+
+    get damaged() {
+        return this._damaged;
     }
 
     get inventory() {
@@ -83,6 +88,10 @@ class Alien {
 
     set maxHealth(health) {
         this._maxHealth = health;
+    }
+
+    set damaged(value) {
+        this._damaged = value;
     }
 
     addItem(item) {

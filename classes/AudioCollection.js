@@ -2,6 +2,7 @@ class AudioCollection {
     constructor() {
         this._wildlife;
         this._weapon;
+        this._headshot;
         this._jumpboost;
     }
 
@@ -27,5 +28,13 @@ class AudioCollection {
 
     set jumpBoost(audio) {
         this._jumpboost = audio;
+    }
+
+    get headshot() {
+        return this._headshot;
+    }
+
+    set headshot(audio) {
+        this._headshot = audio;
     }
 }
