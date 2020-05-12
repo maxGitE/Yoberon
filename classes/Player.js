@@ -6,7 +6,7 @@ class Player {
         this._currentStamina = 100;
         this._maxStamina = 100;
         this._inventory = [];
-        this._weapon = {model: undefined, bulletStart: undefined, bullets: undefined, ammo: 10, cooldown: 0};
+        this._weapon = {model: undefined, bulletStart: undefined, bullets: undefined, ammo: 10, cooldown: 0, recoil: {direction: "up", reachedTop: false, reachedBottom: false}};
         this._bullet = undefined;
         this._upgrades = [];
         this._velocity = {x: 0, y: 0, z: 0};
@@ -14,6 +14,7 @@ class Player {
         this._movingBackward = false;
         this._movingLeft = false;
         this._movingRight = false;
+        this._moving = false;
         this._jumping = false;
         this._running = false;
         this._runFactor = 1;

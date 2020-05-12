@@ -749,11 +749,10 @@ function gameLoop() {
             player.weapon.bullets.shift();
         }
 
-        let newOrigin = new THREE.Vector3();
         player.weapon.bullets.forEach(item => {
             item.bullet.translateZ(-300 * clock.delta);
-            item.bullet.getWorldPosition(newOrigin);
-            item.raycaster.ray.set(newOrigin, item.raycaster.ray.direction);
+            item.bullet.getWorldPosition(item.raycaster.ray.origin); // Make the ray's new origin the bullet's current position
+            item.raycaster.ray.set(item.raycaster.ray.origin, item.raycaster.ray.direction);
 
             // scene.add(new THREE.ArrowHelper(item.raycaster.ray.direction, item.raycaster.ray.origin, 1));
 
@@ -766,6 +765,25 @@ function gameLoop() {
         
         if(player.weapon.cooldown > 0) {
             player.weapon.cooldown -= 1;
+
+            if(player.weapon.model.rotation.x < 0) {
+                player.weapon.model.rotation.x = 0;
+                player.weapon.recoil.reachedBottom = true;
+                player.weapon.recoil.direction = "up";
+            }
+            if(player.weapon.model.rotation.x > 0.2) {
+                player.weapon.model.rotation.x = 0.2;
+                player.weapon.recoil.reachedTop = true;
+                player.weapon.recoil.direction = "down";
+            }
+
+            if(player.weapon.recoil.direction == "up" && !player.weapon.recoil.reachedTop) {
+                player.weapon.model.rotation.x += 0.05;
+            }
+            else if(player.weapon.recoil.direction == "down" && !player.weapon.recoil.reachedBottom) {
+                player.weapon.model.rotation.x -= 0.02;
+            }
+            
             weaponCooldownBar.setAttribute("style", "width:" + player.weapon.cooldown / 50.0 + "%");
         }
 
@@ -1360,6 +1378,9 @@ function initWeapon(gltf) {
     function onMouseDown() {
         if(lockingClick || player.weapon.cooldown != 0) return;
 
+        player.weapon.recoil.reachedBottom = false;
+        player.weapon.recoil.reachedTop = false;
+
         let cylinderGeometry = new THREE.CylinderBufferGeometry(0.05, 0.05, 5);
         cylinderGeometry.rotateX(-Math.PI/2);
         let singleBullet = new THREE.Mesh(cylinderGeometry, new THREE.MeshBasicMaterial( {color: "#03c3fb"} ));
@@ -1376,8 +1397,6 @@ function initWeapon(gltf) {
         singleBullet.getWorldPosition(origin);
 
         let raycaster = new THREE.Raycaster(origin, direction);
-
-        //scene.add(new THREE.ArrowHelper(raycaster.ray.direction, raycaster.ray.origin, 1));
 
         player.weapon.bullets.push({bullet: singleBullet, raycaster: raycaster});
         scene.add(singleBullet);
