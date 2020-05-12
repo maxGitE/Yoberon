@@ -5,6 +5,7 @@ class Alien {
         this._inventory = [];
         this._postition = {x: 0, y: 0, z: 0};
         this._alienModel = undefined;
+        this._hitbox = undefined;
         this._idleAnim = undefined;
         this._walkAnim = undefined;
         this._strafeLAnim = undefined;
@@ -41,6 +42,10 @@ class Alien {
 
     get alienModel() {
         return this._alienModel;
+    }
+
+    get hitbox() {
+        return this._hitbox;
     }
 
     get idleAnim() {
@@ -98,6 +103,10 @@ class Alien {
 
     set alienModel(model) {
         this._alienModel = model;
+    }
+
+    set hitbox(hitbox) {
+        this._hitbox = hitbox;
     }
 
     set idleAnim(animation) {

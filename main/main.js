@@ -96,8 +96,88 @@ let box;
 let lockingClick = true;
 let collidableMeshList = [];
 
-function modelTests(gltf) {
-    
+function gameLoop() {
+
+    // setTimeout( function() {
+
+    //     requestAnimationFrame(gameLoop);
+
+    // }, 1000 / 180);
+
+    requestAnimationFrame(gameLoop);
+
+    if(controls.isLocked) {
+
+        clock.timeNow = performance.now();
+        clock.delta = (clock.timeNow - clock.timeBefore) / 1000;
+
+        player.velocityX = player.velocityX - player.velocityX * 10 * clock.delta;
+        player.velocityY = player.velocityY - 9.807 * 50 * clock.delta;
+        player.velocityZ = player.velocityZ - player.velocityZ * 10 * clock.delta;
+
+        if(player.movingLeft) {
+            player.velocityX = player.velocityX - 400 * clock.delta * player.runFactor;
+        }
+        if(player.movingRight) {
+            player.velocityX = player.velocityX + 400 * clock.delta * player.runFactor;
+        }
+        if(player.movingForward) {
+            player.velocityZ = player.velocityZ - 400 * clock.delta * player.runFactor;
+        }
+        if(player.movingBackward) {
+            player.velocityZ = player.velocityZ + 400 * clock.delta * player.runFactor;
+        }
+
+        controls.moveRight(player.velocityX * clock.delta);
+        controls.moveForward(-player.velocityZ * clock.delta); // Negate the value as moveForward() uses left-handed coordinates
+        controls.getObject().position.y += player.velocityY * clock.delta;
+
+        if(controls.getObject().position.y < 8) {
+            controls.getObject().position.y = 8;
+            player.velocityY = 0;
+        }
+
+        player.playerModel.position.x = controls.getObject().position.x;
+        player.playerModel.position.z = controls.getObject().position.z;
+        player.playerModel.position.y = controls.getObject().position.y - 8;
+        if(cameraType == "tp") {
+            player.playerModel.visible = true;
+            if(controls.getObject().rotation.x * 180 / Math.PI > 12) {
+                controls.getObject().rotation.x = 12 * Math.PI / 180;
+            }
+            else if(controls.getObject().rotation.x * 180 / Math.PI < -28) {
+                controls.getObject().rotation.x = -28 * Math.PI / 180;
+            }
+
+            controls.getObject().rotation.z = 0;
+            controls.getObject().rotation.order = "YXZ";
+        }
+        else {
+            player.playerModel.visible = false;
+        }
+        player.playerModel.rotation.set(0, controls.getObject().rotation.y, 0);
+
+        boundingBox();
+
+        // Update animations
+        for (let i = 0; i < mixers.length; i++) {
+            mixers[i].update(clock.delta);            
+        }
+
+        // Update star field colours 
+        starFieldA.updateColour(0.0035);
+        starFieldB.updateColour(0.0075);
+
+        // console.clear();
+        // console.log(camera.position.x, camera.position.y, camera.position.z); // save two previous positions?
+
+        updateBullets();
+
+        // Update clock time
+        clock.timeBefore = clock.timeNow;
+    }
+
+    render();
 }
 
 function initPlayerModel(gltf) {
@@ -155,6 +235,11 @@ function initAlienModel(gltf) {
     alien.alienModel.scale.set(5, 5, 5);
     alien.alienModel.position.set(0, 0, -20);
     scene.add(alien.alienModel);
+
+    alien.hitbox = new Hitbox("alien");
+    alien.alienModel.add(alien.hitbox.mesh);
+
+    collidableMeshList.push(alien.hitbox.mesh);
 
     let mixer = new THREE.AnimationMixer(alien.alienModel);
     mixers.push(mixer);
@@ -682,131 +767,6 @@ function drawStars() {
     scene.add(starFieldB.starField);
 }
 
-function gameLoop() {
-
-    // setTimeout( function() {
-
-    //     requestAnimationFrame(gameLoop);
-
-    // }, 1000 / 180);
-
-    requestAnimationFrame(gameLoop);
-
-    if(controls.isLocked) {
-
-        clock.timeNow = performance.now();
-        clock.delta = (clock.timeNow - clock.timeBefore) / 1000;
-
-        player.velocityX = player.velocityX - player.velocityX * 10 * clock.delta;
-        player.velocityY = player.velocityY - 9.807 * 50 * clock.delta;
-        player.velocityZ = player.velocityZ - player.velocityZ * 10 * clock.delta;
-
-        if(player.movingLeft) {
-            player.velocityX = player.velocityX - 400 * clock.delta * player.runFactor;
-        }
-        if(player.movingRight) {
-            player.velocityX = player.velocityX + 400 * clock.delta * player.runFactor;
-        }
-        if(player.movingForward) {
-            player.velocityZ = player.velocityZ - 400 * clock.delta * player.runFactor;
-        }
-        if(player.movingBackward) {
-            player.velocityZ = player.velocityZ + 400 * clock.delta * player.runFactor;
-        }
-
-        controls.moveRight(player.velocityX * clock.delta);
-        controls.moveForward(-player.velocityZ * clock.delta); // Negate the value as moveForward() uses left-handed coordinates
-        controls.getObject().position.y += player.velocityY * clock.delta;
-
-        if(controls.getObject().position.y < 8) {
-            controls.getObject().position.y = 8;
-            player.velocityY = 0;
-        }
-
-        player.playerModel.position.x = controls.getObject().position.x;
-        player.playerModel.position.z = controls.getObject().position.z;
-        player.playerModel.position.y = controls.getObject().position.y - 8;
-        if(cameraType == "tp") {
-            player.playerModel.visible = true;
-            if(controls.getObject().rotation.x * 180 / Math.PI > 12) {
-                controls.getObject().rotation.x = 12 * Math.PI / 180;
-            }
-            else if(controls.getObject().rotation.x * 180 / Math.PI < -28) {
-                controls.getObject().rotation.x = -28 * Math.PI / 180;
-            }
-
-            controls.getObject().rotation.z = 0;
-            controls.getObject().rotation.order = "YXZ";
-        }
-        else {
-            player.playerModel.visible = false;
-        }
-        player.playerModel.rotation.set(0, controls.getObject().rotation.y, 0);
-
-        boundingBox();
-
-        // Update animations
-        for (let i = 0; i < mixers.length; i++) {
-            mixers[i].update(clock.delta);            
-        }
-
-        // Update star field colours 
-        starFieldA.updateColour(0.0035);
-        starFieldB.updateColour(0.0075);
-
-        // console.clear();
-        // console.log(camera.position.x, camera.position.y, camera.position.z); // save two previous positions?
-
-        if(player.weapon.bullets.length > 5) {
-            scene.remove(player.weapon.bullets[0].bullet);
-            player.weapon.bullets.shift();
-        }
-
-        player.weapon.bullets.forEach(item => {
-            item.bullet.translateZ(-300 * clock.delta);
-            item.bullet.getWorldPosition(item.raycaster.ray.origin); // Make the ray's new origin the bullet's current position
-            item.raycaster.ray.set(item.raycaster.ray.origin, item.raycaster.ray.direction);
-
-            // scene.add(new THREE.ArrowHelper(item.raycaster.ray.direction, item.raycaster.ray.origin, 1));
-
-            let intersects = item.raycaster.intersectObjects(collidableMeshList, true);
-
-            if(intersects.length > 0) {
-               console.log(intersects[0]);
-            }
-        });
-        
-        if(player.weapon.cooldown > 0) {
-            player.weapon.cooldown -= 1;
-
-            if(player.weapon.model.rotation.x < 0) {
-                player.weapon.model.rotation.x = 0;
-                player.weapon.recoil.reachedBottom = true;
-                player.weapon.recoil.direction = "up";
-            }
-            if(player.weapon.model.rotation.x > 0.2) {
-                player.weapon.model.rotation.x = 0.2;
-                player.weapon.recoil.reachedTop = true;
-                player.weapon.recoil.direction = "down";
-            }
-
-            if(player.weapon.recoil.direction == "up" && !player.weapon.recoil.reachedTop) {
-                player.weapon.model.rotation.x += 0.05;
-            }
-            else if(player.weapon.recoil.direction == "down" && !player.weapon.recoil.reachedBottom) {
-                player.weapon.model.rotation.x -= 0.02;
-            }
-            
-            weaponCooldownBar.setAttribute("style", "width:" + player.weapon.cooldown / 50.0 + "%");
-        }
-
-        // Update clock time
-        clock.timeBefore = clock.timeNow;
-    }
-
-    render();
-}
-
 function boundingBox() {
     switch(currentLevel) {
         case 0: 
@@ -943,6 +903,51 @@ function levelZeroBoundingBox() {
     }
 
     // boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
+}
+
+function updateBullets() {
+    if(player.weapon.bullets.length > 5) {
+        scene.remove(player.weapon.bullets[0].bullet);
+        player.weapon.bullets.shift();
+    }
+
+    player.weapon.bullets.forEach(item => {
+        item.bullet.translateZ(-300 * clock.delta);
+        item.bullet.getWorldPosition(item.raycaster.ray.origin); // Make the ray's new origin the bullet's current position
+        item.raycaster.ray.set(item.raycaster.ray.origin, item.raycaster.ray.direction);
+
+        // scene.add(new THREE.ArrowHelper(item.raycaster.ray.direction, item.raycaster.ray.origin, 1));
+
+        let intersects = item.raycaster.intersectObjects(collidableMeshList, true);
+
+        if(intersects.length > 0) {
+            console.log(intersects[0]);
+        }
+    });
+    
+    if(player.weapon.cooldown > 0) {
+        player.weapon.cooldown -= 1;
+
+        if(player.weapon.model.rotation.x < 0) {
+            player.weapon.model.rotation.x = 0;
+            player.weapon.recoil.reachedBottom = true;
+            player.weapon.recoil.direction = "up";
+        }
+        if(player.weapon.model.rotation.x > 0.2) {
+            player.weapon.model.rotation.x = 0.2;
+            player.weapon.recoil.reachedTop = true;
+            player.weapon.recoil.direction = "down";
+        }
+
+        if(player.weapon.recoil.direction == "up" && !player.weapon.recoil.reachedTop) {
+            player.weapon.model.rotation.x += 0.05;
+        }
+        else if(player.weapon.recoil.direction == "down" && !player.weapon.recoil.reachedBottom) {
+            player.weapon.model.rotation.x -= 0.02;
+        }
+        
+        weaponCooldownBar.setAttribute("style", "width:" + player.weapon.cooldown / 50.0 + "%");
+    }
 }
 
 function boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop) {
@@ -1360,7 +1365,7 @@ function initPlayer() {
 
 function initAlien() {
     alien = new Alien();
-    loadModel("models/characters/enemy/alien.glb", "alien");
+    loadModel("models/characters/enemy/alien.min.glb", "alien");
 }
 
 function initBountyHunter() {
