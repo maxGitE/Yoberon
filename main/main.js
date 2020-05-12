@@ -184,6 +184,26 @@ function initAlienModel(gltf) {
     alien.shootAnim.enabled = true;
 }
 
+function initBountyHunterModel(gltf) {
+    let bountyModel = gltf.scene;
+    let vanguardGeometry = bountyModel.children[0].children[1].geometry;
+    let vanguardMaterial = bountyModel.children[0].children[1].material;
+
+    let instanceNumber = 5;
+
+    let cluster = new THREE.InstancedMesh(vanguardGeometry, vanguardMaterial, instanceNumber);
+    let tempCluster = new THREE.Object3D;
+
+    for (let i = 0; i < instanceNumber; i++) {
+        tempCluster.scale.set(5, 5, 5);
+        tempCluster.rotation.set(-Math.PI/2, 0, 0);
+        tempCluster.position.set(0, 1, i*-20);
+        tempCluster.updateMatrix();
+        cluster.setMatrixAt(i, tempCluster.matrix);
+    }
+    scene.add(cluster);
+}
+
 function initPineTree(gltf) {
     let pinetree = gltf.scene;
     let treeGeometry = pinetree.children[0].geometry;
@@ -1021,6 +1041,9 @@ function loadModel(url, key) {
             case "alien":
                 initAlienModel(gltf);
                 break;
+            case "bounty_side":
+                initBountyHunterModel(gltf);
+                break;
             case "weapon":
                 initWeapon(gltf);
                 break;
@@ -1340,6 +1363,10 @@ function initAlien() {
     loadModel("models/characters/enemy/alien.glb", "alien");
 }
 
+function initBountyHunter() {
+    loadModel("models/characters/bounty hunter/side_death.glb", "bounty_side");
+}
+
 function initWeaponModel() {
     loadModel("models/gun/pistol.glb", "weapon");
 }
@@ -1442,6 +1469,7 @@ function init() {
     initLoaders();
     initPlayer();
     initAlien();
+    initBountyHunter();
     initWeaponModel();
     initAudio();
     initWorld();
