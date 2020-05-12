@@ -184,24 +184,11 @@ function initAlienModel(gltf) {
     alien.shootAnim.enabled = true;
 }
 
-function initBountyHunterModel(gltf) {
+function initBountySide(gltf) {
     let bountyModel = gltf.scene;
-    let vanguardGeometry = bountyModel.children[0].children[1].geometry;
-    let vanguardMaterial = bountyModel.children[0].children[1].material;
-
-    let instanceNumber = 5;
-
-    let cluster = new THREE.InstancedMesh(vanguardGeometry, vanguardMaterial, instanceNumber);
-    let tempCluster = new THREE.Object3D;
-
-    for (let i = 0; i < instanceNumber; i++) {
-        tempCluster.scale.set(5, 5, 5);
-        tempCluster.rotation.set(-Math.PI/2, 0, 0);
-        tempCluster.position.set(0, 1, i*-20);
-        tempCluster.updateMatrix();
-        cluster.setMatrixAt(i, tempCluster.matrix);
-    }
-    scene.add(cluster);
+    bountyModel.scale.set(5, 5, 5);
+    bountyModel.position.set(-10, 0, -20);
+    scene.add(bountyModel);
 }
 
 function initPineTree(gltf) {
@@ -1024,7 +1011,7 @@ function loadModel(url, key) {
                 initAlienModel(gltf);
                 break;
             case "bounty_side":
-                initBountyHunterModel(gltf);
+                initBountySide(gltf);
                 break;
             case "weapon":
                 initWeapon(gltf);
@@ -1230,6 +1217,8 @@ function initControls() {
                 break;
             case 49:    // 1
                 cameraType = "fp";
+                crosshair.style.top = "50%";
+                crosshair.style.transform = "translate(-50%, -50%)"; 
                 break;
             case 50:    // 2
                 cameraType = "tp";
@@ -1244,7 +1233,8 @@ function initControls() {
                 if(player.movingBackward) {
                     updatePlayerAnimation(player.walkAnim);
                 }
-                   
+                crosshair.style.top = "55%";
+                crosshair.style.transform = "translate(-50%, -55%)";                 
                 break;
             case 51:    // 3
                 cameraType = "bev"; break;
