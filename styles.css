@@ -91,19 +91,21 @@ button:active {
 
 #crosshair {
     position: fixed;
-    top: 50%;
+    top: 50.625%;
     left: 50%;
-    transform: translate(-50%, -50%);
-    color: white;
-    font-size: 35px;
+    transform: translate(-50%, -50.625%);
+    width: 25px;
+    height: 25px;
+    background-image: url("hud/crosshairs/crosshair.svg");
+    background-repeat: no-repeat;
     visibility: hidden;
 }
 
 #weaponcooldown {
     position: fixed;
-    top: 52%;
+    top: 52.625%;
     left: 50%;
-    transform: translate(-50%, -52%);
+    transform: translate(-50%, -52.625%);
     width: 0%;
     height: 0.5%;
     background-color: #888b8c;
