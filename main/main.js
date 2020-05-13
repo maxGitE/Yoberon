@@ -1,4 +1,5 @@
 import { GLTFLoader } from 'https://threejs.org/examples/jsm/loaders/GLTFLoader.js';
+import { SkeletonUtils } from 'https://threejs.org/examples/jsm/utils/SkeletonUtils.js';
 import Stats from 'https://cdn.rawgit.com/mrdoob/stats.js/master/src/Stats.js';
 
 let stats = new Stats();
@@ -72,6 +73,11 @@ let currentLevel = 0;
 
 /** ALIEN */
 let alien;
+
+/** BOUNTY HUNTER */
+let bountyHunter1;
+let bountyHunter2;
+let bountyHunter3;
 
 /** LOADERS */
 let textureLoader;
@@ -234,6 +240,7 @@ function initAlienModel(gltf) {
 
     alien.alienModel.scale.set(5, 5, 5);
     alien.alienModel.position.set(0, 0, -20);
+
     scene.add(alien.alienModel);
 
     alien.hitbox = new Hitbox("alien");
@@ -269,24 +276,82 @@ function initAlienModel(gltf) {
     alien.shootAnim.enabled = true;
 }
 
-function initBounterHunterSide(gltf) {
-    let bountyHunterGroup = new THREE.Object3D();
+function initBountyHunters(gltf) {
+    let bountyArray = [];
+
+    bountyHunter1 = new BountyHunter();
+    bountyHunter1.model = gltf.scene;
+    bountyHunter1.animations = gltf.animations;
+    bountyHunter1.setPosition(-10, 0, -15);
+    bountyHunter1.setRotation(0, Math.PI, 0);
+    bountyHunter1.defaultAnim = "Side";
+    bountyArray.push(bountyHunter1);
+
+    bountyHunter2 = new BountyHunter();
+    bountyHunter2.setPosition(5, 0, -30);
+    bountyHunter2.defaultAnim = "Up";
+    bountyArray.push(bountyHunter2);
+
+    bountyHunter3 = new BountyHunter();
+    bountyHunter3.setPosition(10, 0, -20);
+    bountyHunter3.defaultAnim = "Down";
+    bountyArray.push(bountyHunter3);
     
-    let bountyHunterOne = gltf.scene;
-    // let bountyHunterTwo = gltf.scene;
+    instantiateUnits(bountyArray, "vanguard_Mesh");
+}
 
-    bountyHunterOne.scale.set(5, 5, 5);
-    // bountyHunterTwo.scale.set(5, 5, 5);
+/**
+ * Clone a mesh object and apply all relevant transformations.
+ * Populate all animation fields for the mesh and start the default animation.
+ * @param {array} units Array containing meshes to clone
+ * @param {string} meshName Name of the mesh to animate
+ */
+function instantiateUnits(units, meshName) {
+    for (let i = 0; i < units.length; i++) {        
+        let clonedScene = SkeletonUtils.clone(units[0].model);
 
-    bountyHunterOne.position.set(-10, 0, -20);
-    // bountyHunterTwo.position.set(15, 0, -25);
+        if(clonedScene) { // THREE.Scene is cloned properly
+            let clonedMesh = clonedScene.getObjectByName(meshName);
 
-    bountyHunterOne.rotation.set(0, Math.PI, 0);
+            let mixer = new THREE.AnimationMixer(clonedMesh);
 
-    bountyHunterGroup.add(bountyHunterOne);
-    // bountyHunterGroup.add(bountyHunterTwo);
+            /** Populate all animation fields for the relevant mesh */
+            if(meshName == "vanguard_Mesh") {
+                units[i].sideAnim = mixer.clipAction(units[0].animations[0]);
+                units[i].upAnim = mixer.clipAction(units[0].animations[1]);
+                units[i].downAnim = mixer.clipAction(units[0].animations[2]);
 
-    scene.add(bountyHunterGroup);
+                units[i].sideAnim.play();
+                units[i].upAnim.play();
+                units[i].downAnim.play();
+
+                units[i].sideAnim.enabled = false;
+                units[i].upAnim.enabled = false;
+                units[i].downAnim.enabled = false;
+            }
+
+            /** Play default animation */
+            let clip = THREE.AnimationClip.findByName(units[0].animations, units[i].defaultAnim);
+
+            if(clip) {
+                let action = mixer.clipAction(clip);
+                action.enabled = true;
+            }
+            
+            mixers.push(mixer);            
+
+            scene.add(clonedScene); // Add cloned scene to the world scene
+            
+            /** Apply transformations to the cloned scene */
+            clonedScene.position.set(units[i].getPosition().x, units[i].getPosition().y, units[i].getPosition().z);
+
+            clonedScene.scale.set(units[i].getScale().x, units[i].getScale().y, units[i].getScale().z);
+
+            clonedScene.rotation.x = units[i].getRotation().x;
+            clonedScene.rotation.y = units[i].getRotation().y;
+            clonedScene.rotation.z = units[i].getRotation().z;
+        }
+    }
 }
 
 function initPineTree(gltf) {
@@ -726,7 +791,7 @@ function drawGround() {
     let pathTexture = loadTexture("textures/texture_grass_dead.jpg");
     pathTexture.wrapS = THREE.RepeatWrapping;
     pathTexture.wrapT = THREE.RepeatWrapping;
-    pathTexture.repeat.set(10, 25);
+    pathTexture.repeat.set(9, 25);
     let path = new THREE.Mesh(pathGeom,
                                     new THREE.MeshLambertMaterial({
                                         color: "#454545",
@@ -742,7 +807,7 @@ function drawGround() {
     let groundTexture = loadTexture("textures/texture_path_outline.jpg");
     groundTexture.wrapS = THREE.RepeatWrapping;
     groundTexture.wrapT = THREE.RepeatWrapping;
-    groundTexture.repeat.set(100, 100);
+    groundTexture.repeat.set(70, 70);
     let ground = new THREE.Mesh(groundGeom,
                                     new THREE.MeshLambertMaterial({
                                         color: "#5e503e",
@@ -1046,8 +1111,8 @@ function loadModel(url, key) {
             case "alien":
                 initAlienModel(gltf);
                 break;
-            case "bounty_side":
-                initBounterHunterSide(gltf);
+            case "bounty_hunter":
+                initBountyHunters(gltf);
                 break;
             case "weapon":
                 initWeapon(gltf);
@@ -1368,11 +1433,11 @@ function initPlayer() {
 
 function initAlien() {
     alien = new Alien();
-    loadModel("models/characters/enemy/alien.min.glb", "alien");
+    loadModel("models/characters/enemy/alien.mintexture.glb", "alien");
 }
 
 function initBountyHunter() {
-    loadModel("models/characters/bounty hunter/side_death.glb", "bounty_side");
+    loadModel("models/characters/bounty hunter/bounty_hunter.glb", "bounty_hunter");
 }
 
 function initWeaponModel() {
