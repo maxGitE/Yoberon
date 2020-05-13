@@ -917,14 +917,19 @@ function updateBullets() {
     
     player.weapon.bullets.forEach((item, index) => {
 
-        if(item.firstOrigin.distanceTo(item.raycaster.ray.origin) > 100) {
-            scene.remove(item.bullet);
+        console.log()
+
+        if(item.originalPosition.distanceTo(item.bullet.position) > 200) { // Restrict the bullet from travelling past 100 units
+            scene.remove(item.bullet); // Remove the bullet from the scene
             player.weapon.bullets.splice(index, 1); // Remove the bullet from the array
-            return;
+            return; // Iterate to the next bullet
         }
 
         item.bullet.translateZ(-300 * clock.delta);
         item.bullet.getWorldPosition(item.raycaster.ray.origin); // Update the ray's new origin as the bullet's current position
+        // console.clear(); // SAME
+        // console.log(item.bullet.position);
+        // console.log(item.raycaster.ray.origin);
         item.raycaster.ray.set(item.raycaster.ray.origin, item.raycaster.ray.direction);
 
         // scene.add(new THREE.ArrowHelper(item.raycaster.ray.direction, item.raycaster.ray.origin, 1));
@@ -933,50 +938,54 @@ function updateBullets() {
 
         if(intersects.length > 0) {
             let intersect = intersects[0];
+            let distance_one = intersect.distance;
+            let distance_twoVec = new THREE.Vector3();
+            distance_twoVec.subVectors(item.bullet.position, item.lastPosition);
+            let distance_two = distance_twoVec.length();
 
-            if(intersect.object.parent.parent.name != null) {
-                switch(intersect.object.parent.parent.name) {
-                    case "alien":
-                        if(!alien.damaged) {
-                            alien.damaged = true;
-                            alien.damageWindow = 25;
+            if(distance_one <= distance_two) {
+                audioCollection.hitmarker.play();
 
+                if(intersect.object.parent.parent.name != null) {
+                    switch(intersect.object.parent.parent.name) { // The name of the model that the hitbox mesh is attached to
+                        case "alien":
+    
                             if(intersect.object.name == "head") { // Headshot
                                 alien.currentHealth -= 100;
                                 audioCollection.headshot.play();
-                                audioCollection.hitmarker.play();
+                                crosshair.style.background = "url(hud/crosshairs/crosshair_hitmarker.svg)";
+                                crosshair.style.filter = "brightness(0) saturate(100%) invert(11%) sepia(96%) saturate(6875%) hue-rotate(0deg) brightness(91%) contrast(126%)";
                             }
                             else { // Bodyshot
                                 alien.currentHealth -= 20;
-                                audioCollection.hitmarker.play();
-                                crosshair.style.color = "#499304";
+                                crosshair.style.background = "url(hud/crosshairs/crosshair_hitmarker.svg)";
+                                if(alien.currentHealth <= 0) {
+                                    crosshair.style.filter = "brightness(0) saturate(100%) invert(11%) sepia(96%) saturate(6875%) hue-rotate(0deg) brightness(91%) contrast(126%)";
+                                }
                             }
 
                             if(alien.currentHealth <= 0) {
                                 alien.deathAnim.enabled = true;
                                 alien.shootAnim.enabled = false;
+                                let indexOfCollidableMesh = collidableMeshList.indexOf(alien.hitbox.mesh);
+                                collidableMeshList.splice(indexOfCollidableMesh, 1);
                                 alien.alienModel.remove(alien.hitbox.mesh);
                                 alien.hitbox = null;
-                                crosshair.style.color = "#b12300"
                             }
 
                             setTimeout(() => {
-                                crosshair.style.color = "white";
+                                crosshair.style.background = "url(hud/crosshairs/crosshair.svg)";
+                                crosshair.style.filter = "none";
                             }, 300);
-
-                        }
+                        
+                        break;
+                    }
                 }
             }
-
         }
+        item.lastPosition.copy(item.bullet.position);
     });
 
-    if(alien.damageWindow > 0) {
-        alien.damageWindow -= 1;
-    }
-    else {
-        alien.damaged = false;
-    }
 
     if(player.weapon.cooldown > 0) {
         /** Handle weapon cooldown bar */
@@ -1229,8 +1238,8 @@ function initCameras() {
     cameraType = "fp";
 
     birdsEyeViewCamera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 1, 2500);
-    birdsEyeViewCamera.position.set(-100, 300, 100);
-    birdsEyeViewCamera.lookAt(0, 0, 0);
+    birdsEyeViewCamera.position.set(-15, 8, -20);
+    birdsEyeViewCamera.lookAt(0, 8, -20);
     scene.add(birdsEyeViewCamera);
 }
 
@@ -1279,6 +1288,9 @@ function initControls() {
     document.addEventListener("keyup", onKeyUp);
 
     function onKeyDown(event) {
+
+        event.preventDefault();
+
         switch(event.keyCode) {
             case 87:    // W
                 player.movingForward = true;
@@ -1324,8 +1336,8 @@ function initControls() {
                 break;
             case 49:    // 1
                 cameraType = "fp";
-                crosshair.style.top = "50%";
-                crosshair.style.transform = "translate(-50%, -50%)"; 
+                crosshair.style.top = "50.625%";
+                crosshair.style.transform = "translate(-50%, -50.625%)"; 
                 break;
             case 50:    // 2
                 cameraType = "tp";
@@ -1340,8 +1352,8 @@ function initControls() {
                 if(player.movingBackward) {
                     updatePlayerAnimation(player.walkAnim);
                 }
-                crosshair.style.top = "55%";
-                crosshair.style.transform = "translate(-50%, -55%)";                 
+                crosshair.style.top = "55.625%";
+                crosshair.style.transform = "translate(-50%, -55.625%)";                 
                 break;
             case 51:    // 3
                 cameraType = "bev"; break;
@@ -1476,17 +1488,18 @@ function initWeapon(gltf) {
         player.weapon.bulletStart.getWorldPosition(singleBullet.position);
         singleBullet.rotation.copy(camera.rotation);
 
+        let lastPosition = new THREE.Vector3(singleBullet.position.x, singleBullet.position.y, singleBullet.position.z);
+        let originalPosition = new THREE.Vector3(singleBullet.position.x, singleBullet.position.y, singleBullet.position.z);
+
         let direction = new THREE.Vector3();
-        direction.normalize();
         controls.getDirection(direction);
 
         let origin = new THREE.Vector3();
         singleBullet.getWorldPosition(origin);
-        let originCopy = new THREE.Vector3(origin.x, origin.y, origin.z);
 
-        let raycaster = new THREE.Raycaster(origin, direction, 0, 100);
+        let raycaster = new THREE.Raycaster(origin, direction.normalize());
 
-        player.weapon.bullets.push({bullet: singleBullet, raycaster: raycaster, firstOrigin: originCopy});
+        player.weapon.bullets.push({bullet: singleBullet, raycaster: raycaster, lastPosition: lastPosition, originalPosition: originalPosition});
         scene.add(singleBullet);
         audioCollection.weapon.play();
         player.weapon.cooldown = 50;
