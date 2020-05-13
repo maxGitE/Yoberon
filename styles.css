@@ -96,6 +96,7 @@ button:active {
     transform: translate(-50%, -50%);
     color: white;
     font-size: 35px;
+    font-weight: bolder;
     visibility: hidden;
 }
 

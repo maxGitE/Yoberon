@@ -3,6 +3,7 @@ class AudioCollection {
         this._wildlife;
         this._weapon;
         this._headshot;
+        this._hitmarker;
         this._jumpboost;
     }
 
@@ -36,5 +37,13 @@ class AudioCollection {
 
     set headshot(audio) {
         this._headshot = audio;
+    }
+
+    get hitmarker() {
+        return this._hitmarker;
+    }
+
+    set hitmarker(audio) {
+        this._hitmarker = audio;
     }
 }

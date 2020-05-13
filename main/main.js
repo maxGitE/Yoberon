@@ -238,7 +238,6 @@ function initAlienModel(gltf) {
 
     alien.hitbox = new Hitbox("alien");
     alien.alienModel.add(alien.hitbox.mesh);
-
     alien.alienModel.name = "alien";
 
     collidableMeshList.push(alien.hitbox.mesh);
@@ -916,7 +915,14 @@ function updateBullets() {
         player.weapon.bullets.shift();
     }
     
-    player.weapon.bullets.forEach(item => {
+    player.weapon.bullets.forEach((item, index) => {
+
+        if(item.firstOrigin.distanceTo(item.raycaster.ray.origin) > 100) {
+            scene.remove(item.bullet);
+            player.weapon.bullets.splice(index, 1); // Remove the bullet from the array
+            return;
+        }
+
         item.bullet.translateZ(-300 * clock.delta);
         item.bullet.getWorldPosition(item.raycaster.ray.origin); // Update the ray's new origin as the bullet's current position
         item.raycaster.ray.set(item.raycaster.ray.origin, item.raycaster.ray.direction);
@@ -927,26 +933,39 @@ function updateBullets() {
 
         if(intersects.length > 0) {
             let intersect = intersects[0];
-            console.log(intersect.object.name);
 
-            switch(intersect.object.parent.parent.name) {
-                case "alien":
-                    if(!alien.damaged) {
-                        alien.damaged = true;
-                        alien.damageWindow = 25;
+            if(intersect.object.parent.parent.name != null) {
+                switch(intersect.object.parent.parent.name) {
+                    case "alien":
+                        if(!alien.damaged) {
+                            alien.damaged = true;
+                            alien.damageWindow = 25;
 
-                        if(intersect.object.name == "head") { // Headshot
-                            alien.currentHealth -= 100;
-                            audioCollection.headshot.play();
-                            alien.deathAnim.enabled = true;
-                            alien.shootAnim.enabled = false;
+                            if(intersect.object.name == "head") { // Headshot
+                                alien.currentHealth -= 100;
+                                audioCollection.headshot.play();
+                                audioCollection.hitmarker.play();
+                            }
+                            else { // Bodyshot
+                                alien.currentHealth -= 20;
+                                audioCollection.hitmarker.play();
+                                crosshair.style.color = "#499304";
+                            }
+
+                            if(alien.currentHealth <= 0) {
+                                alien.deathAnim.enabled = true;
+                                alien.shootAnim.enabled = false;
+                                alien.alienModel.remove(alien.hitbox.mesh);
+                                alien.hitbox = null;
+                                crosshair.style.color = "#b12300"
+                            }
+
+                            setTimeout(() => {
+                                crosshair.style.color = "white";
+                            }, 300);
+
                         }
-                        else {
-                            alien.currentHealth -= 20;
-                        }
-
-                        console.log(alien.currentHealth);
-                    }
+                }
             }
 
         }
@@ -960,8 +979,11 @@ function updateBullets() {
     }
 
     if(player.weapon.cooldown > 0) {
+        /** Handle weapon cooldown bar */
         player.weapon.cooldown -= 1;
+        weaponCooldownBar.setAttribute("style", "width:" + player.weapon.cooldown / 50.0 + "%");
 
+        /** Handle recoil of the weapon */
         if(player.weapon.model.rotation.x < 0) {
             player.weapon.model.rotation.x = 0;
             player.weapon.recoil.reachedBottom = true;
@@ -979,8 +1001,7 @@ function updateBullets() {
         else if(player.weapon.recoil.direction == "down" && !player.weapon.recoil.reachedBottom) {
             player.weapon.model.rotation.x -= 0.02;
         }
-        
-        weaponCooldownBar.setAttribute("style", "width:" + player.weapon.cooldown / 50.0 + "%");
+    
     }
 }
 
@@ -1143,6 +1164,14 @@ function loadAudio(url, key) {
                 audioCollection.headshot.setBuffer(buffer);
                 audioCollection.headshot.setLoop(false);
                 audioCollection.headshot.setVolume(0.3);
+            });
+            break;
+        case "hitmarker":
+            audioCollection.hitmarker = new THREE.Audio(listener);
+            audioLoader.load(url, function(buffer) {
+                audioCollection.hitmarker.setBuffer(buffer);
+                audioCollection.hitmarker.setLoop(false);
+                audioCollection.hitmarker.setVolume(0.5);
             });
             break;
         case "jump_boost":
@@ -1410,7 +1439,7 @@ function initPlayer() {
 
 function initAlien() {
     alien = new Alien("alien");
-    loadModel("models/characters/enemy/alien.min.notexture.glb", "alien");
+    loadModel("models/characters/enemy/alien.mintexture.glb", "alien");
 }
 
 function initBountyHunter() {
@@ -1444,9 +1473,7 @@ function initWeapon(gltf) {
         let cylinderGeometry = new THREE.CylinderBufferGeometry(0.05, 0.05, 5);
         cylinderGeometry.rotateX(-Math.PI/2);
         let singleBullet = new THREE.Mesh(cylinderGeometry, new THREE.MeshBasicMaterial( {color: "#03c3fb"} ));
-        //let singleBulletPosition = new THREE.Vector3();
         player.weapon.bulletStart.getWorldPosition(singleBullet.position);
-        //singleBullet.position = singleBulletPosition;
         singleBullet.rotation.copy(camera.rotation);
 
         let direction = new THREE.Vector3();
@@ -1455,10 +1482,11 @@ function initWeapon(gltf) {
 
         let origin = new THREE.Vector3();
         singleBullet.getWorldPosition(origin);
+        let originCopy = new THREE.Vector3(origin.x, origin.y, origin.z);
 
-        let raycaster = new THREE.Raycaster(origin, direction);
+        let raycaster = new THREE.Raycaster(origin, direction, 0, 100);
 
-        player.weapon.bullets.push({bullet: singleBullet, raycaster: raycaster});
+        player.weapon.bullets.push({bullet: singleBullet, raycaster: raycaster, firstOrigin: originCopy});
         scene.add(singleBullet);
         audioCollection.weapon.play();
         player.weapon.cooldown = 50;
@@ -1474,6 +1502,7 @@ function initAudio() {
     loadAudio("audio/environment/wildlife.wav", "wildlife");
     loadAudio("audio/weapon/weapon_shot.mp3", "weapon");
     loadAudio("audio/weapon/headshot.mp3", "headshot");
+    loadAudio("audio/weapon/hitmarker.mp3", "hitmarker");
     loadAudio("audio/character/jump_boost.wav", "jump_boost");
 }
 
