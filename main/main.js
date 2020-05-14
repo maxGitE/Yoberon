@@ -193,6 +193,14 @@ function gameLoop() {
     render();
 }
 
+function loadFirstLevel() {
+    let direction = new THREE.Vector3();
+    controls.getDirection(direction);
+    let playerRaycaster = new THREE.Raycaster(controls.getObject().position, direction);
+    scene.add(new THREE.ArrowHelper(playerRaycaster.ray.direction, playerRaycaster.ray.origin, 10));
+
+}
+
 function initPlayerModel(gltf) {
     player.playerModel = gltf.scene;
     let animations = gltf.animations;
@@ -950,7 +958,7 @@ function levelZeroBoundingBox() {
         }
         if(xPos < xTempleEntrance) { // Enter first temple
             currentLevel = 1;
-            // loadFirstLevel();
+            loadFirstLevel();
         }
     }
 
@@ -1632,7 +1640,7 @@ function initWorld() {
     drawRocks();
     drawStars();
 
-    // boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
+    boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
 }
 
 function render() {
