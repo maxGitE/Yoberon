@@ -25,24 +25,6 @@ const loadingSymbol = document.getElementById("loadingsymbol");
 window.onload = menu;
 
 /** TEST VARIABLES */
-// Boundary values for the respective box divisions
-let boxOneBottom = 30;
-let boxOneTop = -550;
-let boxOneLeft = -40;
-let boxOneRight = -boxOneLeft;
-
-let boxTwoBottom = -420;
-let boxTwoTop = -450;
-
-let boxThreeBottom = boxTwoBottom;
-let boxThreeTop = -615;
-let boxThreeLeft = 60;
-let boxThreeRight = 130;
-
-let boxFourBottom = -585;
-let boxFourTop = boxThreeTop;
-
-let xTempleEntrance = 40;
 let boundaryFactor = 5; // Account for skipped frames and fucked behaviour with game loop
 
 /** SCENE GLOBALS */
@@ -876,25 +858,24 @@ function levelZeroBoundingBox() {
     let boxThree;
     let boxFour;
 
-    // // Boundary values for the respective box divisions
-    // let boxOneBottom = 10;
-    // let boxOneTop = -550;
-    // let boxOneLeft = -20;
-    // let boxOneRight = -boxOneLeft;
+    // Boundary values for the respective box divisions
+    let boxOneBottom = 30;
+    let boxOneTop = -550;
+    let boxOneLeft = -40;
+    let boxOneRight = -boxOneLeft;
 
-    // let boxTwoBottom = -420;
-    // let boxTwoTop = -450;
-    
-    // let boxThreeBottom = boxTwoBottom;
-    // let boxThreeTop = -605;
-    // let boxThreeLeft = 50;
-    // let boxThreeRight = 80;
-    
-    // let boxFourBottom = -585;
-    // let boxFourTop = boxThreeTop;
+    let boxTwoBottom = -420;
+    let boxTwoTop = -450;
 
-    // let xTempleEntrance = 40;
-    // let boundaryFactor = 5; // Account for skipped frames and fucked behaviour with game loop
+    let boxThreeBottom = boxTwoBottom;
+    let boxThreeTop = -615;
+    let boxThreeLeft = 60;
+    let boxThreeRight = 130;
+
+    let boxFourBottom = -585;
+    let boxFourTop = boxThreeTop;
+
+    let xTempleEntrance = 40;
 
     if(xPos >= boxOneLeft && xPos <= boxOneRight) {
         setBox(1);
@@ -990,8 +971,119 @@ function levelZeroBoundingBox() {
                 break;
         }
     }
+}
 
-    boundingBoxVis();
+function puzzleOneBoundingBox() {
+    let boxOneBottom = -585;
+    let boxOneLeft = -40;
+    let boxOneRight = -boxOneRight;
+    let boxOneTop = -685;
+
+    let boxTwoBottom = boxOneTop;
+    let boxTwoLeft = -15;
+    let boxTwoRight = 15;
+    let boxTwoTop = -715;
+}
+
+function levelTwoBoundingBox() {
+    let boxOneBottom = -715;
+    let boxOneLeft = 40;
+    let boxOneRight = -boxOneRight;
+    let boxOneTop = -900;
+
+    let boxTwoBottom = boxOneTop;
+    let boxTwoLeft = -200;
+    let boxTwoRight = boxOneRight;
+    let boxTwoTop = -980;
+
+    let boxThreeBottom = boxTwoBottom;
+    let boxThreeLeft = -280;
+    let boxThreeRight = boxTwoLeft;
+    let boxThreeTop = -1100;
+
+    let boxFourBottom = boxThreeTop;
+    let boxFourLeft = boxThreeLeft;
+    let boxFourRight = 500;
+    let boxFourTop = -1180;
+
+    let boxFiveBottom = -1070;
+    let boxFiveLeft = 445;
+    let boxFiveRight = 475;
+    let boxFiveTop = boxFourBottom;
+}
+
+function puzzleTwoBoundingBox() {
+    let boxOneBottom = -970;
+    let boxOneLeft = 420;
+    let boxOneRight = 500;
+    let boxOneTop = -1070;
+
+    let boxTwoBottom = -940;
+    let boxTwoLeft = 445;
+    let boxTwoRight = 475;
+    let boxTwoTop = boxOneBottom;
+}
+
+function levelThreeBoundingBox() {
+    let boxOneBottom = -680;
+    let boxOneLeft = 420;
+    let boxOneRight = 500;
+    let boxOneTop = -940;
+
+    let boxTwoBottom = -600;
+    let boxTwoLeft = 280;
+    let boxTwoRight = boxOneRight;
+    let boxTwoTop = boxOneBottom;
+
+    let boxThreeBottom = -450;
+    let boxThreeLeft = 200;
+    let boxThreeRight = boxTwoLeft;
+    let boxThreeTop = boxTwoTop;
+
+    let boxFourBottom = -370;
+    let boxFourLeft = boxThreeLeft;
+    let boxFourRight = 400;
+    let boxFourTop = boxThreeBottom;
+
+    let boxFiveBottom = -395;
+    let boxFiveLeft = boxFourRight;
+    let boxFiveRight = 430;
+    let boxFiveTop = -425;
+
+    /** SECRET PATH */
+    let boxSixBottom = -810;
+    let boxSixLeft = boxOneLeft;
+    let boxSixRight = 550;
+    let boxSixTop = -840;
+
+    let boxSevenBottom = -770;
+    let boxSevenLeft = boxSixRight;
+    let boxSevenRight = 600;
+    let boxSevenTop = boxSixBottom;
+
+    let boxEightBottom = -740;
+    let boxEightLeft = boxOneLeft;
+    let boxEightRight = boxSevenRight;
+    let boxEightTop = boxSevenBottom;
+}
+
+function puzzleThreeBoundingBox() {
+    let boxOneBottom = -370;
+    let boxOneLeft = 430;
+    let boxOneRight = 530;
+    let boxOneTop = -450;
+
+    let boxTwoBottom = -340;
+    let boxTwoLeft = 465;
+    let boxTwoRight = 495;
+    let boxTwoTop = -370;
+}
+
+function levelFourBoundingBox() {
+    let boxOneBottom = -40;
+    let boxOneLeft = 330;
+    let boxOneRight = 630;
+    let boxOneTop = -340;
 }
 
 function updateBullets() {
@@ -1117,6 +1209,24 @@ function damageAlien(alienNumber, intersect) {
 }
 
 function boundingBoxVis() {
+    // Boundary values for the respective box divisions
+    let boxOneBottom = 30;
+    let boxOneTop = -550;
+    let boxOneLeft = -40;
+    let boxOneRight = -boxOneLeft;
+
+    let boxTwoBottom = -420;
+    let boxTwoTop = -450;
+
+    let boxThreeBottom = boxTwoBottom;
+    let boxThreeTop = -615;
+    let boxThreeLeft = 60;
+    let boxThreeRight = 130;
+
+    let boxFourBottom = -585;
+    let boxFourTop = boxThreeTop;
+
+
     let linematerial = new THREE.LineBasicMaterial({
         color: 0xffff00
     });
@@ -1152,8 +1262,8 @@ function boundingBoxVis() {
     points.push(new THREE.Vector3(40, 1, -715));
     points.push(new THREE.Vector3(15, 1, -715)); // Entrance of level 2 box (right)
 
-    points.push(new THREE.Vector3(15, 1, -685)); // Exit of level 1 box (right)
-    points.push(new THREE.Vector3(40, 1, -685)); // Start of level 1 box (right)
+    points.push(new THREE.Vector3(15, 1, -685)); // Exit of level 1.5 box (right)
+    points.push(new THREE.Vector3(40, 1, -685)); // Start of level 1.5 box (right)
 
     /** Level 1 box */
     points.push(new THREE.Vector3(boxOneRight, 1, boxFourTop));
