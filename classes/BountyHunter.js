@@ -1,7 +1,6 @@
 class BountyHunter {
     constructor() {
         this._model = undefined;
-        this._animations = undefined;
         this._position = {x: 0, y: 0, z: 0};
         this._scale = {x: 5, y: 5, z: 5};
         this._rotation = {x: 0, y: 0, z: 0};
@@ -15,9 +14,17 @@ class BountyHunter {
     get model() {
         return this._model;
     }
+    
+    get position() {
+        return this._position;
+    }
 
-    get animations() {
-        return this._animations;
+    get scale() {
+        return this._scale;
+    }
+
+    get rotation() {
+        return this._rotation;
     }
 
     get defaultAnim() {
@@ -36,41 +43,9 @@ class BountyHunter {
         return this._sideAnim;
     }
 
-    getPosition() {
-        return this._position;
-    }
-
-    getScale() {
-        return this._scale;
-    }
-
-    getRotation() {
-        return this._rotation;
-    }
-
     /** SETTERS */
     set model(model) {
         this._model = model;
-    }
-
-    set animations(animations) {
-        this._animations = animations;
-    }
-
-    set defaultAnim(animation) {
-        this._defaultAnim = animation;
-    }
-
-    set downAnim(animation) {
-        this._downAnim = animation;
-    }
-
-    set upAnim(animation) {
-        this._upAnim = animation;
-    }
-
-    set sideAnim(animation) {
-        this._sideAnim = animation;
     }
 
     setPosition(x, y, z) {
@@ -89,5 +64,21 @@ class BountyHunter {
         this._rotation.x = x;
         this._rotation.y = y;
         this._rotation.z = z;
+    }
+
+    set defaultAnim(animation) {
+        this._defaultAnim = animation;
+    }
+
+    set downAnim(animation) {
+        this._downAnim = animation;
+    }
+
+    set upAnim(animation) {
+        this._upAnim = animation;
+    }
+
+    set sideAnim(animation) {
+        this._sideAnim = animation;
     }
 }

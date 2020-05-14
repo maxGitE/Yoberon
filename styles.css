@@ -103,9 +103,9 @@ button:active {
 
 #weaponcooldown {
     position: fixed;
-    top: 52.625%;
+    top: 53%;
     left: 50%;
-    transform: translate(-50%, -52.625%);
+    transform: translate(-50%, -53%);
     width: 0%;
     height: 0.5%;
     background-color: #888b8c;

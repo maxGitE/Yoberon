@@ -72,9 +72,16 @@ let player;
 let currentLevel = 0;
 
 /** ALIEN */
-let alien;
+let alienArray = [];
+let alien1;
+let alien2;
+let alien3;
+let alien4;
+let alien5;
+let alien6;
 
 /** BOUNTY HUNTER */
+let bountyArray = [];
 let bountyHunter1;
 let bountyHunter2;
 let bountyHunter3;
@@ -187,7 +194,7 @@ function gameLoop() {
 }
 
 function initPlayerModel(gltf) {
-    player.playerModel = gltf.scene; // ** TODO **
+    player.playerModel = gltf.scene;
     let animations = gltf.animations;
  
     player.playerModel.scale.set(-0.5, 0.5, -0.5);
@@ -234,74 +241,43 @@ function initPlayerModel(gltf) {
     player.currentAnimation = player.idleAnim;
 }
 
-function initAlienModel(gltf) {
-    alien.alienModel = gltf.scene;
-    let animations = gltf.animations;
+function initAlienModels(gltf) {
+    alien1.setPosition(-10, 0, -40);
+    alienArray.push(alien1);
 
-    alien.alienModel.scale.set(5, 5, 5);
-    alien.alienModel.position.set(0, 0, -20);
+    alien2.setPosition(10, 0, -40);
+    alienArray.push(alien2);
 
-    scene.add(alien.alienModel);
+    alien3.setPosition(0, 0, -45);
+    alienArray.push(alien3);
 
-    alien.hitbox = new Hitbox("alien");
-    alien.alienModel.add(alien.hitbox.mesh);
-    alien.alienModel.name = "alien";
+    alien4.setPosition(-5, 0, -50);
+    alienArray.push(alien4);
 
-    collidableMeshList.push(alien.hitbox.mesh);
+    alien5.setPosition(5, 0, -50);
+    alienArray.push(alien5);
 
-    let mixer = new THREE.AnimationMixer(alien.alienModel);
-    mixers.push(mixer);
+    alien6.setPosition(0, 0, -55);
+    alienArray.push(alien6);
 
-    alien.idleAnim = mixer.clipAction(animations[0]);
-    alien.walkAnim = mixer.clipAction(animations[1]);
-    alien.strafeLAnim = mixer.clipAction(animations[2]);
-    alien.strafeRAnim = mixer.clipAction(animations[3]);
-    alien.walkBackwardsAnim = mixer.clipAction(animations[4]);
-    alien.deathAnim = mixer.clipAction(animations[5]);
-    alien.shootAnim = mixer.clipAction(animations[6]);
-
-    alien.deathAnim.setLoop(THREE.LoopOnce);
-    alien.deathAnim.clampWhenFinished = true;
-
-    alien.idleAnim.play();
-    alien.walkAnim.play();
-    alien.strafeLAnim.play();
-    alien.strafeRAnim.play();
-    alien.walkBackwardsAnim.play();
-    alien.deathAnim.play();
-    alien.shootAnim.play();
-
-    alien.idleAnim.enabled = false;
-    alien.walkAnim.enabled = false;
-    alien.strafeLAnim.enabled = false;
-    alien.strafeRAnim.enabled = false;
-    alien.walkBackwardsAnim.enabled = false;
-    alien.deathAnim.enabled = false;
-    alien.shootAnim.enabled = true;
+    instantiateUnits(gltf, alienArray, "Alien_(Armature)");  
 }
 
 function initBountyHunters(gltf) {
-    let bountyArray = [];
-
-    bountyHunter1 = new BountyHunter();
-    bountyHunter1.model = gltf.scene;
-    bountyHunter1.animations = gltf.animations;
     bountyHunter1.setPosition(-10, 0, -15);
     bountyHunter1.setRotation(0, Math.PI, 0);
     bountyHunter1.defaultAnim = "Side";
     bountyArray.push(bountyHunter1);
 
-    bountyHunter2 = new BountyHunter();
     bountyHunter2.setPosition(5, 0, -30);
     bountyHunter2.defaultAnim = "Up";
     bountyArray.push(bountyHunter2);
 
-    bountyHunter3 = new BountyHunter();
     bountyHunter3.setPosition(10, 0, -20);
     bountyHunter3.defaultAnim = "Down";
     bountyArray.push(bountyHunter3);
     
-    instantiateUnits(bountyArray, "vanguard_Mesh");
+    instantiateUnits(gltf, bountyArray, "vanguard_Mesh");
 }
 
 /**
@@ -310,9 +286,10 @@ function initBountyHunters(gltf) {
  * @param {array} units Array containing meshes to clone
  * @param {string} meshName Name of the mesh to animate
  */
-function instantiateUnits(units, meshName) {
+function instantiateUnits(gltf, units, meshName) {
     for (let i = 0; i < units.length; i++) {        
-        let clonedScene = SkeletonUtils.clone(units[0].model);
+        let clonedScene = SkeletonUtils.clone(gltf.scene);
+        units[i].model = clonedScene;
 
         if(clonedScene) { // THREE.Scene is cloned properly
             let clonedMesh = clonedScene.getObjectByName(meshName);
@@ -321,9 +298,9 @@ function instantiateUnits(units, meshName) {
 
             /** Populate all animation fields for the relevant mesh */
             if(meshName == "vanguard_Mesh") {
-                units[i].sideAnim = mixer.clipAction(units[0].animations[0]);
-                units[i].upAnim = mixer.clipAction(units[0].animations[1]);
-                units[i].downAnim = mixer.clipAction(units[0].animations[2]);
+                units[i].sideAnim = mixer.clipAction(gltf.animations[0]);
+                units[i].upAnim = mixer.clipAction(gltf.animations[1]);
+                units[i].downAnim = mixer.clipAction(gltf.animations[2]);
 
                 units[i].sideAnim.play();
                 units[i].upAnim.play();
@@ -333,9 +310,44 @@ function instantiateUnits(units, meshName) {
                 units[i].upAnim.enabled = false;
                 units[i].downAnim.enabled = false;
             }
+            else if(meshName == "Alien_(Armature)") {
+                units[i].idleAnim = mixer.clipAction(gltf.animations[0]);
+                units[i].walkAnim = mixer.clipAction(gltf.animations[1]);
+                units[i].strafeLAnim = mixer.clipAction(gltf.animations[2]);
+                units[i].strafeRAnim = mixer.clipAction(gltf.animations[3]);
+                units[i].walkBackwardsAnim = mixer.clipAction(gltf.animations[4]);
+                units[i].deathAnim = mixer.clipAction(gltf.animations[5]);
+                units[i].shootAnim = mixer.clipAction(gltf.animations[6]);
+            
+                units[i].deathAnim.setLoop(THREE.LoopOnce);
+                units[i].deathAnim.clampWhenFinished = true;
+            
+                units[i].idleAnim.play();
+                units[i].walkAnim.play();
+                units[i].strafeLAnim.play();
+                units[i].strafeRAnim.play();
+                units[i].walkBackwardsAnim.play();
+                units[i].deathAnim.play();
+                units[i].shootAnim.play();
+            
+                units[i].idleAnim.enabled = false;
+                units[i].walkAnim.enabled = false;
+                units[i].strafeLAnim.enabled = false;
+                units[i].strafeRAnim.enabled = false;
+                units[i].walkBackwardsAnim.enabled = false;
+                units[i].deathAnim.enabled = false;
+                units[i].shootAnim.enabled = false;
+
+                /** Hitboxes */
+                units[i].hitbox = new Hitbox("alien");
+                units[i].model.add(units[i].hitbox.mesh);
+                units[i].model.name = "alien" + (i + 1);
+
+                collidableMeshList.push(units[i].hitbox.mesh);
+            }
 
             /** Play default animation */
-            let clip = THREE.AnimationClip.findByName(units[0].animations, units[i].defaultAnim);
+            let clip = THREE.AnimationClip.findByName(gltf.animations, units[i].defaultAnim);
 
             if(clip) {
                 let action = mixer.clipAction(clip);
@@ -347,13 +359,13 @@ function instantiateUnits(units, meshName) {
             scene.add(clonedScene); // Add cloned scene to the world scene
             
             /** Apply transformations to the cloned scene */
-            clonedScene.position.set(units[i].getPosition().x, units[i].getPosition().y, units[i].getPosition().z);
+            clonedScene.position.set(units[i].position.x, units[i].position.y, units[i].position.z);
 
-            clonedScene.scale.set(units[i].getScale().x, units[i].getScale().y, units[i].getScale().z);
+            clonedScene.scale.set(units[i].scale.x, units[i].scale.y, units[i].scale.z);
 
-            clonedScene.rotation.x = units[i].getRotation().x;
-            clonedScene.rotation.y = units[i].getRotation().y;
-            clonedScene.rotation.z = units[i].getRotation().z;
+            clonedScene.rotation.x = units[i].rotation.x;
+            clonedScene.rotation.y = units[i].rotation.y;
+            clonedScene.rotation.z = units[i].rotation.z;
         }
     }
 }
@@ -982,8 +994,6 @@ function updateBullets() {
     
     player.weapon.bullets.forEach((item, index) => {
 
-        console.log()
-
         if(item.originalPosition.distanceTo(item.bullet.position) > 200) { // Restrict the bullet from travelling past 100 units
             scene.remove(item.bullet); // Remove the bullet from the scene
             player.weapon.bullets.splice(index, 1); // Remove the bullet from the array
@@ -1000,7 +1010,7 @@ function updateBullets() {
         // scene.add(new THREE.ArrowHelper(item.raycaster.ray.direction, item.raycaster.ray.origin, 1));
 
         let intersects = item.raycaster.intersectObjects(collidableMeshList, true);
-
+        
         if(intersects.length > 0) {
             let intersect = intersects[0];
             let distance_one = intersect.distance;
@@ -1013,37 +1023,24 @@ function updateBullets() {
 
                 if(intersect.object.parent.parent.name != null) {
                     switch(intersect.object.parent.parent.name) { // The name of the model that the hitbox mesh is attached to
-                        case "alien":
-    
-                            if(intersect.object.name == "head") { // Headshot
-                                alien.currentHealth -= 100;
-                                audioCollection.headshot.play();
-                                crosshair.style.background = "url(hud/crosshairs/crosshair_hitmarker.svg)";
-                                crosshair.style.filter = "brightness(0) saturate(100%) invert(11%) sepia(96%) saturate(6875%) hue-rotate(0deg) brightness(91%) contrast(126%)";
-                            }
-                            else { // Bodyshot
-                                alien.currentHealth -= 20;
-                                crosshair.style.background = "url(hud/crosshairs/crosshair_hitmarker.svg)";
-                                if(alien.currentHealth <= 0) {
-                                    crosshair.style.filter = "brightness(0) saturate(100%) invert(11%) sepia(96%) saturate(6875%) hue-rotate(0deg) brightness(91%) contrast(126%)";
-                                }
-                            }
-
-                            if(alien.currentHealth <= 0) {
-                                alien.deathAnim.enabled = true;
-                                alien.shootAnim.enabled = false;
-                                let indexOfCollidableMesh = collidableMeshList.indexOf(alien.hitbox.mesh);
-                                collidableMeshList.splice(indexOfCollidableMesh, 1);
-                                alien.alienModel.remove(alien.hitbox.mesh);
-                                alien.hitbox = null;
-                            }
-
-                            setTimeout(() => {
-                                crosshair.style.background = "url(hud/crosshairs/crosshair.svg)";
-                                crosshair.style.filter = "none";
-                            }, 300);
-                        
-                        break;
+                        case "alien1":
+                            damageAlien(0, intersect);
+                            break;
+                        case "alien2":
+                            damageAlien(1, intersect);
+                            break;
+                        case "alien3":
+                            damageAlien(2, intersect);
+                            break;
+                        case "alien4":
+                            damageAlien(3, intersect);
+                            break;
+                        case "alien5":
+                            damageAlien(4, intersect);
+                            break;
+                        case "alien6":
+                            damageAlien(5, intersect);
+                            break;
                     }
                 }
             }
@@ -1077,6 +1074,38 @@ function updateBullets() {
         }
     
     }
+}
+
+function damageAlien(alienNumber, intersect) {
+    let currAlien = alienArray[alienNumber];
+
+    if(intersect.object.name == "head") { // Headshot
+        currAlien.currentHealth -= 100;
+        audioCollection.headshot.play();
+        crosshair.style.background = "url(hud/crosshairs/crosshair_hitmarker.svg)";
+        crosshair.style.filter = "brightness(0) saturate(100%) invert(11%) sepia(96%) saturate(6875%) hue-rotate(0deg) brightness(91%) contrast(126%)";
+    }
+    else { // Bodyshot
+        currAlien.currentHealth -= 20;
+        crosshair.style.background = "url(hud/crosshairs/crosshair_hitmarker.svg)";
+        if(currAlien.currentHealth <= 0) {
+            crosshair.style.filter = "brightness(0) saturate(100%) invert(11%) sepia(96%) saturate(6875%) hue-rotate(0deg) brightness(91%) contrast(126%)";
+        }
+    }
+
+    if(currAlien.currentHealth <= 0) {
+        currAlien.deathAnim.enabled = true;
+        currAlien.idleAnim.enabled = false;
+        let indexOfCollidableMesh = collidableMeshList.indexOf(currAlien.hitbox.mesh);
+        collidableMeshList.splice(indexOfCollidableMesh, 1);
+        currAlien.model.remove(currAlien.hitbox.mesh);
+        currAlien.hitbox = null;
+    }
+
+    setTimeout(() => {
+        crosshair.style.background = "url(hud/crosshairs/crosshair.svg)";
+        crosshair.style.filter = "none";
+    }, 300);
 }
 
 function boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop) {
@@ -1173,7 +1202,7 @@ function loadModel(url, key) {
                 initPlayerModel(gltf);
                 break;
             case "alien":
-                initAlienModel(gltf);
+                initAlienModels(gltf);
                 break;
             case "bounty_hunter":
                 initBountyHunters(gltf);
@@ -1514,12 +1543,20 @@ function initPlayer() {
     loadModel("models/characters/player/player_gun.glb", "player");
 }
 
-function initAlien() {
-    alien = new Alien("alien");
+function initAliens() {
+    alien1 = new Alien();
+    alien2 = new Alien();
+    alien3 = new Alien();
+    alien4 = new Alien();
+    alien5 = new Alien();
+    alien6 = new Alien();
     loadModel("models/characters/enemy/alien.mintexture.glb", "alien");
 }
 
 function initBountyHunter() {
+    bountyHunter1 = new BountyHunter();
+    bountyHunter2 = new BountyHunter();
+    bountyHunter3 = new BountyHunter();
     loadModel("models/characters/bounty hunter/bounty_hunter.glb", "bounty_hunter");
 }
 
@@ -1626,7 +1663,7 @@ function init() {
     initLoadingManager();
     initLoaders();
     initPlayer();
-    initAlien();
+    initAliens();
     initBountyHunter();
     initWeaponModel();
     initAudio();
