@@ -186,6 +186,14 @@ function gameLoop() {
     render();
 }
 
+function loadFirstLevel() {
+    let direction = new THREE.Vector3();
+    controls.getDirection(direction);
+    let playerRaycaster = new THREE.Raycaster(controls.getObject().position, direction);
+    scene.add(new THREE.ArrowHelper(playerRaycaster.ray.direction, playerRaycaster.ray.origin, 10));
+
+}
+
 function initPlayerModel(gltf) {
     player.playerModel = gltf.scene; // ** TODO **
     let animations = gltf.animations;
@@ -938,7 +946,7 @@ function levelZeroBoundingBox() {
         }
         if(xPos < xTempleEntrance) { // Enter first temple
             currentLevel = 1;
-            // loadFirstLevel();
+            loadFirstLevel();
         }
     }
 
@@ -981,8 +989,6 @@ function updateBullets() {
     }
     
     player.weapon.bullets.forEach((item, index) => {
-
-        console.log()
 
         if(item.originalPosition.distanceTo(item.bullet.position) > 200) { // Restrict the bullet from travelling past 100 units
             scene.remove(item.bullet); // Remove the bullet from the scene
@@ -1595,7 +1601,7 @@ function initWorld() {
     drawRocks();
     drawStars();
 
-    // boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
+    boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
 }
 
 function render() {
