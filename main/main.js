@@ -24,25 +24,6 @@ const loadingSymbol = document.getElementById("loadingsymbol");
 
 window.onload = menu;
 
-/** TEST VARIABLES */
-// Boundary values for the respective box divisions
-let boxOneBottom = 30;
-let boxOneTop = -550;
-let boxOneLeft = -40;
-let boxOneRight = -boxOneLeft;
-
-let boxTwoBottom = -420;
-let boxTwoTop = -450;
-
-let boxThreeBottom = boxTwoBottom;
-let boxThreeTop = -615;
-let boxThreeLeft = 60;
-let boxThreeRight = 130;
-
-let boxFourBottom = -585;
-let boxFourTop = boxThreeTop;
-
-let xTempleEntrance = 60;
 let boundaryFactor = 5; // Account for skipped frames and fucked behaviour with game loop
 
 /** SCENE GLOBALS */
@@ -810,28 +791,11 @@ function drawBushes() {
 }
 
 function drawGround() {
-    /** Texture for the secret path */
-    let pathGeom = new THREE.PlaneBufferGeometry(90, 250, 100, 100);
-    let pathTexture = loadTexture("textures/texture_grass_dead.jpg");
-    pathTexture.wrapS = THREE.RepeatWrapping;
-    pathTexture.wrapT = THREE.RepeatWrapping;
-    pathTexture.repeat.set(9, 25);
-    let path = new THREE.Mesh(pathGeom,
-                                    new THREE.MeshLambertMaterial({
-                                        color: "#454545",
-                                        side: THREE.DoubleSide,
-                                        map: pathTexture
-                                    }));
-    path.rotation.x = -Math.PI/2;
-    path.position.set(85, 0.01, -545);
-    scene.add(path);
-
-    /** Texture for general path */
-    let groundGeom = new THREE.PlaneBufferGeometry(1000, 1000, 100, 100);
+    let groundGeom = new THREE.PlaneBufferGeometry(2000, 4000, 100, 100);
     let groundTexture = loadTexture("textures/texture_path_outline.jpg");
     groundTexture.wrapS = THREE.RepeatWrapping;
     groundTexture.wrapT = THREE.RepeatWrapping;
-    groundTexture.repeat.set(70, 70);
+    groundTexture.repeat.set(80, 160);
     let ground = new THREE.Mesh(groundGeom,
                                     new THREE.MeshLambertMaterial({
                                         color: "#5e503e",
@@ -876,25 +840,24 @@ function levelZeroBoundingBox() {
     let boxThree;
     let boxFour;
 
-    // // Boundary values for the respective box divisions
-    // let boxOneBottom = 10;
-    // let boxOneTop = -550;
-    // let boxOneLeft = -20;
-    // let boxOneRight = -boxOneLeft;
+    // Boundary values for the respective box divisions
+    let boxOneBottom = 30;
+    let boxOneTop = -550;
+    let boxOneLeft = -40;
+    let boxOneRight = -boxOneLeft;
 
-    // let boxTwoBottom = -420;
-    // let boxTwoTop = -450;
-    
-    // let boxThreeBottom = boxTwoBottom;
-    // let boxThreeTop = -605;
-    // let boxThreeLeft = 50;
-    // let boxThreeRight = 80;
-    
-    // let boxFourBottom = -585;
-    // let boxFourTop = boxThreeTop;
+    let boxTwoBottom = -420;
+    let boxTwoTop = -450;
 
-    // let xTempleEntrance = 40;
-    // let boundaryFactor = 5; // Account for skipped frames and fucked behaviour with game loop
+    let boxThreeBottom = boxTwoBottom;
+    let boxThreeTop = -615;
+    let boxThreeLeft = 60;
+    let boxThreeRight = 130;
+
+    let boxFourBottom = -585;
+    let boxFourTop = boxThreeTop;
+
+    let xTempleEntrance = 60;
 
     if(xPos >= boxOneLeft && xPos <= boxOneRight) {
         setBox(1);
@@ -990,8 +953,119 @@ function levelZeroBoundingBox() {
                 break;
         }
     }
+}
 
-    // boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
+function puzzleOneBoundingBox() {
+    let boxOneBottom = -585;
+    let boxOneLeft = -40;
+    let boxOneRight = -boxOneRight;
+    let boxOneTop = -685;
+
+    let boxTwoBottom = boxOneTop;
+    let boxTwoLeft = -15;
+    let boxTwoRight = 15;
+    let boxTwoTop = -715;
+}
+
+function levelTwoBoundingBox() {
+    let boxOneBottom = -715;
+    let boxOneLeft = 40;
+    let boxOneRight = -boxOneRight;
+    let boxOneTop = -900;
+
+    let boxTwoBottom = boxOneTop;
+    let boxTwoLeft = -200;
+    let boxTwoRight = boxOneRight;
+    let boxTwoTop = -980;
+
+    let boxThreeBottom = boxTwoBottom;
+    let boxThreeLeft = -280;
+    let boxThreeRight = boxTwoLeft;
+    let boxThreeTop = -1100;
+
+    let boxFourBottom = boxThreeTop;
+    let boxFourLeft = boxThreeLeft;
+    let boxFourRight = 500;
+    let boxFourTop = -1180;
+
+    let boxFiveBottom = -1070;
+    let boxFiveLeft = 445;
+    let boxFiveRight = 475;
+    let boxFiveTop = boxFourBottom;
+}
+
+function puzzleTwoBoundingBox() {
+    let boxOneBottom = -970;
+    let boxOneLeft = 420;
+    let boxOneRight = 500;
+    let boxOneTop = -1070;
+
+    let boxTwoBottom = -940;
+    let boxTwoLeft = 445;
+    let boxTwoRight = 475;
+    let boxTwoTop = boxOneBottom;
+}
+
+function levelThreeBoundingBox() {
+    let boxOneBottom = -680;
+    let boxOneLeft = 420;
+    let boxOneRight = 500;
+    let boxOneTop = -940;
+
+    let boxTwoBottom = -600;
+    let boxTwoLeft = 280;
+    let boxTwoRight = boxOneRight;
+    let boxTwoTop = boxOneBottom;
+
+    let boxThreeBottom = -450;
+    let boxThreeLeft = 200;
+    let boxThreeRight = boxTwoLeft;
+    let boxThreeTop = boxTwoTop;
+
+    let boxFourBottom = -370;
+    let boxFourLeft = boxThreeLeft;
+    let boxFourRight = 400;
+    let boxFourTop = boxThreeBottom;
+
+    let boxFiveBottom = -395;
+    let boxFiveLeft = boxFourRight;
+    let boxFiveRight = 430;
+    let boxFiveTop = -425;
+
+    /** SECRET PATH */
+    let boxSixBottom = -810;
+    let boxSixLeft = boxOneLeft;
+    let boxSixRight = 550;
+    let boxSixTop = -840;
+
+    let boxSevenBottom = -770;
+    let boxSevenLeft = boxSixRight;
+    let boxSevenRight = 600;
+    let boxSevenTop = boxSixBottom;
+
+    let boxEightBottom = -740;
+    let boxEightLeft = boxOneLeft;
+    let boxEightRight = boxSevenRight;
+    let boxEightTop = boxSevenBottom;
+}
+
+function puzzleThreeBoundingBox() {
+    let boxOneBottom = -370;
+    let boxOneLeft = 430;
+    let boxOneRight = 530;
+    let boxOneTop = -450;
+
+    let boxTwoBottom = -340;
+    let boxTwoLeft = 465;
+    let boxTwoRight = 495;
+    let boxTwoTop = -370;
+}
+
+function levelFourBoundingBox() {
+    let boxOneBottom = -40;
+    let boxOneLeft = 330;
+    let boxOneRight = 630;
+    let boxOneTop = -340;
 }
 
 function updateBullets() {
@@ -1116,31 +1190,132 @@ function damageAlien(alienNumber, intersect) {
     }, 300);
 }
 
-function boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop) {
+function boundingBoxVis() {
+    // Boundary values for the respective box divisions
+    let boxOneBottom = 30;
+    let boxOneTop = -550;
+    let boxOneLeft = -40;
+    let boxOneRight = -boxOneLeft;
+
+    let boxTwoBottom = -420;
+    let boxTwoTop = -450;
+
+    let boxThreeBottom = boxTwoBottom;
+    let boxThreeTop = -615;
+    let boxThreeLeft = 60;
+    let boxThreeRight = 130;
+
+    let boxFourBottom = -585;
+    let boxFourTop = boxThreeTop;
+
     let linematerial = new THREE.LineBasicMaterial({
         color: 0xffff00
     });
 
     let points = [];
+    let points2 = [];
 
-    points.push(new THREE.Vector3(xTempleEntrance, .1, boxFourTop));
-    points.push(new THREE.Vector3(boxThreeRight, .1, boxFourTop));
-    points.push(new THREE.Vector3(boxThreeRight, .1, boxTwoBottom));
+    points.push(new THREE.Vector3(330, 1, -40));
+    points.push(new THREE.Vector3(330, 1, -340)); // Entrance of level 4 box (left)
 
-    points.push(new THREE.Vector3(boxOneRight, .1, boxTwoBottom));
-    points.push(new THREE.Vector3(boxOneRight, .1, boxOneBottom));
-    points.push(new THREE.Vector3(-boxOneRight, .1, boxOneBottom));
-    points.push(new THREE.Vector3(-boxOneRight, .1, boxOneTop));
-    points.push(new THREE.Vector3(boxOneRight, .1, boxOneTop));
-    points.push(new THREE.Vector3(boxOneRight, .1, boxTwoTop));
-    points.push(new THREE.Vector3(boxThreeLeft, .1, boxTwoTop));
-    points.push(new THREE.Vector3(boxThreeLeft, .1, boxFourBottom));
-    points.push(new THREE.Vector3(xTempleEntrance, .1, boxFourBottom));
+    points.push(new THREE.Vector3(465, 1, -340)); // Exit of level 3.5 box (left)
+    points.push(new THREE.Vector3(465, 1, -370));
+    points.push(new THREE.Vector3(430, 1, -370)); // Entrance of level 3.5 box (right)
+
+    points.push(new THREE.Vector3(430, 1, -395)); // Exit of level 3 box (right)
+    points.push(new THREE.Vector3(400, 1, -395));
+    points.push(new THREE.Vector3(400, 1, -370));
+    points.push(new THREE.Vector3(200, 1, -370));
+    points.push(new THREE.Vector3(200, 1, -680));
+    points.push(new THREE.Vector3(420, 1, -680));
+    points.push(new THREE.Vector3(420, 1, -940));
+    points.push(new THREE.Vector3(445, 1, -940)); // Entrance of level 3 box (right)
+
+    points.push(new THREE.Vector3(445, 1, -970)); // Exit of level 2.5 box (right)
+    points.push(new THREE.Vector3(420, 1, -970));
+    points.push(new THREE.Vector3(420, 1, -1070));
+    points.push(new THREE.Vector3(445, 1, -1070)); // Start of level 2.5 box (right)
+
+    points.push(new THREE.Vector3(445, 1, -1100)); // Exit of level 2 box (right)
+    points.push(new THREE.Vector3(-200, 1, -1100));
+    points.push(new THREE.Vector3(-200, 1, -980));
+    points.push(new THREE.Vector3(40, 1, -980));
+    points.push(new THREE.Vector3(40, 1, -715));
+    points.push(new THREE.Vector3(15, 1, -715)); // Entrance of level 2 box (right)
+
+    points.push(new THREE.Vector3(15, 1, -685)); // Exit of level 1.5 box (right)
+    points.push(new THREE.Vector3(40, 1, -685)); // Start of level 1.5 box (right)
+
+    /** Level 1 box */
+    points.push(new THREE.Vector3(boxOneRight, 1, boxFourTop));
+    points.push(new THREE.Vector3(boxThreeRight, 1, boxFourTop));
+    points.push(new THREE.Vector3(boxThreeRight, 1, boxTwoBottom));
+    
+    points.push(new THREE.Vector3(boxOneRight, 1, boxTwoBottom));
+    points.push(new THREE.Vector3(boxOneRight, 1, boxOneBottom));
+    points.push(new THREE.Vector3(-boxOneRight, 1, boxOneBottom));
+    points.push(new THREE.Vector3(-boxOneRight, 1, boxOneTop));
+    points.push(new THREE.Vector3(boxOneRight, 1, boxOneTop));
+    points.push(new THREE.Vector3(boxOneRight, 1, boxTwoTop));
+    points.push(new THREE.Vector3(boxThreeLeft, 1, boxTwoTop));
+    points.push(new THREE.Vector3(boxThreeLeft, 1, boxFourBottom));
+    points.push(new THREE.Vector3(boxOneRight, 1, boxFourBottom));
+
+    points.push(new THREE.Vector3(-40, 1, -585)); // Start of level 1.5 box (left)
+    points.push(new THREE.Vector3(-40, 1, -685));
+    points.push(new THREE.Vector3(-15, 1, -685)); // Exit of level 1.5 box (left)
+
+    points.push(new THREE.Vector3(-15, 1, -715)); // Entrance of level 2 box (left)
+    points.push(new THREE.Vector3(-40, 1, -715));
+    points.push(new THREE.Vector3(-40, 1, -900));
+    points.push(new THREE.Vector3(-280, 1, -900));
+    points.push(new THREE.Vector3(-280, 1, -1180));
+    points.push(new THREE.Vector3(500, 1, -1180));
+    points.push(new THREE.Vector3(500, 1, -1100));
+    points.push(new THREE.Vector3(475, 1, -1100)); // Exit of level 2 box (left)
+
+    points.push(new THREE.Vector3(475, 1, -1070)); // Start of level 2.5 box (left)
+    points.push(new THREE.Vector3(500, 1, -1070));
+    points.push(new THREE.Vector3(500, 1, -970));
+    points.push(new THREE.Vector3(475, 1, -970)); // Exit of level 2.5 box (left)
+
+    points.push(new THREE.Vector3(475, 1, -940)); // Entrance of level 3 box (left)
+    points.push(new THREE.Vector3(500, 1, -940));
+    points.push(new THREE.Vector3(500, 1, -840));
+
+    points.push(new THREE.Vector3(600, 1, -840)); // Entrance of secret path
+    points.push(new THREE.Vector3(600, 1, -740));
+    points.push(new THREE.Vector3(500, 1, -740)); // Exit of secret path
+
+    /** Secret path inner box */
+    points2.push(new THREE.Vector3(500, 1, -810));
+    points2.push(new THREE.Vector3(550, 1, -810));
+    points2.push(new THREE.Vector3(550, 1, -770));
+    points2.push(new THREE.Vector3(500, 1, -770));
+
+    points.push(new THREE.Vector3(500, 1, -600));
+    points.push(new THREE.Vector3(280, 1, -600));
+    points.push(new THREE.Vector3(280, 1, -450));
+    points.push(new THREE.Vector3(400, 1, -450));
+    points.push(new THREE.Vector3(400, 1, -425));
+    points.push(new THREE.Vector3(430, 1, -425)); // Exit of level 3 box (left)
+
+    points.push(new THREE.Vector3(430, 1, -450)); // Entrance of level 3.5 box (left)
+    points.push(new THREE.Vector3(530, 1, -450));
+    points.push(new THREE.Vector3(530, 1, -370));
+    points.push(new THREE.Vector3(495, 1, -370));
+    points.push(new THREE.Vector3(495, 1, -340)); // Exit of level 3.5 box (right)
+
+    points.push(new THREE.Vector3(630, 1, -340)); // Entrance of level 4 box (right)
+    points.push(new THREE.Vector3(630, 1, -40));
 
     let geometry = new THREE.BufferGeometry().setFromPoints(points);
+    let geometry2 = new THREE.BufferGeometry().setFromPoints(points2);
 
-    let boundingBox = new THREE.Line(geometry, linematerial);
+    let boundingBox = new THREE.LineLoop(geometry, linematerial);
+    let secretPathInner = new THREE.LineLoop(geometry2, linematerial);
     scene.add(boundingBox);
+    scene.add(secretPathInner);
 }
 
 /** Standalone function to handle the jump animation.
@@ -1640,7 +1815,7 @@ function initWorld() {
     drawRocks();
     drawStars();
 
-    boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
+    boundingBoxVis();
 }
 
 function render() {
