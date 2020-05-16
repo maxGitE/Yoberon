@@ -101,7 +101,7 @@ let totemFour;
 let selectedTotem;
 let selectedTotems = [];
 let correctTotemOrder = [];
-let finishedTotemPuzzle = false;
+let finishedPuzzleOne = false;
 let frog;
 let eagle;
 let lion;
@@ -208,10 +208,9 @@ function gameLoop() {
     render();
 }
 
-function levelOne() {
-    levelOneBoundingBox();
+function levelOnePuzzle() {
 
-    if(!finishedTotemPuzzle) {
+    if(!finishedPuzzleOne) {
         cameraDirectionLevelOne = new THREE.Vector3();
         cameraDirectionLevelOne.normalize();
         controls.getDirection(cameraDirectionLevelOne);
@@ -309,7 +308,7 @@ function updateTotemSelection() {
                 setTimeout(() => {
                     audioCollection.rockSink.play();
                 }, 4000);
-                finishedTotemPuzzle = true; // Stop casting the ray
+                finishedPuzzleOne = true; // Stop casting the ray
                 interact.style.visibility = "hidden";
             }
             else {
@@ -513,7 +512,7 @@ function instantiateUnits(gltf, units, meshName) {
                 units[i].model.add(units[i].hitbox.mesh);
                 units[i].model.name = "alien" + (i + 1);
 
-                collidableMeshList.push(units[i].hitbox.mesh);
+                bulletCollidableMeshList.push(units[i].hitbox.mesh);
             }
 
             /** Play default animation */
@@ -1061,7 +1060,6 @@ function drawStars() {
     scene.add(starFieldB.starField);
 }
 
-
 function drawTotems() {
     totemCollection = new THREE.Object3D();
 
@@ -1167,6 +1165,7 @@ function updateLevel() {
             levelOneBoundingBox();
             break;
         case 1.5:
+            levelOnePuzzle();
             puzzleOneBoundingBox();
             break;
         case 2:
@@ -1225,36 +1224,6 @@ function setBox(boxNo, level) {
     }
     // console.clear();
     // console.log("Level: " + level + ", Box: " + boxArr.findIndex(item => item == true));
-}
-
-/** Changes which bounding boxes to load depending on what the current level is */
-function updateLevel() {
-    xPos = controls.getObject().position.x;
-    zPos = controls.getObject().position.z;
-
-    switch(currentLevel) {
-        case 1: 
-            levelOneBoundingBox();
-            break;
-        case 1.5:
-            puzzleOneBoundingBox();
-            break;
-        case 2:
-            levelTwoBoundingBox();
-            break;
-        case 2.5:
-            puzzleTwoBoundingBox();
-            break;  
-        case 3:
-            levelThreeBoundingBox();
-            break;
-        case 3.5:
-            puzzleThreeBoundingBox();
-            break;   
-        case 4:
-            levelFourBoundingBox();
-            break; 
-    }
 }
 
 /** 
@@ -1367,8 +1336,6 @@ function puzzleOneBoundingBox() {
     let boxTwoRight = 15;
     let boxTwoTop = -715;
 
-    let puzzleCompleted = true;
-
     // Check which box the player is in at any point in time
     if(xPos > boxOneLeft && xPos < boxOneRight && zPos < boxOneBottom && zPos > boxOneTop) {
         setBox(1, 1.5);
@@ -1382,7 +1349,7 @@ function puzzleOneBoundingBox() {
             controls.getObject().position.z = boxOneBottom - boundaryFactor;
         }
         if(zPos < boxOneTop + boundaryFactor) { // Place top boundary
-            if(puzzleCompleted) { // Allow player through the path only after the puzzle is completed
+            if(finishedPuzzleOne) { // Allow player through the path only after the puzzle is completed
                 if(xPos < boxTwoLeft || xPos > boxTwoRight)
                     controls.getObject().position.z = boxOneTop + boundaryFactor;
             }
@@ -1848,10 +1815,6 @@ function levelFourBoundingBox() {
     }
 }
 
-function levelOneBoundingBox() {
-
-}
-
 function updateBullets() {
     if(player.weapon.bullets.length > 5) {
         scene.remove(player.weapon.bullets[0].bullet);
@@ -1875,7 +1838,7 @@ function updateBullets() {
 
         // scene.add(new THREE.ArrowHelper(item.raycaster.ray.direction, item.raycaster.ray.origin, 1));
 
-        let intersects = item.raycaster.intersectObjects(collidableMeshList, true);
+        let intersects = item.raycaster.intersectObjects(bulletCollidableMeshList, true);
         
         if(intersects.length > 0) {
             let intersect = intersects[0];
@@ -1968,8 +1931,8 @@ function damageAlien(alienNumber, intersect) {
     if(currAlien.currentHealth <= 0) {
         currAlien.deathAnim.enabled = true;
         currAlien.idleAnim.enabled = false;
-        let indexOfCollidableMesh = collidableMeshList.indexOf(currAlien.hitbox.mesh);
-        collidableMeshList.splice(indexOfCollidableMesh, 1);
+        let indexOfCollidableMesh = bulletCollidableMeshList.indexOf(currAlien.hitbox.mesh);
+        bulletCollidableMeshList.splice(indexOfCollidableMesh, 1);
         currAlien.model.remove(currAlien.hitbox.mesh);
         currAlien.hitbox = null;
     }
