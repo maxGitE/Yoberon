@@ -5,6 +5,12 @@ class AudioCollection {
         this._headshot;
         this._hitmarker;
         this._jumpboost;
+        this._paper;
+        this._totemSelect;
+        this._wrongTotemOrder;
+        this._correctTotemOrder;
+        this._rockSink;
+        this._rockSlide;
     }
 
     get wildlife() {
@@ -31,6 +37,14 @@ class AudioCollection {
         this._jumpboost = audio;
     }
 
+    get paper() {
+        return this._paper;
+    }
+
+    set paper(audio) {
+        this._paper = audio;
+    }
+
     get headshot() {
         return this._headshot;
     }
@@ -45,5 +59,45 @@ class AudioCollection {
 
     set hitmarker(audio) {
         this._hitmarker = audio;
+    }
+
+    get totemSelect() {
+        return this._totemSelect;
+    }
+
+    set totemSelect(audio) {
+        this._totemSelect = audio;
+    }
+
+    get wrongTotemOrder() {
+        return this._wrongTotemOrder
+    }
+
+    set wrongTotemOrder(audio) {
+        this._wrongTotemOrder = audio;
+    }
+
+    get correctTotemOrder() {
+        return this._correctTotemOrder;
+    }
+
+    set correctTotemOrder(audio) {
+        this._correctTotemOrder = audio;
+    }
+
+    get rockSink() {
+        return this._rockSink;
+    }
+
+    set rockSink(audio) {
+        this._rockSink = audio;
+    }
+
+    get rockSlide() {
+        return this._rockSlide;
+    }
+
+    set rockSlide(audio) {
+        this._rockSlide = audio;
     }
 }

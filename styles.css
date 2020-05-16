@@ -111,6 +111,35 @@ button:active {
     background-color: #888b8c;
 }
 
+#interact {
+    position: fixed;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -30%);
+    width: 50px;
+    height: 50px;
+    background-image: url("hud/interaction/e_interact.svg");
+    background-repeat: no-repeat;
+    visibility: hidden;
+}
+
+#paper {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 25%;
+    height: 50%;
+    background-image: url("hud/inventory/inventory_background.png");
+    background-color: #f2eecb;
+    text-align: center;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 100px;
+    line-height: 200px;
+    visibility: hidden;
+}
+
 #loadinginfo {
     position: fixed;
     top: 0;

@@ -15,9 +15,10 @@ const title = document.getElementById("title");
 const menuBlock = document.getElementById("menu");
 const pauseBlock = document.getElementById("pause");
 const resume = document.getElementById("resume");
-const controlspause = document.getElementById("controlspause");
 const crosshair = document.getElementById("crosshair");
 const weaponCooldownBar = document.getElementById("weaponcooldown");
+const interact = document.getElementById("interact");
+const paper = document.getElementById("paper");
 const playButton = document.getElementById("play");
 const loadingInfo = document.getElementById("loadinginfo");
 const loadingSymbol = document.getElementById("loadingsymbol");
@@ -89,10 +90,40 @@ let skyboxURLs = ["cubemap/space_one/px.png", "cubemap/space_one/nx.png",
 /** OBJECTS */
 let starFieldA;
 let starFieldB;
-let box;
+
+/** LEVEL 1 */
+let cameraDirectionLevelOne;
+let totemCollection;
+let totemOne;
+let totemTwo;
+let totemThree;
+let totemFour;
+let selectedTotem;
+let selectedTotems = [];
+let correctTotemOrder = [];
+let finishedTotemPuzzle = false;
+let frog;
+let eagle;
+let lion;
+let rooster;
+let boulder_one;
+let rockOverClueOne;
+let rockOverClueTwo;
+let rockOverClueThree;
+let rockOverClueFour;
+let selectedRock;
+let directionRockSlides;
+let paper_clueOne;
+let paper_clueTwo;
+let paper_clueThree;
+let paper_clueFour;
+let clueWords = ["AIR", "WATER", "FIRE", "EARTH"];
+let levelOneCollidableMeshList = [];
 
 let lockingClick = true;
-let collidableMeshList = [];
+let bulletCollidableMeshList = [];
+
+let interactableObject;
 
 function gameLoop() {
 
@@ -177,12 +208,159 @@ function gameLoop() {
     render();
 }
 
-function loadFirstLevel() {
-    let direction = new THREE.Vector3();
-    controls.getDirection(direction);
-    let playerRaycaster = new THREE.Raycaster(controls.getObject().position, direction);
-    scene.add(new THREE.ArrowHelper(playerRaycaster.ray.direction, playerRaycaster.ray.origin, 10));
+function levelOne() {
+    levelOneBoundingBox();
 
+    if(!finishedTotemPuzzle) {
+        cameraDirectionLevelOne = new THREE.Vector3();
+        cameraDirectionLevelOne.normalize();
+        controls.getDirection(cameraDirectionLevelOne);
+        let playerRaycaster = new THREE.Raycaster(controls.getObject().position, cameraDirectionLevelOne);
+
+        // scene.add(new THREE.ArrowHelper(playerRaycaster.ray.direction, playerRaycaster.ray.origin, 10));
+        let intersects = playerRaycaster.intersectObjects(levelOneCollidableMeshList, false);
+
+        if(intersects.length > 0 && intersects[0].distance < 10) {
+            interact.style.visibility = "visible";
+            console.log(intersects[0]);
+            if(intersects[0].object.name == "totem") { // Totem
+                interactableObject = "totem";
+                selectedTotem = intersects[0];
+            }
+            else if(intersects[0].object.name == "rockOverClueOne") { // Rock over clue one
+                interactableObject = "rockOverClueOne";
+            }
+            else if(intersects[0].object.name == "rockOverClueTwo") { // Rock over clue two
+                interactableObject = "rockOverClueTwo";
+            }
+            else if(intersects[0].object.name == "rockOverClueThree") { // Rock over clue three
+                interactableObject = "rockOverClueThree";
+            }
+            else if(intersects[0].object.name == "rockOverClueFour") { // Rock over clue four
+                interactableObject = "rockOverClueFour";
+            }
+            else if(intersects[0].object.name == "clueOne") { // Clue one
+                interactableObject = "clueOne";
+            }
+            else if(intersects[0].object.name == "clueTwo") { // Clue two
+                interactableObject = "clueTwo";
+            }
+            else if(intersects[0].object.name == "clueThree") { // Clue three
+                interactableObject = "clueThree";
+            }
+            else if(intersects[0].object.name == "clueFour") { // Clue four
+                interactableObject = "clueFour";
+            }
+        }
+        else {
+            interact.style.visibility = "hidden";
+            paper.style.visibility = "hidden";
+        }
+
+        if(audioCollection.rockSlide.isPlaying) {   
+            switch(selectedRock) {
+                case rockOverClueOne:
+                    rockOverClueOne.position.add(directionRockSlides.clone().multiplyScalar(0.1));
+                    break;
+                case rockOverClueTwo:
+                    rockOverClueTwo.position.add(directionRockSlides.clone().multiplyScalar(0.1));
+                    break;
+                case rockOverClueThree:
+                    rockOverClueThree.position.add(directionRockSlides.clone().multiplyScalar(0.1));
+                    break;
+                case rockOverClueFour:
+                    rockOverClueFour.position.add(directionRockSlides.clone().multiplyScalar(0.1));
+                    break;
+            }
+        }
+
+    }
+    else { // Solved puzzle
+        if(audioCollection.rockSink.isPlaying) {
+            if(boulder_one.position.y > -16.5) {
+                boulder_one.position.y -= 0.02;
+            }
+            else {
+                scene.remove(boulder_one);
+            }
+        }
+    }
+}
+
+function updateTotemSelection() {
+    selectedTotem.object.userData.selected = !selectedTotem.object.userData.selected;
+
+    if(selectedTotem.object.userData.selected) { // From unselected to selected
+        selectedTotem.object.material.color.setHex(0xffffff);
+        selectedTotems.push(selectedTotem);
+
+        if(selectedTotems.length == 4) { // Combination finished
+            let correct = true;
+            
+            for(let i = 0; i < 3; i++) {
+                if(selectedTotems[i].object.id != correctTotemOrder[i].id) { // Wrong order entered. The items in correctTotemOrder are objects so we can directly reference their id's.
+                                                                             // The items in selectedTotems are intersections so we need to explicitly reference the object attribute of the intersection to get the id.
+                    correct = false;
+                }
+            }
+
+            if(correct) {
+                audioCollection.correctTotemOrder.play();
+                setTimeout(() => {
+                    audioCollection.rockSink.play();
+                }, 4000);
+                finishedTotemPuzzle = true; // Stop casting the ray
+                interact.style.visibility = "hidden";
+            }
+            else {
+                audioCollection.wrongTotemOrder.play();
+                selectedTotems.forEach(totem => {
+                    totem.object.material.color.setHex(0x706d71);
+                    totem.object.userData.selected = false;
+                });
+                selectedTotems = [];
+            }
+        }
+    }
+    else { // From selected to unselected
+        selectedTotem.object.material.color.setHex(0x706d71);
+        let totemIndex = selectedTotems.findIndex(totem => totem.object.id == selectedTotem.object.id);
+        selectedTotems.splice(totemIndex, 1);
+    }   
+}
+
+function updateRockOverClue(rock, name) {
+    if(audioCollection.rockSlide.isPlaying) return; // Another rock is being pushed
+
+    selectedRock = rock;
+    audioCollection.rockSlide.play();
+
+    directionRockSlides = cameraDirectionLevelOne.clone(); // The direction the rock will move is the same direction that the camera is facing
+    directionRockSlides.y = 0; // Ignore the y direction of the camera as the rocks will slide along the xz-plane
+
+    let indexToRemove = levelOneCollidableMeshList.findIndex(object => object.name == name); // Remove the selected rock from the collidable mesh list
+    levelOneCollidableMeshList.splice(indexToRemove, 1);
+}
+
+function showClue(name) {
+    switch(name) {
+        case "clueOne":
+            paper.style.visibility = "visible";
+            paper.innerHTML = clueWords[0];
+            break;
+        case "clueTwo":
+            paper.style.visibility = "visible";
+            paper.innerHTML = clueWords[1];
+            break;
+        case "clueThree":
+            paper.style.visibility = "visible";
+            paper.innerHTML = clueWords[2];
+            break;
+        case "clueFour":
+            paper.style.visibility = "visible";
+            paper.innerHTML = clueWords[3];
+            break;            
+    }
 }
 
 function initPlayerModel(gltf) {
@@ -599,6 +777,61 @@ function initRockFour(gltf) {
     scene.add(cluster);
 }
 
+function initRockFive(gltf) {
+    boulder_one = gltf.scene; 
+    boulder_one.scale.set(15, 15, 15);
+    boulder_one.position.set(0, 0, -700);
+    scene.add(boulder_one);
+}
+
+function initRockOverClueOne(gltf) {
+    rockOverClueOne = gltf.scene.children[0];
+
+    rockOverClueOne.scale.set(0.005, 0.005, 0.005);
+    rockOverClueOne.rotation.z = Math.random() * 2*Math.PI;
+    rockOverClueOne.position.set(-20, 0, -570);
+
+    levelOneCollidableMeshList.push(rockOverClueOne);
+ 
+    scene.add(rockOverClueOne);
+}
+
+function initRockOverClueTwo(gltf) {
+    rockOverClueTwo = gltf.scene.children[0];
+
+    rockOverClueTwo.scale.set(0.006, 0.006, 0.006);
+    rockOverClueTwo.rotation.z = Math.random() * 2*Math.PI;
+    rockOverClueTwo.position.set(25, 0, -620);
+
+    levelOneCollidableMeshList.push(rockOverClueTwo);
+ 
+    scene.add(rockOverClueTwo);
+}
+
+function initRockOverClueThree(gltf) {
+    rockOverClueThree = gltf.scene.children[0];
+
+    rockOverClueThree.scale.set(0.0055, 0.0055, 0.0055);
+    rockOverClueThree.rotation.z = Math.random() * 2*Math.PI;
+    rockOverClueThree.position.set(-15, 0, -650);
+
+    levelOneCollidableMeshList.push(rockOverClueThree);
+ 
+    scene.add(rockOverClueThree);
+}
+
+function initRockOverClueFour(gltf) {
+    rockOverClueFour = gltf.scene.children[0];
+
+    rockOverClueFour.scale.set(0.0045, 0.0045, 0.0045);
+    rockOverClueFour.rotation.z = Math.random() * 2*Math.PI;
+    rockOverClueFour.position.set(10, 0, -560);
+
+    levelOneCollidableMeshList.push(rockOverClueFour);
+ 
+    scene.add(rockOverClueFour);
+}
+
 function initBushOne(gltf) {
     let bush = gltf.scene;
     let leafGeometry = bush.children[0].children[0].geometry;
@@ -811,8 +1044,13 @@ function drawGround() {
 }
 
 function drawRocks() {
-    loadModel("models/environment/rocks/rock_three.glb", "rock_three")
+    loadModel("models/environment/rocks/rock_three.glb", "rock_three");
     loadModel("models/environment/rocks/rock_four.glb", "rock_four");
+    loadModel("models/environment/rocks/rock_five.glb", "rock_five");
+    loadModel("models/environment/rocks/rock_over_clue_one.glb", "rock_over_clue_one");
+    loadModel("models/environment/rocks/rock_over_clue_two.glb", "rock_over_clue_two");
+    loadModel("models/environment/rocks/rock_over_clue_three.glb", "rock_over_clue_three");
+    loadModel("models/environment/rocks/rock_over_clue_four.glb", "rock_over_clue_four");
 }
 
 function drawStars() {
@@ -821,6 +1059,132 @@ function drawStars() {
 
     scene.add(starFieldA.starField);
     scene.add(starFieldB.starField);
+}
+
+
+function drawTotems() {
+    totemCollection = new THREE.Object3D();
+
+    let totemTexture = loadTexture("textures/totem_wood.png");
+    let normalMap = loadTexture("textures/totem_wood_normal.png");
+
+    let totemGeometry = new THREE.CylinderBufferGeometry(3, 3, 12, 32);
+    let totemOneMaterial = new THREE.MeshStandardMaterial( {color: "#706d71", map: totemTexture, normalMap: normalMap} );
+    let totemTwoMaterial = totemOneMaterial.clone();
+    let totemThreeMaterial = totemOneMaterial.clone();
+    let totemFourMaterial = totemOneMaterial.clone();
+
+    totemOne = new THREE.Mesh(totemGeometry, totemOneMaterial);
+    totemTwo = new THREE.Mesh(totemGeometry, totemTwoMaterial);
+    totemThree = new THREE.Mesh(totemGeometry, totemThreeMaterial);
+    totemFour = new THREE.Mesh(totemGeometry, totemFourMaterial);
+
+    totemOne.position.set(0, 6, -592);
+    totemTwo.position.set(0, 6, -603);
+    totemThree.position.set(0, 6, -614);
+    totemFour.position.set(0, 6, -625);
+
+    totemOne.userData = {selected: false, animal: "eagle"};
+    totemTwo.userData = {selected: false, animal: "frog"};
+    totemThree.userData = {selected: false, animal: "lion"};
+    totemFour.userData = {selected: false, animal: "rooster"};
+
+    totemOne.name = "totem";
+    totemTwo.name = "totem";
+    totemThree.name = "totem";
+    totemFour.name = "totem";
+
+    correctTotemOrder.push(totemOne);
+    correctTotemOrder.push(totemTwo);
+    correctTotemOrder.push(totemThree);
+    correctTotemOrder.push(totemFour);
+
+    // Randomise the correct order of totems and their respective clue words using the Durstenfeld shuffle
+    for(let i = 3; i > 0; i--) {
+        let j = Math.floor(Math.random() * (i + 1));
+
+        let totemTemp = correctTotemOrder[i];
+        correctTotemOrder[i] = correctTotemOrder[j];
+        correctTotemOrder[j] = totemTemp;
+
+        let clueTemp = clueWords[i];
+        clueWords[i] = clueWords[j];
+        clueWords[j] = clueTemp;
+    }
+    
+    totemCollection.add(totemOne);
+    totemCollection.add(totemTwo);
+    totemCollection.add(totemThree);
+    totemCollection.add(totemFour);
+
+    levelOneCollidableMeshList.push(totemOne);
+    levelOneCollidableMeshList.push(totemTwo);
+    levelOneCollidableMeshList.push(totemThree);
+    levelOneCollidableMeshList.push(totemFour);
+
+    loadModel("models/totems/frog.glb", "frog");
+    loadModel("models/totems/eagle.glb", "eagle");
+    loadModel("models/totems/lion.glb", "lion");
+    loadModel("models/totems/rooster.glb", "rooster");
+
+    scene.add(totemCollection);
+}
+
+function drawPaper() {
+    paper_clueOne = new THREE.Mesh(new THREE.BoxBufferGeometry(1, 0.01, 1), new THREE.MeshLambertMaterial( {color: "#f2eecb"} ));
+    paper_clueOne.position.set(-20, 0, -570);
+    paper_clueOne.name = "clueOne";
+    levelOneCollidableMeshList.push(paper_clueOne);
+
+    paper_clueTwo = new THREE.Mesh(new THREE.BoxBufferGeometry(1, 0.01, 1), new THREE.MeshLambertMaterial( {color: "#f2eecb"} ));
+    paper_clueTwo.position.set(25, 0, -620);
+    paper_clueTwo.name = "clueTwo";
+    levelOneCollidableMeshList.push(paper_clueTwo);
+
+    paper_clueThree = new THREE.Mesh(new THREE.BoxBufferGeometry(1, 0.01, 1), new THREE.MeshLambertMaterial( {color: "#f2eecb"} ));
+    paper_clueThree.position.set(-15, 0, -650);
+    paper_clueThree.name = "clueThree";
+    levelOneCollidableMeshList.push(paper_clueThree);
+
+    paper_clueFour = new THREE.Mesh(new THREE.BoxBufferGeometry(1, 0.01, 1), new THREE.MeshLambertMaterial( {color: "#f2eecb"} ));
+    paper_clueFour.position.set(10, 0, -560);
+    paper_clueFour.name = "clueFour";
+    levelOneCollidableMeshList.push(paper_clueFour);
+
+    scene.add(paper_clueOne);
+    scene.add(paper_clueTwo);
+    scene.add(paper_clueThree);
+    scene.add(paper_clueFour);
+}
+
+/** Changes which bounding boxes to load depending on what the current level is */
+function updateLevel() {
+    xPos = controls.getObject().position.x;
+    zPos = controls.getObject().position.z;
+
+    switch(currentLevel) {
+        case 1: 
+            levelOneBoundingBox();
+            break;
+        case 1.5:
+            puzzleOneBoundingBox();
+            break;
+        case 2:
+            levelTwoBoundingBox();
+            break;
+        case 2.5:
+            puzzleTwoBoundingBox();
+            break;
+        case 3:
+            levelThreeBoundingBox();
+            break;
+        case 3.5:
+            puzzleThreeBoundingBox();
+            break;
+        case 4:
+            levelFourBoundingBox();
+            break; 
+    }
 }
 
 /** 
@@ -1484,6 +1848,10 @@ function levelFourBoundingBox() {
     }
 }
 
+function levelOneBoundingBox() {
+
+}
+
 function updateBullets() {
     if(player.weapon.bullets.length > 5) {
         scene.remove(player.weapon.bullets[0].bullet);
@@ -1545,7 +1913,6 @@ function updateBullets() {
         }
         item.lastPosition.copy(item.bullet.position);
     });
-
 
     if(player.weapon.cooldown > 0) {
         /** Handle weapon cooldown bar */
@@ -1795,7 +2162,7 @@ function loadTexture(url) {
             material.needsUpdate = true;
         }
     }
-    let texture = new THREE.TextureLoader().load(url, callback);
+    let texture = textureLoader.load(url, callback);
     texture.anisotropy = renderer.capabilities.getMaxAnisotropy(); // Max reduction in texture blur at glancing angles
     texture.encoding = THREE.sRGBEncoding;
     return texture;
@@ -1834,6 +2201,21 @@ function loadModel(url, key) {
             case "rock_four":
                 initRockFour(gltf);
                 break;
+            case "rock_five":
+                initRockFive(gltf);
+                break;
+            case "rock_over_clue_one":
+                initRockOverClueOne(gltf);
+                break;
+            case "rock_over_clue_two":
+                initRockOverClueTwo(gltf);
+                break;
+            case "rock_over_clue_three":
+                initRockOverClueThree(gltf);
+                break;
+            case "rock_over_clue_four":
+                initRockOverClueFour(gltf);
+                break;
             case "bush_one":
                 initBushOne(gltf);
                 break;
@@ -1843,6 +2225,38 @@ function loadModel(url, key) {
             case "bush_three":
                 initBushThree(gltf);
                 break;
+            case "eagle":
+                eagle = gltf.scene.children[0];
+                eagle.scale.set(0.2, 0.2, 0.2);
+                eagle.rotation.set(0, 3*Math.PI/4, 0);
+                eagle.position.copy(totemOne.position);
+                eagle.position.y = 12;
+                totemCollection.add(eagle);
+                break;
+            case "frog":
+                frog = gltf.scene.children[0];
+                frog.scale.set(1.65, 1.65, 1.65);
+                frog.position.copy(totemTwo.position);
+                frog.position.y = 12;
+                totemCollection.add(frog);
+                break;
+            case "lion":
+                lion = gltf.scene.children[0];
+                lion.scale.set(0.0375, 0.0375, 0.0375);
+                lion.position.copy(totemThree.position);
+                lion.position.y = 12;
+                totemCollection.add(lion);
+                break;
+            case "rooster":
+                rooster = gltf.scene.children[0];
+                rooster.scale.set(0.075, 0.075, 0.075);
+                rooster.rotation.set(0, Math.PI/4, 0);
+                rooster.position.copy(totemFour.position);
+                rooster.position.y = 12;
+                totemCollection.add(rooster);
+                break;
+            
+            
         }
     }
     gltfLoader.load(url, callback, undefined, (error) => console.log(error));
@@ -1889,6 +2303,54 @@ function loadAudio(url, key) {
                 audioCollection.jumpBoost.setBuffer(buffer);
                 audioCollection.jumpBoost.setLoop(false);
                 audioCollection.jumpBoost.setVolume(0.3);
+            });
+            break;
+        case "paper":
+            audioCollection.paper = new THREE.Audio(listener);
+            audioLoader.load(url, function(buffer) {
+                audioCollection.paper.setBuffer(buffer);
+                audioCollection.paper.setLoop(false);
+                audioCollection.paper.setVolume(0.3);
+            });
+            break;
+        case "totem_select":
+            audioCollection.totemSelect = new THREE.Audio(listener);
+            audioLoader.load(url, function(buffer) {
+                audioCollection.totemSelect.setBuffer(buffer);
+                audioCollection.totemSelect.setLoop(false);
+                audioCollection.totemSelect.setVolume(0.3);
+            });
+            break;
+        case "wrong_totem_order":
+            audioCollection.wrongTotemOrder = new THREE.Audio(listener);
+            audioLoader.load(url, function(buffer) {
+                audioCollection.wrongTotemOrder.setBuffer(buffer);
+                audioCollection.wrongTotemOrder.setLoop(false);
+                audioCollection.wrongTotemOrder.setVolume(0.3);
+            });
+            break;
+        case "correct_totem_order":
+            audioCollection.correctTotemOrder = new THREE.Audio(listener);
+            audioLoader.load(url, function(buffer) {
+                audioCollection.correctTotemOrder.setBuffer(buffer);
+                audioCollection.correctTotemOrder.setLoop(false);
+                audioCollection.correctTotemOrder.setVolume(0.3);
+            });
+            break;
+        case "rock_sink":
+            audioCollection.rockSink = new THREE.Audio(listener);
+            audioLoader.load(url, function(buffer) {
+                audioCollection.rockSink.setBuffer(buffer);
+                audioCollection.rockSink.setLoop(false);
+                audioCollection.rockSink.setVolume(0.5);
+            });
+            break;
+        case "rock_slide":
+            audioCollection.rockSlide = new THREE.Audio(listener);
+            audioLoader.load(url, function(buffer) {
+                audioCollection.rockSlide.setBuffer(buffer);
+                audioCollection.rockSlide.setLoop(false);
+                audioCollection.rockSlide.setVolume(0.5);
             });
             break;
     }
@@ -2057,6 +2519,49 @@ function initControls() {
                 break;
             case 51:    // 3
                 cameraType = "bev"; break;
+            case 84:  // T
+                controls.getObject().position.set(77, 8, -597);
+                break;
+            case 69:    // E
+                if(interact.style.visibility == "visible") {
+                    switch(interactableObject) {
+                        case "totem":
+                            if(!audioCollection.totemSelect.isPlaying) {
+                                audioCollection.totemSelect.play();
+                            }
+                            updateTotemSelection();
+                            break;
+                        case "rockOverClueOne":
+                            updateRockOverClue(rockOverClueOne, "rockOverClueOne");
+                            break;
+                        case "rockOverClueTwo":
+                            updateRockOverClue(rockOverClueTwo, "rockOverClueTwo");
+                            break;
+                        case "rockOverClueThree":
+                            updateRockOverClue(rockOverClueThree, "rockOverClueThree");
+                            break;
+                        case "rockOverClueFour":
+                            updateRockOverClue(rockOverClueFour, "rockOverClueFour");
+                            break;
+                        case "clueOne":
+                            audioCollection.paper.play();
+                            showClue("clueOne");
+                            break;
+                        case "clueTwo":
+                            audioCollection.paper.play();
+                            showClue("clueTwo");
+                            break;
+                        case "clueThree":
+                            audioCollection.paper.play();
+                            showClue("clueThree");
+                            break;
+                        case "clueFour":
+                            audioCollection.paper.play();
+                            showClue("clueFour");
+                            break;          
+                    }
+                }
+                break;
         }
     }
 
@@ -2224,7 +2729,13 @@ function initAudio() {
     loadAudio("audio/weapon/weapon_shot.mp3", "weapon");
     loadAudio("audio/weapon/headshot.mp3", "headshot");
     loadAudio("audio/weapon/hitmarker.mp3", "hitmarker");
+    loadAudio("audio/items/paper.wav", "paper");
     loadAudio("audio/character/jump_boost.wav", "jump_boost");
+    loadAudio("audio/environment/level_one/totem_select.wav", "totem_select");
+    loadAudio("audio/environment/level_one/wrong_totem_order.wav", "wrong_totem_order");
+    loadAudio("audio/environment/level_one/correct_totem_order.wav", "correct_totem_order");
+    loadAudio("audio/environment/level_one/rock_sink.wav", "rock_sink");
+    loadAudio("audio/environment/level_one/rock_slide.wav", "rock_slide");
 }
 
 function initWorld() {
@@ -2233,6 +2744,8 @@ function initWorld() {
     drawGround();
     drawRocks();
     drawStars();
+    drawTotems();
+    drawPaper();
 
     boundingBoxVis();
 }
@@ -2261,9 +2774,9 @@ function init() {
     initCameras();
     initLights();
     initTime();
-    initSkybox();
     initLoadingManager();
     initLoaders();
+    initSkybox();
     initPlayer();
     initAliens();
     initBountyHunter();
