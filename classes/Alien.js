@@ -4,8 +4,11 @@ class Alien {
         this._maxHealth = 100;
         this._damaged = false;
         this._inventory = [];
-        this._postition = {x: 0, y: 0, z: 0};
-        this._alienModel = undefined;
+        this._position = {x: 0, y: 0, z: 0};
+        this._scale = {x: 5, y: 5, z: 5};
+        this._rotation = {x: 0, y: 0, z: 0};
+        this._defaultAnim = "Idle";
+        this._model = undefined;
         this._hitbox = undefined;
         this._idleAnim = undefined;
         this._walkAnim = undefined;
@@ -33,20 +36,8 @@ class Alien {
         return this._inventory;
     }
 
-    get positionX() {
-        return this._postition.x;
-    }
-
-    get positionY() {
-        return this._postition.y;
-    }
-
-    get positionZ() {
-        return this._postition.z;
-    }
-
-    get alienModel() {
-        return this._alienModel;
+    get model() {
+        return this._model;
     }
 
     get hitbox() {
@@ -81,6 +72,22 @@ class Alien {
         return this._deathAnim;
     }
 
+    get defaultAnim() {
+        return this._defaultAnim;
+    }
+
+    get position() {
+        return this._position;
+    }
+
+    get scale() {
+        return this._scale;
+    }
+
+    get rotation() {
+        return this._rotation;
+    }
+
     /** SETTERS */
     set currentHealth(health) {
         this._currentHealth = health;
@@ -98,20 +105,30 @@ class Alien {
         this._inventory.push(item);
     }
 
-    set positionX(x) {
-        this._postition.x = x;
+    setPosition(x, y, z) {
+        this._position.x = x;
+        this._position.y = y;
+        this._position.z = z;
     }
 
-    set positionY(y) {
-        this._postition.y = y;
+    setScale(x, y, z) {
+        this._scale.x = x;
+        this._scale.y = y;
+        this._scale.z = z;
     }
 
-    set positionZ(z) {
-        this._postition.z = z;
+    setRotation(x, y, z) {
+        this._rotation.x = x;
+        this._rotation.y = y;
+        this._rotation.z = z;
     }
 
-    set alienModel(model) {
-        this._alienModel = model;
+    set defaultAnim(animation) {
+        this._defaultAnim = animation;
+    }
+
+    set model(model) {
+        this._model = model;
     }
 
     set hitbox(hitbox) {

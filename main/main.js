@@ -25,26 +25,9 @@ const loadingSymbol = document.getElementById("loadingsymbol");
 
 window.onload = menu;
 
-/** TEST VARIABLES */
-// Boundary values for the respective box divisions
-let boxOneBottom = 30;
-let boxOneTop = -550;
-let boxOneLeft = -40;
-let boxOneRight = -boxOneLeft;
-
-let boxTwoBottom = -420;
-let boxTwoTop = -450;
-
-let boxThreeBottom = boxTwoBottom;
-let boxThreeTop = -615;
-let boxThreeLeft = 60;
-let boxThreeRight = 130;
-
-let boxFourBottom = -585;
-let boxFourTop = boxThreeTop;
-
-let xTempleEntrance = 60;
+/** BOUNDARY BOX GLOBALS */
 let boundaryFactor = 5; // Account for skipped frames and fucked behaviour with game loop
+let boxArr = new Array(9);
 
 /** SCENE GLOBALS */
 let canvas;
@@ -70,12 +53,21 @@ let menuAudioSource; // Buffer source for the menu audio
 let controls;
 let clock;
 let player;
-let currentLevel = 0;
+let currentLevel = 1;
+let xPos;
+let zPos;
 
 /** ALIEN */
-let alien;
+let alienArray = [];
+let alien1;
+let alien2;
+let alien3;
+let alien4;
+let alien5;
+let alien6;
 
 /** BOUNTY HUNTER */
+let bountyArray = [];
 let bountyHunter1;
 let bountyHunter2;
 let bountyHunter3;
@@ -372,7 +364,7 @@ function showClue(name) {
 }
 
 function initPlayerModel(gltf) {
-    player.playerModel = gltf.scene; // ** TODO **
+    player.playerModel = gltf.scene;
     let animations = gltf.animations;
  
     player.playerModel.scale.set(-0.5, 0.5, -0.5);
@@ -419,74 +411,43 @@ function initPlayerModel(gltf) {
     player.currentAnimation = player.idleAnim;
 }
 
-function initAlienModel(gltf) {
-    alien.alienModel = gltf.scene;
-    let animations = gltf.animations;
+function initAlienModels(gltf) {
+    alien1.setPosition(-10, 0, -40);
+    alienArray.push(alien1);
 
-    alien.alienModel.scale.set(5, 5, 5);
-    alien.alienModel.position.set(0, 0, -20);
+    alien2.setPosition(10, 0, -40);
+    alienArray.push(alien2);
 
-    scene.add(alien.alienModel);
+    alien3.setPosition(0, 0, -45);
+    alienArray.push(alien3);
 
-    alien.hitbox = new Hitbox("alien");
-    alien.alienModel.add(alien.hitbox.mesh);
-    alien.alienModel.name = "alien";
+    alien4.setPosition(-5, 0, -50);
+    alienArray.push(alien4);
 
-    bulletCollidableMeshList.push(alien.hitbox.mesh);
+    alien5.setPosition(5, 0, -50);
+    alienArray.push(alien5);
 
-    let mixer = new THREE.AnimationMixer(alien.alienModel);
-    mixers.push(mixer);
+    alien6.setPosition(0, 0, -55);
+    alienArray.push(alien6);
 
-    alien.idleAnim = mixer.clipAction(animations[0]);
-    alien.walkAnim = mixer.clipAction(animations[1]);
-    alien.strafeLAnim = mixer.clipAction(animations[2]);
-    alien.strafeRAnim = mixer.clipAction(animations[3]);
-    alien.walkBackwardsAnim = mixer.clipAction(animations[4]);
-    alien.deathAnim = mixer.clipAction(animations[5]);
-    alien.shootAnim = mixer.clipAction(animations[6]);
-
-    alien.deathAnim.setLoop(THREE.LoopOnce);
-    alien.deathAnim.clampWhenFinished = true;
-
-    alien.idleAnim.play();
-    alien.walkAnim.play();
-    alien.strafeLAnim.play();
-    alien.strafeRAnim.play();
-    alien.walkBackwardsAnim.play();
-    alien.deathAnim.play();
-    alien.shootAnim.play();
-
-    alien.idleAnim.enabled = false;
-    alien.walkAnim.enabled = false;
-    alien.strafeLAnim.enabled = false;
-    alien.strafeRAnim.enabled = false;
-    alien.walkBackwardsAnim.enabled = false;
-    alien.deathAnim.enabled = false;
-    alien.shootAnim.enabled = true;
+    instantiateUnits(gltf, alienArray, "Alien_(Armature)");  
 }
 
 function initBountyHunters(gltf) {
-    let bountyArray = [];
-
-    bountyHunter1 = new BountyHunter();
-    bountyHunter1.model = gltf.scene;
-    bountyHunter1.animations = gltf.animations;
     bountyHunter1.setPosition(-10, 0, -15);
     bountyHunter1.setRotation(0, Math.PI, 0);
     bountyHunter1.defaultAnim = "Side";
     bountyArray.push(bountyHunter1);
 
-    bountyHunter2 = new BountyHunter();
     bountyHunter2.setPosition(5, 0, -30);
     bountyHunter2.defaultAnim = "Up";
     bountyArray.push(bountyHunter2);
 
-    bountyHunter3 = new BountyHunter();
     bountyHunter3.setPosition(10, 0, -20);
     bountyHunter3.defaultAnim = "Down";
     bountyArray.push(bountyHunter3);
     
-    instantiateUnits(bountyArray, "vanguard_Mesh");
+    instantiateUnits(gltf, bountyArray, "vanguard_Mesh");
 }
 
 /**
@@ -495,9 +456,10 @@ function initBountyHunters(gltf) {
  * @param {array} units Array containing meshes to clone
  * @param {string} meshName Name of the mesh to animate
  */
-function instantiateUnits(units, meshName) {
+function instantiateUnits(gltf, units, meshName) {
     for (let i = 0; i < units.length; i++) {        
-        let clonedScene = SkeletonUtils.clone(units[0].model);
+        let clonedScene = SkeletonUtils.clone(gltf.scene);
+        units[i].model = clonedScene;
 
         if(clonedScene) { // THREE.Scene is cloned properly
             let clonedMesh = clonedScene.getObjectByName(meshName);
@@ -506,9 +468,9 @@ function instantiateUnits(units, meshName) {
 
             /** Populate all animation fields for the relevant mesh */
             if(meshName == "vanguard_Mesh") {
-                units[i].sideAnim = mixer.clipAction(units[0].animations[0]);
-                units[i].upAnim = mixer.clipAction(units[0].animations[1]);
-                units[i].downAnim = mixer.clipAction(units[0].animations[2]);
+                units[i].sideAnim = mixer.clipAction(gltf.animations[0]);
+                units[i].upAnim = mixer.clipAction(gltf.animations[1]);
+                units[i].downAnim = mixer.clipAction(gltf.animations[2]);
 
                 units[i].sideAnim.play();
                 units[i].upAnim.play();
@@ -518,9 +480,44 @@ function instantiateUnits(units, meshName) {
                 units[i].upAnim.enabled = false;
                 units[i].downAnim.enabled = false;
             }
+            else if(meshName == "Alien_(Armature)") {
+                units[i].idleAnim = mixer.clipAction(gltf.animations[0]);
+                units[i].walkAnim = mixer.clipAction(gltf.animations[1]);
+                units[i].strafeLAnim = mixer.clipAction(gltf.animations[2]);
+                units[i].strafeRAnim = mixer.clipAction(gltf.animations[3]);
+                units[i].walkBackwardsAnim = mixer.clipAction(gltf.animations[4]);
+                units[i].deathAnim = mixer.clipAction(gltf.animations[5]);
+                units[i].shootAnim = mixer.clipAction(gltf.animations[6]);
+            
+                units[i].deathAnim.setLoop(THREE.LoopOnce);
+                units[i].deathAnim.clampWhenFinished = true;
+            
+                units[i].idleAnim.play();
+                units[i].walkAnim.play();
+                units[i].strafeLAnim.play();
+                units[i].strafeRAnim.play();
+                units[i].walkBackwardsAnim.play();
+                units[i].deathAnim.play();
+                units[i].shootAnim.play();
+            
+                units[i].idleAnim.enabled = false;
+                units[i].walkAnim.enabled = false;
+                units[i].strafeLAnim.enabled = false;
+                units[i].strafeRAnim.enabled = false;
+                units[i].walkBackwardsAnim.enabled = false;
+                units[i].deathAnim.enabled = false;
+                units[i].shootAnim.enabled = false;
+
+                /** Hitboxes */
+                units[i].hitbox = new Hitbox("alien");
+                units[i].model.add(units[i].hitbox.mesh);
+                units[i].model.name = "alien" + (i + 1);
+
+                collidableMeshList.push(units[i].hitbox.mesh);
+            }
 
             /** Play default animation */
-            let clip = THREE.AnimationClip.findByName(units[0].animations, units[i].defaultAnim);
+            let clip = THREE.AnimationClip.findByName(gltf.animations, units[i].defaultAnim);
 
             if(clip) {
                 let action = mixer.clipAction(clip);
@@ -532,13 +529,13 @@ function instantiateUnits(units, meshName) {
             scene.add(clonedScene); // Add cloned scene to the world scene
             
             /** Apply transformations to the cloned scene */
-            clonedScene.position.set(units[i].getPosition().x, units[i].getPosition().y, units[i].getPosition().z);
+            clonedScene.position.set(units[i].position.x, units[i].position.y, units[i].position.z);
 
-            clonedScene.scale.set(units[i].getScale().x, units[i].getScale().y, units[i].getScale().z);
+            clonedScene.scale.set(units[i].scale.x, units[i].scale.y, units[i].scale.z);
 
-            clonedScene.rotation.x = units[i].getRotation().x;
-            clonedScene.rotation.y = units[i].getRotation().y;
-            clonedScene.rotation.z = units[i].getRotation().z;
+            clonedScene.rotation.x = units[i].rotation.x;
+            clonedScene.rotation.y = units[i].rotation.y;
+            clonedScene.rotation.z = units[i].rotation.z;
         }
     }
 }
@@ -1030,28 +1027,11 @@ function drawBushes() {
 }
 
 function drawGround() {
-    /** Texture for the secret path */
-    let pathGeom = new THREE.PlaneBufferGeometry(90, 250, 100, 100);
-    let pathTexture = loadTexture("textures/texture_grass_dead.jpg");
-    pathTexture.wrapS = THREE.RepeatWrapping;
-    pathTexture.wrapT = THREE.RepeatWrapping;
-    pathTexture.repeat.set(9, 25);
-    let path = new THREE.Mesh(pathGeom,
-                                    new THREE.MeshLambertMaterial({
-                                        color: "#454545",
-                                        side: THREE.DoubleSide,
-                                        map: pathTexture
-                                    }));
-    path.rotation.x = -Math.PI/2;
-    path.position.set(85, 0.01, -545);
-    scene.add(path);
-
-    /** Texture for general path */
-    let groundGeom = new THREE.PlaneBufferGeometry(1000, 1000, 100, 100);
+    let groundGeom = new THREE.PlaneBufferGeometry(2000, 4000, 100, 100);
     let groundTexture = loadTexture("textures/texture_path_outline.jpg");
     groundTexture.wrapS = THREE.RepeatWrapping;
     groundTexture.wrapT = THREE.RepeatWrapping;
-    groundTexture.repeat.set(70, 70);
+    groundTexture.repeat.set(80, 160);
     let ground = new THREE.Mesh(groundGeom,
                                     new THREE.MeshLambertMaterial({
                                         color: "#5e503e",
@@ -1080,6 +1060,7 @@ function drawStars() {
     scene.add(starFieldA.starField);
     scene.add(starFieldB.starField);
 }
+
 
 function drawTotems() {
     totemCollection = new THREE.Object3D();
@@ -1176,63 +1157,147 @@ function drawPaper() {
     scene.add(paper_clueFour);
 }
 
+/** Changes which bounding boxes to load depending on what the current level is */
 function updateLevel() {
+    xPos = controls.getObject().position.x;
+    zPos = controls.getObject().position.z;
+
     switch(currentLevel) {
-        case 0: 
-            levelZeroBoundingBox();
+        case 1: 
+            levelOneBoundingBox();
             break;
-        case 1:
-            levelOne();
+        case 1.5:
+            puzzleOneBoundingBox();
             break;
+        case 2:
+            levelTwoBoundingBox();
+            break;
+        case 2.5:
+            puzzleTwoBoundingBox();
+            break;
+        case 3:
+            levelThreeBoundingBox();
+            break;
+        case 3.5:
+            puzzleThreeBoundingBox();
+            break;
+        case 4:
+            levelFourBoundingBox();
+            break; 
     }
 }
 
-/** Handles bound checking for the initial level.
- *  Called by boundingBox() if currentLevel = 0.
+/** 
+ * Sets the value of boxArr at the index of the current box number to true, and sets all other values to false.
+ * The player can only be in one box at any given point in time.
+ * @param {number} boxNo The current box that the player is in
+ * @param {number} level The current level that the player is on (used for printing purposes only)
  */
-function levelZeroBoundingBox() {
-    let xPos = controls.getObject().position.x;
-    let zPos = controls.getObject().position.z;
-
-    let boxOne;
-    let boxTwo;
-    let boxThree;
-    let boxFour;
-
-    // // Boundary values for the respective box divisions
-    // let boxOneBottom = 10;
-    // let boxOneTop = -550;
-    // let boxOneLeft = -20;
-    // let boxOneRight = -boxOneLeft;
-
-    // let boxTwoBottom = -420;
-    // let boxTwoTop = -450;
-    
-    // let boxThreeBottom = boxTwoBottom;
-    // let boxThreeTop = -605;
-    // let boxThreeLeft = 50;
-    // let boxThreeRight = 80;
-    
-    // let boxFourBottom = -585;
-    // let boxFourTop = boxThreeTop;
-
-    // let xTempleEntrance = 40;
-    // let boundaryFactor = 5; // Account for skipped frames and fucked behaviour with game loop
-
-    if(xPos >= boxOneLeft && xPos <= boxOneRight) {
-        setBox(1);
+function setBox(boxNo, level) {
+    for (let i = 0; i < boxArr.length; i++) {
+        boxArr[i] = false;                
     }
-    else if(xPos > boxOneRight && xPos <= boxThreeLeft && zPos <= boxTwoBottom && zPos >= boxTwoTop) {
-        setBox(2);
+    switch(boxNo) {
+        case 1:             
+            boxArr[1] = true;  
+            break;
+        case 2:
+            boxArr[2] = true;
+            break;
+        case 3:
+            boxArr[3] = true;
+            break;
+        case 4:
+            boxArr[4] = true;
+            break;
+        case 5:
+            boxArr[5] = true;
+            break;
+        case 6:
+            boxArr[6] = true;
+            break;
+        case 7:
+            boxArr[7] = true;
+            break;
+        case 8:
+            boxArr[8] = true;
+            break;
     }
-    else if(xPos > boxThreeLeft && xPos <= boxThreeRight) {
-        setBox(3);
+    // console.clear();
+    // console.log("Level: " + level + ", Box: " + boxArr.findIndex(item => item == true));
+}
+
+/** Changes which bounding boxes to load depending on what the current level is */
+function updateLevel() {
+    xPos = controls.getObject().position.x;
+    zPos = controls.getObject().position.z;
+
+    switch(currentLevel) {
+        case 1: 
+            levelOneBoundingBox();
+            break;
+        case 1.5:
+            puzzleOneBoundingBox();
+            break;
+        case 2:
+            levelTwoBoundingBox();
+            break;
+        case 2.5:
+            puzzleTwoBoundingBox();
+            break;  
+        case 3:
+            levelThreeBoundingBox();
+            break;
+        case 3.5:
+            puzzleThreeBoundingBox();
+            break;   
+        case 4:
+            levelFourBoundingBox();
+            break; 
     }
-    else if(xPos >= xTempleEntrance && xPos <= boxThreeLeft && zPos <= boxFourBottom && zPos >= boxFourTop) {
-        setBox(4);
+}
+
+/** 
+ *  Handles bound checking for the first level.
+ *  Called by updateLevel() if currentLevel = 1.
+ */
+function levelOneBoundingBox() {
+    // Boundary values for the respective box divisions
+    let boxOneBottom = 30;
+    let boxOneTop = -550;
+    let boxOneLeft = -40;
+    let boxOneRight = -boxOneLeft;
+
+    let boxTwoBottom = -420;
+    let boxTwoTop = -450;
+    let boxTwoLeft = boxOneRight;
+    let boxTwoRight = 60;
+
+    let boxThreeBottom = boxTwoBottom;
+    let boxThreeTop = -615;
+    let boxThreeLeft = 60;
+    let boxThreeRight = 130;
+
+    let boxFourBottom = -585;
+    let boxFourTop = boxThreeTop;
+    let boxFourLeft = boxOneRight;
+    let boxFourRight = boxThreeRight;
+
+    // Check which box the player is in at any point in time
+    if(xPos > boxOneLeft && xPos < boxOneRight && zPos < boxOneBottom && zPos > boxOneTop) {
+        setBox(1, 1);
+    }
+    else if(xPos > boxTwoLeft && xPos < boxTwoRight && zPos < boxTwoBottom && zPos > boxTwoTop) {
+        setBox(2, 1);
+    }
+    else if(xPos > boxThreeLeft && xPos < boxThreeRight && zPos < boxThreeBottom && zPos > boxThreeTop) {
+        setBox(3, 1);
+    }
+    else if(xPos > boxFourLeft && xPos < boxFourRight && zPos < boxFourBottom && zPos > boxFourTop) {
+        setBox(4, 1);
     }
 
-    if(boxOne) {
+    if(boxArr[1]) { // In box one
         if(zPos > boxOneBottom - boundaryFactor) { // Place boundary behind where player spawns
             controls.getObject().position.z = boxOneBottom - boundaryFactor;
         }
@@ -1243,12 +1308,11 @@ function levelZeroBoundingBox() {
             controls.getObject().position.x = boxOneLeft + boundaryFactor;
         }
         if(xPos > boxOneRight - boundaryFactor) { // Place right boundary except where secret entrance is
-            if(zPos > boxTwoBottom || zPos < boxTwoTop) {
+            if(zPos > boxTwoBottom || zPos < boxTwoTop)
                 controls.getObject().position.x = boxOneRight - boundaryFactor;
-            }
         }
     }
-    else if(boxTwo) {
+    else if(boxArr[2]) { // In box two
         if(zPos > boxTwoBottom - boundaryFactor) { // Place bottom boundary
             controls.getObject().position.z = boxTwoBottom - boundaryFactor;
         }
@@ -1256,7 +1320,7 @@ function levelZeroBoundingBox() {
             controls.getObject().position.z = boxTwoTop + boundaryFactor;
         }
     }
-    else if(boxThree) {
+    else if(boxArr[3]) { // In box three
         if(zPos > boxThreeBottom - boundaryFactor) { // Place bottom boundary
             controls.getObject().position.z = boxThreeBottom - boundaryFactor;
         }
@@ -1264,57 +1328,524 @@ function levelZeroBoundingBox() {
             controls.getObject().position.z = boxThreeTop + boundaryFactor;
         }
         if(zPos < boxTwoTop && zPos > boxFourBottom) { // Place left boundary excluding overlaps on boxTwo and boxFour
-            if(xPos < boxThreeLeft + boundaryFactor) {
+            if(xPos < boxThreeLeft + boundaryFactor)
                 controls.getObject().position.x = boxThreeLeft + boundaryFactor;
-            }
         }
         if(xPos > boxThreeRight - boundaryFactor) { // Place right boundary
             controls.getObject().position.x = boxThreeRight - boundaryFactor;
         }
+        if(zPos > boxThreeBottom - boundaryFactor) { // Place bottom boundary
+            controls.getObject().position.z = boxThreeBottom - boundaryFactor;
+        }
     }
-    else {
+    else if(boxArr[4]) { // In box four
         if(zPos > boxFourBottom - boundaryFactor) { // Place bottom boundary
             controls.getObject().position.z = boxFourBottom - boundaryFactor;
         }
         if(zPos < boxFourTop + boundaryFactor) { // Place top boundary
             controls.getObject().position.z = boxFourTop + boundaryFactor;
         }
-        if(xPos < xTempleEntrance) { // Enter first temple
-            currentLevel = 1;
-            levelOne();
+        if(xPos < boxFourLeft) { // Change the level once the player leaves the box
+            currentLevel = 1.5;
         }
     }
+}
 
-    function setBox(quadrant) {
-        switch(quadrant) {
-            case 1:
-                boxOne = true;
-                boxTwo = false;
-                boxThree = false;
-                boxFour = false;
-                break;
-            case 2:
-                boxOne = false;
-                boxTwo = true;
-                boxThree = false;
-                boxFour = false;
-                break;
-            case 3:
-                boxOne = false;
-                boxTwo = false;
-                boxThree = true;
-                boxFour = false;
-                break;
-            case 4:
-                boxOne = false;
-                boxTwo = false;
-                boxThree = false;
-                boxFour = true;
-                break;
+/** 
+ *  Handles bound checking for the first puzzle.
+ *  Called by updateLevel() if currentLevel = 1.5.
+ */
+function puzzleOneBoundingBox() {
+    // Boundary values for the respective box divisions
+    let boxOneBottom = -585;
+    let boxOneLeft = -40;
+    let boxOneRight = -boxOneLeft;
+    let boxOneTop = -685;
+
+    let boxTwoBottom = boxOneTop;
+    let boxTwoLeft = -15;
+    let boxTwoRight = 15;
+    let boxTwoTop = -715;
+
+    let puzzleCompleted = true;
+
+    // Check which box the player is in at any point in time
+    if(xPos > boxOneLeft && xPos < boxOneRight && zPos < boxOneBottom && zPos > boxOneTop) {
+        setBox(1, 1.5);
+    }
+    else if(xPos > boxTwoLeft && xPos < boxTwoRight && zPos < boxTwoBottom && zPos > boxTwoTop) {
+        setBox(2, 1.5);
+    }
+    
+    if(boxArr[1]) { // In box one
+        if(zPos > boxOneBottom - boundaryFactor) { // Place bottom boundary
+            controls.getObject().position.z = boxOneBottom - boundaryFactor;
+        }
+        if(zPos < boxOneTop + boundaryFactor) { // Place top boundary
+            if(puzzleCompleted) { // Allow player through the path only after the puzzle is completed
+                if(xPos < boxTwoLeft || xPos > boxTwoRight)
+                    controls.getObject().position.z = boxOneTop + boundaryFactor;
+            }
+            else {
+                controls.getObject().position.z = boxOneTop + boundaryFactor;
+            }
+        }
+        if(xPos < boxOneLeft + boundaryFactor) { // Place left boundary
+            controls.getObject().position.x = boxOneLeft + boundaryFactor;
+        }
+        if(xPos > boxOneRight) { // Place right boundary
+            controls.getObject().position.x = boxOneRight;
         }
     }
+    else if(boxArr[2]) { // In box two
+        if(xPos < boxTwoLeft + boundaryFactor) { // Place left boundary
+            controls.getObject().position.x = boxTwoLeft + boundaryFactor;
+        }
+        if(xPos > boxTwoRight - boundaryFactor) { // Place right boundary
+            controls.getObject().position.x = boxTwoRight - boundaryFactor;
+        }
+        if(zPos < boxTwoTop) { // Change the level once the player leaves the box
+            currentLevel = 2;
+        }
+    }
+}
 
-    // boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
+/** 
+ *  Handles bound checking for the second level.
+ *  Called by updateLevel() if currentLevel = 2.
+ */
+function levelTwoBoundingBox() {
+    // Boundary values for the respective box divisions
+    let boxOneBottom = -715;
+    let boxOneLeft = -40;
+    let boxOneRight = -boxOneLeft;
+    let boxOneTop = -900;
+
+    let boxTwoBottom = boxOneTop;
+    let boxTwoLeft = -200;
+    let boxTwoRight = boxOneRight;
+    let boxTwoTop = -980;
+
+    let boxThreeBottom = boxTwoBottom;
+    let boxThreeLeft = -280;
+    let boxThreeRight = boxTwoLeft;
+    let boxThreeTop = -1100;
+
+    let boxFourBottom = boxThreeTop;
+    let boxFourLeft = boxThreeLeft;
+    let boxFourRight = 500;
+    let boxFourTop = -1180;
+
+    let boxFiveBottom = -1070;
+    let boxFiveLeft = 445;
+    let boxFiveRight = 475;
+    let boxFiveTop = boxFourBottom;
+
+    // Check which box the player is in at any point in time
+    if(xPos > boxOneLeft && xPos < boxOneRight && zPos < boxOneBottom && zPos > boxOneTop) {
+        setBox(1, 2);
+    }
+    else if(xPos > boxTwoLeft && xPos < boxTwoRight && zPos < boxTwoBottom && zPos > boxTwoTop) {
+        setBox(2, 2);
+    }
+    else if(xPos > boxThreeLeft && xPos < boxThreeRight && zPos < boxThreeBottom && zPos > boxThreeTop) {
+        setBox(3, 2);
+    }
+    else if(xPos > boxFourLeft && xPos < boxFourRight && zPos < boxFourBottom && zPos > boxFourTop) {
+        setBox(4, 2);
+    }
+    else if(xPos > boxFiveLeft && xPos < boxFiveRight && zPos < boxFiveBottom && zPos > boxFiveTop) {
+        setBox(5, 2);
+    }
+
+    if(boxArr[1]) { // In box one
+        if(zPos > boxOneBottom) { // Place bottom boundary
+            controls.getObject().position.z = boxOneBottom;
+        }
+        if(xPos < boxOneLeft + boundaryFactor) { // Place left boundary except at box two overlap
+            if(zPos > boxTwoBottom)
+                controls.getObject().position.x = boxOneLeft + boundaryFactor;
+        }
+        if(xPos > boxOneRight - boundaryFactor) { // Place right boundary
+            controls.getObject().position.x = boxOneRight - boundaryFactor;
+        }
+    }
+    else if(boxArr[2]) { // In box two
+        if(zPos > boxTwoBottom - boundaryFactor) { // Place bottom boundary except at box one overlap
+            if(xPos < boxOneLeft)
+                controls.getObject().position.z = boxTwoBottom - boundaryFactor;
+        }
+        if(zPos < boxTwoTop + boundaryFactor) { // Place top boundary except at box three overlap
+            if(xPos > boxThreeRight)
+                controls.getObject().position.z = boxTwoTop + boundaryFactor;
+        }
+        if(xPos > boxTwoRight - boundaryFactor) { // Place right boundary
+            controls.getObject().position.x = boxTwoRight - boundaryFactor;
+        }
+    }
+    else if(boxArr[3]) { // In box three
+        if(zPos > boxThreeBottom - boundaryFactor) { // Place bottom boundary
+            controls.getObject().position.z = boxThreeBottom - boundaryFactor;
+        }
+        if(xPos < boxThreeLeft + boundaryFactor) { // Place left boundary
+            controls.getObject().position.x = boxThreeLeft + boundaryFactor;
+        }
+        if(xPos > boxThreeRight - boundaryFactor) { // Place right boundary except at box two overlap
+            if(zPos < boxTwoTop)
+                controls.getObject().position.x = boxThreeRight - boundaryFactor;
+        }
+    }
+    else if(boxArr[4]) { // In box four
+        if(zPos > boxFourBottom - boundaryFactor) { // Place bottom boundary except at box four overlap and box five entrance
+            if(xPos > boxThreeRight && (xPos < boxFiveLeft || xPos > boxFiveRight))
+                controls.getObject().position.z = boxFourBottom - boundaryFactor;
+        }
+        if(zPos < boxFourTop + boundaryFactor) { // Place top boundary
+            controls.getObject().position.z = boxFourTop + boundaryFactor;
+        }
+        if(xPos < boxFourLeft + boundaryFactor) { // Place left boundary
+            controls.getObject().position.x = boxFourLeft + boundaryFactor;
+        }
+        if(xPos > boxFourRight - boundaryFactor) { // Place right boundary
+            controls.getObject().position.x = boxFourRight - boundaryFactor;
+        }
+    }
+    else if(boxArr[5]) { // In box five
+        if(xPos < boxFiveLeft + boundaryFactor) { // Place left boundary
+            controls.getObject().position.x = boxFiveLeft + boundaryFactor;
+        }
+        if(xPos > boxFiveRight - boundaryFactor) { // Place right boundary
+            controls.getObject().position.x = boxFiveRight - boundaryFactor;
+        }
+        if(zPos > boxFiveBottom) { // Change the level once the player leaves the box
+            currentLevel = 2.5;
+        }
+    }
+}
+
+/** 
+ *  Handles bound checking for the second puzzle.
+ *  Called by updateLevel() if currentLevel = 2.5.
+ */
+function puzzleTwoBoundingBox() {
+    // Boundary values for the respective box divisions
+    let boxOneBottom = -970;
+    let boxOneLeft = 420;
+    let boxOneRight = 500;
+    let boxOneTop = -1070;
+
+    let boxTwoBottom = -940;
+    let boxTwoLeft = 445;
+    let boxTwoRight = 475;
+    let boxTwoTop = boxOneBottom;
+
+    let puzzleCompleted = true;
+
+    // Check which box the player is in at any point in time
+    if(xPos > boxOneLeft && xPos < boxOneRight && zPos < boxOneBottom && zPos > boxOneTop) {
+        setBox(1, 2.5);
+    }
+    else if(xPos > boxTwoLeft && xPos < boxTwoRight && zPos < boxTwoBottom && zPos > boxTwoTop) {
+        setBox(2, 2.5);
+    }
+
+    if(boxArr[1]) { // In box one
+        if(zPos > boxOneBottom - boundaryFactor) { // Place bottom boundary
+            if(puzzleCompleted) { // Allow player through the path only after the puzzle is completed
+                if(xPos < boxTwoLeft || xPos > boxTwoRight)
+                    controls.getObject().position.z = boxOneBottom - boundaryFactor;
+            }
+            else {
+                controls.getObject().position.z = boxOneBottom - boundaryFactor;
+            }
+        }
+        if(zPos < boxOneTop) { // Place top boundary    
+            controls.getObject().position.z = boxOneTop;
+
+        }
+        if(xPos < boxOneLeft + boundaryFactor) { // Place left boundary
+            controls.getObject().position.x = boxOneLeft + boundaryFactor;
+        }
+        if(xPos > boxOneRight - boundaryFactor) { // Place right boundary
+            controls.getObject().position.x = boxOneRight - boundaryFactor;
+        }
+    }
+    else if(boxArr[2]) { // In box two
+        if(xPos < boxTwoLeft + boundaryFactor) { // Place left boundary
+            controls.getObject().position.x = boxTwoLeft + boundaryFactor;
+        }
+        if(xPos > boxTwoRight - boundaryFactor) { // Place right boundary
+            controls.getObject().position.x = boxTwoRight - boundaryFactor;
+        }
+        if(zPos > boxTwoBottom) { // Change the level once the player leaves the box
+            currentLevel = 3;
+        }
+    }
+}
+
+/** 
+ *  Handles bound checking for the third level.
+ *  Called by updateLevel() if currentLevel = 3.
+ */
+function levelThreeBoundingBox() {
+    // Boundary values for the respective box divisions
+    let boxOneBottom = -600;
+    let boxOneLeft = 420;
+    let boxOneRight = 500;
+    let boxOneTop = -940;
+
+    let boxTwoBottom = boxOneBottom;
+    let boxTwoLeft = 200;
+    let boxTwoRight = boxOneRight;
+    let boxTwoTop = -680;
+
+    let boxThreeBottom = -370;
+    let boxThreeLeft = boxTwoLeft;
+    let boxThreeRight = 280;
+    let boxThreeTop = boxTwoTop;
+
+    let boxFourBottom = boxThreeBottom;
+    let boxFourLeft = boxThreeRight;
+    let boxFourRight = 400;
+    let boxFourTop = -450;
+
+    let boxFiveBottom = -395;
+    let boxFiveLeft = boxFourRight;
+    let boxFiveRight = 430;
+    let boxFiveTop = -425;
+
+    /** SECRET PATH */
+    let boxSixBottom = -810;
+    let boxSixLeft = boxOneLeft;
+    let boxSixRight = 550;
+    let boxSixTop = -840;
+
+    let boxSevenBottom = -740;
+    let boxSevenLeft = boxSixRight;
+    let boxSevenRight = 600;
+    let boxSevenTop = boxSixTop;
+
+    let boxEightBottom = boxSevenBottom;
+    let boxEightLeft = boxOneLeft;
+    let boxEightRight = boxSevenLeft;
+    let boxEightTop = -770;
+
+    // Check which box the player is in at any point in time
+    if(xPos > boxOneLeft && xPos < boxOneRight && zPos < boxOneBottom && zPos > boxOneTop) {
+        setBox(1, 3);
+    }
+    else if(xPos > boxTwoLeft && xPos < boxTwoRight && zPos < boxTwoBottom && zPos > boxTwoTop) {
+        setBox(2, 3);
+    }
+    else if(xPos > boxThreeLeft && xPos < boxThreeRight && zPos < boxThreeBottom && zPos > boxThreeTop) {
+        setBox(3, 3);
+    }
+    else if(xPos > boxFourLeft && xPos < boxFourRight && zPos < boxFourBottom && zPos > boxFourTop) {
+        setBox(4, 3);
+    }
+    else if(xPos > boxFiveLeft && xPos < boxFiveRight && zPos < boxFiveBottom && zPos > boxFiveTop) {
+        setBox(5, 3);
+    }
+    else if(xPos > boxSixLeft && xPos < boxSixRight && zPos < boxSixBottom && zPos > boxSixTop) {
+        setBox(6, 3);
+    }
+    else if(xPos > boxSevenLeft && xPos < boxSevenRight && zPos < boxSevenBottom && zPos > boxSevenTop) {
+        setBox(7, 3);
+    }
+    else if(xPos > boxEightLeft && xPos < boxEightRight && zPos < boxEightBottom && zPos > boxEightTop) {
+        setBox(8, 3);
+    }
+
+    if(boxArr[1]) { // In box one
+        if(zPos > boxOneBottom - boundaryFactor) { // Place bottom boundary
+            controls.getObject().position.z = boxOneBottom - boundaryFactor;
+        }
+        if(zPos < boxOneTop) { // Place top boundary
+            controls.getObject().position.z = boxOneTop;
+        }
+        if(xPos < boxOneLeft + boundaryFactor) { // Place left boundary except at box two overlap
+            if(zPos < boxTwoTop)
+                controls.getObject().position.x = boxOneLeft + boundaryFactor;
+        }
+        if(xPos > boxOneRight - boundaryFactor) { // Place right boundary except at secret path entrance and exit
+            if( (zPos < boxSixTop || zPos > boxSixBottom) && (zPos < boxEightTop || zPos > boxEightBottom) )
+                controls.getObject().position.x = boxOneRight - boundaryFactor;
+        }
+    }
+    else if(boxArr[2]) { // In box two
+        if(zPos > boxTwoBottom - boundaryFactor) { // Place bottom boundary except at box three overlap
+            if(xPos > boxThreeRight)
+                controls.getObject().position.z = boxTwoBottom - boundaryFactor;
+        }
+        if(zPos < boxTwoTop + boundaryFactor) { // Place top boundary
+            controls.getObject().position.z = boxTwoTop + boundaryFactor;
+        }
+        if(xPos < boxThreeLeft + boundaryFactor) { // Place left boundary
+            controls.getObject().position.x = boxTwoLeft + boundaryFactor;
+        }
+        if(xPos > boxTwoRight - boundaryFactor) { // Place right boundary except at box one overlap
+            if(xPos < boxOneLeft)
+                controls.getObject().position.x = boxTwoRight - boundaryFactor;
+        }
+    }
+    else if(boxArr[3]) { // In box three
+        if(zPos > boxThreeBottom - boundaryFactor) { // Place bottom boundary
+            controls.getObject().position.z = boxThreeBottom - boundaryFactor;
+        }
+        if(xPos < boxThreeLeft + boundaryFactor) { // Place left boundary
+            controls.getObject().position.x = boxThreeLeft + boundaryFactor;
+        }
+        if(xPos > boxThreeRight - boundaryFactor) { // Place right boundary except at box four overlap
+            if(zPos < boxFourTop)
+                controls.getObject().position.x = boxThreeRight - boundaryFactor;
+        }
+    }
+    else if(boxArr[4]) { // In box four
+        if(zPos > boxFourBottom - boundaryFactor) { // Place bottom boundary
+            controls.getObject().position.z = boxFourBottom - boundaryFactor;
+        }
+        if(zPos < boxFourTop + boundaryFactor) { // Place top boundary
+            controls.getObject().position.z = boxFourTop + boundaryFactor;
+        }
+        if(xPos > boxFourRight - boundaryFactor) { // Place right boundary except at box five entrance
+            if(zPos < boxFiveTop || zPos > boxFiveBottom)
+                controls.getObject().position.x = boxFourRight - boundaryFactor;
+        }
+    }
+    else if(boxArr[5]) { // In box five
+        if(zPos > boxFiveBottom - boundaryFactor) { // Place bottom boundary
+            controls.getObject().position.z = boxFiveBottom - boundaryFactor;
+        }
+        if(zPos < boxFiveTop + boundaryFactor) { // Place top boundary
+            controls.getObject().position.z = boxFiveTop + boundaryFactor;
+        }
+        if(xPos > boxFiveRight) { // Change the level once the player leaves the box
+            currentLevel = 3.5;
+        }
+    }
+    else if(boxArr[6]) { // In box six
+        if(zPos > boxSixBottom - boundaryFactor) { // Place bottom boundary
+            controls.getObject().position.z = boxSixBottom - boundaryFactor;
+        }
+        if(zPos < boxSixTop + boundaryFactor) { // Place top boundary
+            controls.getObject().position.z = boxSixTop + boundaryFactor;
+        }
+    }
+    else if(boxArr[7]) { // In box seven
+        if(zPos > boxSevenBottom - boundaryFactor) { // Place bottom boundary
+            controls.getObject().position.z = boxSevenBottom - boundaryFactor;
+        }
+        if(zPos < boxSevenTop + boundaryFactor) { // Place top boundary
+            controls.getObject().position.z = boxSevenTop + boundaryFactor;
+        }
+        if(xPos < boxSevenLeft + boundaryFactor) { // Place left boundary except at box six and box eight overlaps
+            if( (zPos < boxSixTop || zPos > boxSixBottom) && (zPos < boxEightTop || zPos > boxEightBottom) )
+                controls.getObject().position.x = boxSevenLeft + boundaryFactor;
+        }
+        if(xPos > boxSevenRight - boundaryFactor) { // Place right boundary
+            controls.getObject().position.x = boxSevenRight - boundaryFactor;
+        }
+    }
+    else if(boxArr[8]) { // In box eight
+        if(zPos > boxEightBottom - boundaryFactor) { // Place bottom boundary
+            controls.getObject().position.z = boxEightBottom - boundaryFactor;
+        }
+        if(zPos < boxEightTop + boundaryFactor) { // Place top boundary
+            controls.getObject().position.z = boxEightTop + boundaryFactor;
+        }
+    }
+}
+
+/** 
+ *  Handles bound checking for the third puzzle.
+ *  Called by updateLevel() if currentLevel = 3.5.
+ */
+function puzzleThreeBoundingBox() {
+    // Boundary values for the respective box divisions
+    let boxOneBottom = -370;
+    let boxOneLeft = 430;
+    let boxOneRight = 530;
+    let boxOneTop = -450;
+
+    let boxTwoBottom = -340;
+    let boxTwoLeft = 465;
+    let boxTwoRight = 495;
+    let boxTwoTop = -370;
+
+    let puzzleCompleted = true;
+
+    // Check which box the player is in at any point in time
+    if(xPos > boxOneLeft && xPos < boxOneRight && zPos < boxOneBottom && zPos > boxOneTop) {
+        setBox(1, 3.5);
+    }
+    else if(xPos > boxTwoLeft && xPos < boxTwoRight && zPos < boxTwoBottom && zPos > boxTwoTop) {
+        setBox(2, 3.5);
+    }
+
+    if(boxArr[1]) { // In box one
+        if(zPos > boxOneBottom - boundaryFactor) { // Place bottom boundary
+            if(puzzleCompleted) { // Allow player through the path only after the puzzle is completed
+                if(xPos < boxTwoLeft || xPos > boxTwoRight)
+                    controls.getObject().position.z = boxOneBottom - boundaryFactor;
+            }
+            else {
+                controls.getObject().position.z = boxOneBottom - boundaryFactor;
+            }
+        }
+        if(zPos < boxOneTop + boundaryFactor) { // Place top boundary    
+            controls.getObject().position.z = boxOneTop + boundaryFactor;
+
+        }
+        if(xPos < boxOneLeft) { // Place left boundary
+            controls.getObject().position.x = boxOneLeft;
+        }
+        if(xPos > boxOneRight - boundaryFactor) { // Place right boundary
+            controls.getObject().position.x = boxOneRight - boundaryFactor;
+        }
+    }
+    else if(boxArr[2]) { // In box two
+        if(xPos < boxTwoLeft + boundaryFactor) { // Place left boundary
+            controls.getObject().position.x = boxTwoLeft + boundaryFactor;
+        }
+        if(xPos > boxTwoRight - boundaryFactor) { // Place right boundary
+            controls.getObject().position.x = boxTwoRight - boundaryFactor;
+        }
+        if(zPos > boxTwoBottom) { // Change the level once the player leaves the box
+            currentLevel = 4;
+        }
+    }
+}
+
+/** 
+ *  Handles bound checking for the fourth level.
+ *  Called by updateLevel() if currentLevel = 4.
+ */
+function levelFourBoundingBox() {
+    // Boundary values for the respective box divisions
+    let boxOneBottom = -40;
+    let boxOneLeft = 330;
+    let boxOneRight = 630;
+    let boxOneTop = -340;
+
+    // Check which box the player is in at any point in time
+    if(xPos > boxOneLeft && xPos < boxOneRight && zPos < boxOneBottom && zPos > boxOneTop) {
+        setBox(1, 4);
+    }
+
+    if(boxArr[1]) { // In box one
+        if(zPos > boxOneBottom - boundaryFactor) { // Place bottom boundary
+            controls.getObject().position.z = boxOneBottom - boundaryFactor;
+        }
+        if(zPos < boxOneTop) { // Place top boundary
+            controls.getObject().position.z = boxOneTop;
+        }
+        if(xPos < boxOneLeft + boundaryFactor) { // Place left boundary
+            controls.getObject().position.x = boxOneLeft + boundaryFactor;
+        }
+        if(xPos > boxOneRight - boundaryFactor) { // Place right boundary
+            controls.getObject().position.x = boxOneRight - boundaryFactor;
+        }
+    }
 }
 
 function levelOneBoundingBox() {
@@ -1344,8 +1875,8 @@ function updateBullets() {
 
         // scene.add(new THREE.ArrowHelper(item.raycaster.ray.direction, item.raycaster.ray.origin, 1));
 
-        let intersects = item.raycaster.intersectObjects(bulletCollidableMeshList, true);
-
+        let intersects = item.raycaster.intersectObjects(collidableMeshList, true);
+        
         if(intersects.length > 0) {
             let intersect = intersects[0];
             let distance_one = intersect.distance;
@@ -1358,44 +1889,30 @@ function updateBullets() {
 
                 if(intersect.object.parent.parent.name != null) {
                     switch(intersect.object.parent.parent.name) { // The name of the model that the hitbox mesh is attached to
-                        case "alien":
-    
-                            if(intersect.object.name == "head") { // Headshot
-                                alien.currentHealth -= 100;
-                                audioCollection.headshot.play();
-                                crosshair.style.background = "url(hud/crosshairs/crosshair_hitmarker.svg)";
-                                crosshair.style.filter = "brightness(0) saturate(100%) invert(11%) sepia(96%) saturate(6875%) hue-rotate(0deg) brightness(91%) contrast(126%)";
-                            }
-                            else { // Bodyshot
-                                alien.currentHealth -= 20;
-                                crosshair.style.background = "url(hud/crosshairs/crosshair_hitmarker.svg)";
-                                if(alien.currentHealth <= 0) {
-                                    crosshair.style.filter = "brightness(0) saturate(100%) invert(11%) sepia(96%) saturate(6875%) hue-rotate(0deg) brightness(91%) contrast(126%)";
-                                }
-                            }
-
-                            if(alien.currentHealth <= 0) {
-                                alien.deathAnim.enabled = true;
-                                alien.shootAnim.enabled = false;
-                                let indexOfCollidableMesh = bulletCollidableMeshList.indexOf(alien.hitbox.mesh);
-                                bulletCollidableMeshList.splice(indexOfCollidableMesh, 1);
-                                alien.alienModel.remove(alien.hitbox.mesh);
-                                alien.hitbox = null;
-                            }
-
-                            setTimeout(() => {
-                                crosshair.style.background = "url(hud/crosshairs/crosshair.svg)";
-                                crosshair.style.filter = "none";
-                            }, 300);
-                        
-                        break;
+                        case "alien1":
+                            damageAlien(0, intersect);
+                            break;
+                        case "alien2":
+                            damageAlien(1, intersect);
+                            break;
+                        case "alien3":
+                            damageAlien(2, intersect);
+                            break;
+                        case "alien4":
+                            damageAlien(3, intersect);
+                            break;
+                        case "alien5":
+                            damageAlien(4, intersect);
+                            break;
+                        case "alien6":
+                            damageAlien(5, intersect);
+                            break;
                     }
                 }
             }
         }
         item.lastPosition.copy(item.bullet.position);
     });
-
 
     if(player.weapon.cooldown > 0) {
         /** Handle weapon cooldown bar */
@@ -1424,31 +1941,171 @@ function updateBullets() {
     }
 }
 
-function boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop) {
+/**
+ * Checks where the bullet collided with the current alien and reduces the alien's health accordingly.
+ * Changes the crosshair to the hitmarker when a collision takes place.
+ * Plays death animation for the current alien when health drops to zero and removes the hitbox from the scene.
+ * @param {number} alienNumber Number of the alien which was shot
+ * @param {*} intersect First index of the intersects array
+ */
+function damageAlien(alienNumber, intersect) {
+    let currAlien = alienArray[alienNumber];
+
+    if(intersect.object.name == "head") { // Headshot
+        currAlien.currentHealth -= 100;
+        audioCollection.headshot.play();
+        crosshair.style.background = "url(hud/crosshairs/crosshair_hitmarker.svg)";
+        crosshair.style.filter = "brightness(0) saturate(100%) invert(11%) sepia(96%) saturate(6875%) hue-rotate(0deg) brightness(91%) contrast(126%)";
+    }
+    else { // Bodyshot
+        currAlien.currentHealth -= 20;
+        crosshair.style.background = "url(hud/crosshairs/crosshair_hitmarker.svg)";
+        if(currAlien.currentHealth <= 0) {
+            crosshair.style.filter = "brightness(0) saturate(100%) invert(11%) sepia(96%) saturate(6875%) hue-rotate(0deg) brightness(91%) contrast(126%)";
+        }
+    }
+
+    if(currAlien.currentHealth <= 0) {
+        currAlien.deathAnim.enabled = true;
+        currAlien.idleAnim.enabled = false;
+        let indexOfCollidableMesh = collidableMeshList.indexOf(currAlien.hitbox.mesh);
+        collidableMeshList.splice(indexOfCollidableMesh, 1);
+        currAlien.model.remove(currAlien.hitbox.mesh);
+        currAlien.hitbox = null;
+    }
+
+    setTimeout(() => {
+        crosshair.style.background = "url(hud/crosshairs/crosshair.svg)";
+        crosshair.style.filter = "none";
+    }, 300);
+}
+
+function boundingBoxVis() {
+    // Boundary values for the respective box divisions
+    let boxOneBottom = 30;
+    let boxOneTop = -550;
+    let boxOneLeft = -40;
+    let boxOneRight = -boxOneLeft;
+
+    let boxTwoBottom = -420;
+    let boxTwoTop = -450;
+
+    let boxThreeBottom = boxTwoBottom;
+    let boxThreeTop = -615;
+    let boxThreeLeft = 60;
+    let boxThreeRight = 130;
+
+    let boxFourBottom = -585;
+    let boxFourTop = boxThreeTop;
+
     let linematerial = new THREE.LineBasicMaterial({
         color: 0xffff00
     });
 
     let points = [];
+    let points2 = [];
 
-    points.push(new THREE.Vector3(xTempleEntrance, .1, boxFourTop));
-    points.push(new THREE.Vector3(boxThreeRight, .1, boxFourTop));
-    points.push(new THREE.Vector3(boxThreeRight, .1, boxTwoBottom));
+    points.push(new THREE.Vector3(330, 1, -40));
+    points.push(new THREE.Vector3(330, 1, -340)); // Entrance of level 4 box (left)
 
-    points.push(new THREE.Vector3(boxOneRight, .1, boxTwoBottom));
-    points.push(new THREE.Vector3(boxOneRight, .1, boxOneBottom));
-    points.push(new THREE.Vector3(-boxOneRight, .1, boxOneBottom));
-    points.push(new THREE.Vector3(-boxOneRight, .1, boxOneTop));
-    points.push(new THREE.Vector3(boxOneRight, .1, boxOneTop));
-    points.push(new THREE.Vector3(boxOneRight, .1, boxTwoTop));
-    points.push(new THREE.Vector3(boxThreeLeft, .1, boxTwoTop));
-    points.push(new THREE.Vector3(boxThreeLeft, .1, boxFourBottom));
-    points.push(new THREE.Vector3(xTempleEntrance, .1, boxFourBottom));
+    points.push(new THREE.Vector3(465, 1, -340)); // Exit of level 3.5 box (left)
+    points.push(new THREE.Vector3(465, 1, -370));
+    points.push(new THREE.Vector3(430, 1, -370)); // Entrance of level 3.5 box (right)
+
+    points.push(new THREE.Vector3(430, 1, -395)); // Exit of level 3 box (right)
+    points.push(new THREE.Vector3(400, 1, -395));
+    points.push(new THREE.Vector3(400, 1, -370));
+    points.push(new THREE.Vector3(200, 1, -370));
+    points.push(new THREE.Vector3(200, 1, -680));
+    points.push(new THREE.Vector3(420, 1, -680));
+    points.push(new THREE.Vector3(420, 1, -940));
+    points.push(new THREE.Vector3(445, 1, -940)); // Entrance of level 3 box (right)
+
+    points.push(new THREE.Vector3(445, 1, -970)); // Exit of level 2.5 box (right)
+    points.push(new THREE.Vector3(420, 1, -970));
+    points.push(new THREE.Vector3(420, 1, -1070));
+    points.push(new THREE.Vector3(445, 1, -1070)); // Start of level 2.5 box (right)
+
+    points.push(new THREE.Vector3(445, 1, -1100)); // Exit of level 2 box (right)
+    points.push(new THREE.Vector3(-200, 1, -1100));
+    points.push(new THREE.Vector3(-200, 1, -980));
+    points.push(new THREE.Vector3(40, 1, -980));
+    points.push(new THREE.Vector3(40, 1, -715));
+    points.push(new THREE.Vector3(15, 1, -715)); // Entrance of level 2 box (right)
+
+    points.push(new THREE.Vector3(15, 1, -685)); // Exit of level 1.5 box (right)
+    points.push(new THREE.Vector3(40, 1, -685)); // Start of level 1.5 box (right)
+
+    /** Level 1 box */
+    points.push(new THREE.Vector3(boxOneRight, 1, boxFourTop));
+    points.push(new THREE.Vector3(boxThreeRight, 1, boxFourTop));
+    points.push(new THREE.Vector3(boxThreeRight, 1, boxTwoBottom));
+    
+    points.push(new THREE.Vector3(boxOneRight, 1, boxTwoBottom));
+    points.push(new THREE.Vector3(boxOneRight, 1, boxOneBottom));
+    points.push(new THREE.Vector3(-boxOneRight, 1, boxOneBottom));
+    points.push(new THREE.Vector3(-boxOneRight, 1, boxOneTop));
+    points.push(new THREE.Vector3(boxOneRight, 1, boxOneTop));
+    points.push(new THREE.Vector3(boxOneRight, 1, boxTwoTop));
+    points.push(new THREE.Vector3(boxThreeLeft, 1, boxTwoTop));
+    points.push(new THREE.Vector3(boxThreeLeft, 1, boxFourBottom));
+    points.push(new THREE.Vector3(boxOneRight, 1, boxFourBottom));
+
+    points.push(new THREE.Vector3(-40, 1, -585)); // Start of level 1.5 box (left)
+    points.push(new THREE.Vector3(-40, 1, -685));
+    points.push(new THREE.Vector3(-15, 1, -685)); // Exit of level 1.5 box (left)
+
+    points.push(new THREE.Vector3(-15, 1, -715)); // Entrance of level 2 box (left)
+    points.push(new THREE.Vector3(-40, 1, -715));
+    points.push(new THREE.Vector3(-40, 1, -900));
+    points.push(new THREE.Vector3(-280, 1, -900));
+    points.push(new THREE.Vector3(-280, 1, -1180));
+    points.push(new THREE.Vector3(500, 1, -1180));
+    points.push(new THREE.Vector3(500, 1, -1100));
+    points.push(new THREE.Vector3(475, 1, -1100)); // Exit of level 2 box (left)
+
+    points.push(new THREE.Vector3(475, 1, -1070)); // Start of level 2.5 box (left)
+    points.push(new THREE.Vector3(500, 1, -1070));
+    points.push(new THREE.Vector3(500, 1, -970));
+    points.push(new THREE.Vector3(475, 1, -970)); // Exit of level 2.5 box (left)
+
+    points.push(new THREE.Vector3(475, 1, -940)); // Entrance of level 3 box (left)
+    points.push(new THREE.Vector3(500, 1, -940));
+    points.push(new THREE.Vector3(500, 1, -840));
+
+    points.push(new THREE.Vector3(600, 1, -840)); // Entrance of secret path
+    points.push(new THREE.Vector3(600, 1, -740));
+    points.push(new THREE.Vector3(500, 1, -740)); // Exit of secret path
+
+    /** Secret path inner box */
+    points2.push(new THREE.Vector3(500, 1, -810));
+    points2.push(new THREE.Vector3(550, 1, -810));
+    points2.push(new THREE.Vector3(550, 1, -770));
+    points2.push(new THREE.Vector3(500, 1, -770));
+
+    points.push(new THREE.Vector3(500, 1, -600));
+    points.push(new THREE.Vector3(280, 1, -600));
+    points.push(new THREE.Vector3(280, 1, -450));
+    points.push(new THREE.Vector3(400, 1, -450));
+    points.push(new THREE.Vector3(400, 1, -425));
+    points.push(new THREE.Vector3(430, 1, -425)); // Exit of level 3 box (left)
+
+    points.push(new THREE.Vector3(430, 1, -450)); // Entrance of level 3.5 box (left)
+    points.push(new THREE.Vector3(530, 1, -450));
+    points.push(new THREE.Vector3(530, 1, -370));
+    points.push(new THREE.Vector3(495, 1, -370));
+    points.push(new THREE.Vector3(495, 1, -340)); // Exit of level 3.5 box (right)
+
+    points.push(new THREE.Vector3(630, 1, -340)); // Entrance of level 4 box (right)
+    points.push(new THREE.Vector3(630, 1, -40));
 
     let geometry = new THREE.BufferGeometry().setFromPoints(points);
+    let geometry2 = new THREE.BufferGeometry().setFromPoints(points2);
 
-    let boundingBox = new THREE.Line(geometry, linematerial);
+    let boundingBox = new THREE.LineLoop(geometry, linematerial);
+    let secretPathInner = new THREE.LineLoop(geometry2, linematerial);
     scene.add(boundingBox);
+    scene.add(secretPathInner);
 }
 
 /** Standalone function to handle the jump animation.
@@ -1518,7 +2175,7 @@ function loadModel(url, key) {
                 initPlayerModel(gltf);
                 break;
             case "alien":
-                initAlienModel(gltf);
+                initAlienModels(gltf);
                 break;
             case "bounty_hunter":
                 initBountyHunters(gltf);
@@ -1997,12 +2654,20 @@ function initPlayer() {
     loadModel("models/characters/player/player_gun.glb", "player");
 }
 
-function initAlien() {
-    alien = new Alien("alien");
+function initAliens() {
+    alien1 = new Alien();
+    alien2 = new Alien();
+    alien3 = new Alien();
+    alien4 = new Alien();
+    alien5 = new Alien();
+    alien6 = new Alien();
     loadModel("models/characters/enemy/alien.mintexture.glb", "alien");
 }
 
 function initBountyHunter() {
+    bountyHunter1 = new BountyHunter();
+    bountyHunter2 = new BountyHunter();
+    bountyHunter3 = new BountyHunter();
     loadModel("models/characters/bounty hunter/bounty_hunter.glb", "bounty_hunter");
 }
 
@@ -2074,16 +2739,15 @@ function initAudio() {
 }
 
 function initWorld() {
-
     drawTrees();
-    // drawBushes();
+    drawBushes();
     drawGround();
     drawRocks();
     drawStars();
     drawTotems();
     drawPaper();
 
-    boundingBoxVis(boxOneBottom, boxOneRight, boxOneTop, boxTwoBottom, boxTwoTop, xTempleEntrance, boxThreeLeft, boxThreeRight, boxFourBottom, boxFourTop);
+    boundingBoxVis();
 }
 
 function render() {
@@ -2114,7 +2778,7 @@ function init() {
     initLoaders();
     initSkybox();
     initPlayer();
-   // initAlien();
+    initAliens();
     initBountyHunter();
     initWeaponModel();
     initAudio();
