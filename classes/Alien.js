@@ -17,6 +17,7 @@ class Alien {
         this._walkBackwardsAnim = undefined;
         this._deathAnim = undefined;        
         this._shootAnim = undefined;
+        this._inRangeofPlayer = false;
     }
 
     /** GETTERS */

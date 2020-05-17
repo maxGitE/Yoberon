@@ -123,6 +123,30 @@ button:active {
     visibility: hidden;
 }
 
+#tooltip {
+    position: fixed;
+    top: 2%;
+    right: 2%;
+    width: 20%;
+    height: 5%;
+    background-color: rgb(255, 255, 255, 0);
+    text-align: center;
+    color: white;
+    font-family: monospace;
+    font-size: 20px;
+    font-family: monospace;
+    font-weight: bold;
+    visibility: hidden;
+}
+
+.blinking-animation {
+    animation: blinking 2.25s infinite alternate;
+}
+
+@keyframes blinking {
+    from { opacity: 0; }
+}
+
 #paper {
     position: fixed;
     top: 50%;
@@ -156,7 +180,7 @@ button:active {
     top: 50%;
     left: 50%;
     -webkit-transform: translate(-50%, -50%) rotate(45deg) scale(1);
-            transform: translate(-50%, -50%) rotate(45deg) scale(1);
+    transform: translate(-50%, -50%) rotate(45deg) scale(1);
   }
   
 .stroke-still {

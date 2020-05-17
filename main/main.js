@@ -18,6 +18,7 @@ const resume = document.getElementById("resume");
 const crosshair = document.getElementById("crosshair");
 const weaponCooldownBar = document.getElementById("weaponcooldown");
 const interact = document.getElementById("interact");
+const tooltip = document.getElementById("tooltip");
 const paper = document.getElementById("paper");
 const playButton = document.getElementById("play");
 const loadingInfo = document.getElementById("loadinginfo");
@@ -90,6 +91,7 @@ let skyboxURLs = ["cubemap/space_one/px.png", "cubemap/space_one/nx.png",
 /** OBJECTS */
 let starFieldA;
 let starFieldB;
+let blockingTrees;
 
 /** LEVEL 1 */
 let cameraDirectionLevelOne;
@@ -120,13 +122,15 @@ let paper_clueFour;
 let clueWords = ["AIR", "WATER", "FIRE", "EARTH"];
 let levelOneCollidableMeshList = [];
 
+/** HUD */
+let completedTooltip = false;
+
 let lockingClick = true;
 let bulletCollidableMeshList = [];
 
 let interactableObject;
 
 function gameLoop() {
-
     // setTimeout( function() {
 
     //     requestAnimationFrame(gameLoop);
@@ -209,19 +213,17 @@ function gameLoop() {
 }
 
 function levelOnePuzzle() {
-
     if(!finishedPuzzleOne) {
         cameraDirectionLevelOne = new THREE.Vector3();
         cameraDirectionLevelOne.normalize();
         controls.getDirection(cameraDirectionLevelOne);
         let playerRaycaster = new THREE.Raycaster(controls.getObject().position, cameraDirectionLevelOne);
-
         // scene.add(new THREE.ArrowHelper(playerRaycaster.ray.direction, playerRaycaster.ray.origin, 10));
         let intersects = playerRaycaster.intersectObjects(levelOneCollidableMeshList, false);
 
         if(intersects.length > 0 && intersects[0].distance < 10) {
             interact.style.visibility = "visible";
-            console.log(intersects[0]);
+   
             if(intersects[0].object.name == "totem") { // Totem
                 interactableObject = "totem";
                 selectedTotem = intersects[0];
@@ -278,9 +280,6 @@ function levelOnePuzzle() {
         if(audioCollection.rockSink.isPlaying) {
             if(boulder_one.position.y > -16.5) {
                 boulder_one.position.y -= 0.02;
-            }
-            else {
-                scene.remove(boulder_one);
             }
         }
     }
@@ -360,6 +359,8 @@ function showClue(name) {
             paper.innerHTML = clueWords[3];
             break;            
     }
+
+    hideTooltip();
 }
 
 function initPlayerModel(gltf) {
@@ -541,6 +542,7 @@ function instantiateUnits(gltf, units, meshName) {
 
 function initPineTree(gltf) {
     let pinetree = gltf.scene;
+
     let treeGeometry = pinetree.children[0].geometry;
     let treeMaterial = pinetree.children[0].material;
 
@@ -708,6 +710,25 @@ function initBroadLeaf(gltf) {
     scene.add(broadLeafGroup);
 }
 
+function initBlockingTree(gltf) {
+    let blockingTreeOne = gltf.scene;
+    let blockingTreeTwo = blockingTreeOne.clone();
+    let blockingTreeThree = blockingTreeOne.clone();
+
+    blockingTrees = new THREE.Object3D();
+
+    blockingTreeOne.position.set(-5, 0, 0);
+    blockingTreeTwo.position.set(0, 0, 0);
+    blockingTreeThree.position.set(5, 0, 0);
+
+    blockingTrees.add(blockingTreeOne);
+    blockingTrees.add(blockingTreeTwo);
+    blockingTrees.add(blockingTreeThree);
+
+    blockingTrees.position.set(0, 0, -10);
+    scene.add(blockingTrees);
+}
+
 function initRockOne(gltf) {
    
 }
@@ -778,8 +799,9 @@ function initRockFour(gltf) {
 
 function initRockFive(gltf) {
     boulder_one = gltf.scene; 
-    boulder_one.scale.set(15, 15, 15);
-    boulder_one.position.set(0, 0, -700);
+    boulder_one.scale.set(10, 15, 10);
+    boulder_one.rotation.y = -Math.PI/2;
+    boulder_one.position.set(0, 0, -695);
     scene.add(boulder_one);
 }
 
@@ -788,7 +810,7 @@ function initRockOverClueOne(gltf) {
 
     rockOverClueOne.scale.set(0.005, 0.005, 0.005);
     rockOverClueOne.rotation.z = Math.random() * 2*Math.PI;
-    rockOverClueOne.position.set(-20, 0, -570);
+    rockOverClueOne.position.set(-20, 0, -625);
 
     levelOneCollidableMeshList.push(rockOverClueOne);
  
@@ -812,7 +834,7 @@ function initRockOverClueThree(gltf) {
 
     rockOverClueThree.scale.set(0.0055, 0.0055, 0.0055);
     rockOverClueThree.rotation.z = Math.random() * 2*Math.PI;
-    rockOverClueThree.position.set(-15, 0, -650);
+    rockOverClueThree.position.set(-15, 0, -675);
 
     levelOneCollidableMeshList.push(rockOverClueThree);
  
@@ -824,7 +846,7 @@ function initRockOverClueFour(gltf) {
 
     rockOverClueFour.scale.set(0.0045, 0.0045, 0.0045);
     rockOverClueFour.rotation.z = Math.random() * 2*Math.PI;
-    rockOverClueFour.position.set(10, 0, -560);
+    rockOverClueFour.position.set(-10, 0, -590);
 
     levelOneCollidableMeshList.push(rockOverClueFour);
  
@@ -1017,6 +1039,7 @@ function initBushThree(gltf) {
 function drawTrees() {
     loadModel("models/environment/trees/pinetree.glb", "pinetree");
     loadModel("models/environment/trees/broadleaf.glb", "broadleaf");
+    loadModel("models/environment/trees/blocking_tree.glb", "blocking_tree");
 }
 
 function drawBushes() {
@@ -1077,10 +1100,10 @@ function drawTotems() {
     totemThree = new THREE.Mesh(totemGeometry, totemThreeMaterial);
     totemFour = new THREE.Mesh(totemGeometry, totemFourMaterial);
 
-    totemOne.position.set(0, 6, -592);
-    totemTwo.position.set(0, 6, -603);
-    totemThree.position.set(0, 6, -614);
-    totemFour.position.set(0, 6, -625);
+    totemOne.position.set(-16.5, 6, 0);
+    totemTwo.position.set(-5.5, 6, 0);
+    totemThree.position.set(5.5, 6, 0);
+    totemFour.position.set(16.5, 6, 0);
 
     totemOne.userData = {selected: false, animal: "eagle"};
     totemTwo.userData = {selected: false, animal: "frog"};
@@ -1125,27 +1148,34 @@ function drawTotems() {
     loadModel("models/totems/lion.glb", "lion");
     loadModel("models/totems/rooster.glb", "rooster");
 
+    totemCollection.rotation.set(0, Math.PI/2, 0);
+    totemCollection.position.set(-10, 0, -635);
+
     scene.add(totemCollection);
 }
 
 function drawPaper() {
     paper_clueOne = new THREE.Mesh(new THREE.BoxBufferGeometry(1, 0.01, 1), new THREE.MeshLambertMaterial( {color: "#f2eecb"} ));
-    paper_clueOne.position.set(-20, 0, -570);
+    paper_clueOne.rotation.y = Math.random() * 2*Math.PI;
+    paper_clueOne.position.set(-20, 0, -625);
     paper_clueOne.name = "clueOne";
     levelOneCollidableMeshList.push(paper_clueOne);
 
     paper_clueTwo = new THREE.Mesh(new THREE.BoxBufferGeometry(1, 0.01, 1), new THREE.MeshLambertMaterial( {color: "#f2eecb"} ));
+    paper_clueTwo.rotation.y = Math.random() * 2*Math.PI;
     paper_clueTwo.position.set(25, 0, -620);
     paper_clueTwo.name = "clueTwo";
     levelOneCollidableMeshList.push(paper_clueTwo);
 
     paper_clueThree = new THREE.Mesh(new THREE.BoxBufferGeometry(1, 0.01, 1), new THREE.MeshLambertMaterial( {color: "#f2eecb"} ));
-    paper_clueThree.position.set(-15, 0, -650);
+    paper_clueThree.rotation.y = Math.random() * 2*Math.PI;
+    paper_clueThree.position.set(-15, 0, -675);
     paper_clueThree.name = "clueThree";
     levelOneCollidableMeshList.push(paper_clueThree);
 
     paper_clueFour = new THREE.Mesh(new THREE.BoxBufferGeometry(1, 0.01, 1), new THREE.MeshLambertMaterial( {color: "#f2eecb"} ));
-    paper_clueFour.position.set(10, 0, -560);
+    paper_clueFour.rotation.y = Math.random() * 2*Math.PI;
+    paper_clueFour.position.set(-10, 0, -590);
     paper_clueFour.name = "clueFour";
     levelOneCollidableMeshList.push(paper_clueFour);
 
@@ -1267,6 +1297,10 @@ function levelOneBoundingBox() {
     }
 
     if(boxArr[1]) { // In box one
+        if(zPos < boxTwoBottom + 20 && !completedTooltip) { // Show level one tooltip
+            displayTooltip("The path is blocked. Find a way around!");
+        }
+
         if(zPos > boxOneBottom - boundaryFactor) { // Place boundary behind where player spawns
             controls.getObject().position.z = boxOneBottom - boundaryFactor;
         }
@@ -1282,6 +1316,8 @@ function levelOneBoundingBox() {
         }
     }
     else if(boxArr[2]) { // In box two
+        hideTooltip(); // Hide the tooltip once the secret path is found
+
         if(zPos > boxTwoBottom - boundaryFactor) { // Place bottom boundary
             controls.getObject().position.z = boxTwoBottom - boundaryFactor;
         }
@@ -1316,6 +1352,7 @@ function levelOneBoundingBox() {
         }
         if(xPos < boxFourLeft) { // Change the level once the player leaves the box
             currentLevel = 1.5;
+            completedTooltip = false;
         }
     }
 }
@@ -1345,11 +1382,15 @@ function puzzleOneBoundingBox() {
     }
     
     if(boxArr[1]) { // In box one
+        if(zPos < -615 && !completedTooltip) { // Show puzzle one tooltip
+             displayTooltip("The environment may contain useful information!");
+        }
+
         if(zPos > boxOneBottom - boundaryFactor) { // Place bottom boundary
             controls.getObject().position.z = boxOneBottom - boundaryFactor;
         }
         if(zPos < boxOneTop + boundaryFactor) { // Place top boundary
-            if(finishedPuzzleOne) { // Allow player through the path only after the puzzle is completed
+            if(finishedPuzzleOne && boulder_one.position.y < -8) { // Allow player through the path only after the puzzle is completed and the rock has sufficiently sunk
                 if(xPos < boxTwoLeft || xPos > boxTwoRight)
                     controls.getObject().position.z = boxOneTop + boundaryFactor;
             }
@@ -1382,6 +1423,10 @@ function puzzleOneBoundingBox() {
  *  Called by updateLevel() if currentLevel = 2.
  */
 function levelTwoBoundingBox() {
+    if(boulder_one.position.y < 0) { // Move the rock back up to it's original position
+        boulder_one.position.y += 0.02;
+    }
+
     // Boundary values for the respective box divisions
     let boxOneBottom = -715;
     let boxOneLeft = -40;
@@ -1916,6 +1961,9 @@ function damageAlien(alienNumber, intersect) {
 
     if(intersect.object.name == "head") { // Headshot
         currAlien.currentHealth -= 100;
+        if(audioCollection.headshot.isPlaying) {
+            audioCollection.headshot.stop();
+        }
         audioCollection.headshot.play();
         crosshair.style.background = "url(hud/crosshairs/crosshair_hitmarker.svg)";
         crosshair.style.filter = "brightness(0) saturate(100%) invert(11%) sepia(96%) saturate(6875%) hue-rotate(0deg) brightness(91%) contrast(126%)";
@@ -2152,6 +2200,9 @@ function loadModel(url, key) {
             case "broadleaf":
                 initBroadLeaf(gltf);
                 break;
+            case "blocking_tree":
+                initBlockingTree(gltf);
+                break;
             case "rock_one":
                 initRockOne(gltf);
                 break;
@@ -2191,7 +2242,7 @@ function loadModel(url, key) {
             case "eagle":
                 eagle = gltf.scene.children[0];
                 eagle.scale.set(0.2, 0.2, 0.2);
-                eagle.rotation.set(0, 3*Math.PI/4, 0);
+                eagle.rotation.set(0, Math.PI/4, 0);
                 eagle.position.copy(totemOne.position);
                 eagle.position.y = 12;
                 totemCollection.add(eagle);
@@ -2213,13 +2264,11 @@ function loadModel(url, key) {
             case "rooster":
                 rooster = gltf.scene.children[0];
                 rooster.scale.set(0.075, 0.075, 0.075);
-                rooster.rotation.set(0, Math.PI/4, 0);
+                rooster.rotation.set(0, -Math.PI/4, 0);
                 rooster.position.copy(totemFour.position);
                 rooster.position.y = 12;
                 totemCollection.add(rooster);
                 break;
-            
-            
         }
     }
     gltfLoader.load(url, callback, undefined, (error) => console.log(error));
@@ -2316,7 +2365,28 @@ function loadAudio(url, key) {
                 audioCollection.rockSlide.setVolume(0.5);
             });
             break;
+        case "tooltip_completed":
+            audioCollection.tooltipCompleted = new THREE.Audio(listener);
+            audioLoader.load(url, function(buffer) {
+                audioCollection.tooltipCompleted.setBuffer(buffer);
+                audioCollection.tooltipCompleted.setLoop(false);
+                audioCollection.tooltipCompleted.setVolume(0.5);
+            });
+            break;
     }
+}
+
+function displayTooltip(message) {
+    tooltip.innerHTML = message;
+    tooltip.style.visibility = "visible";
+}
+
+function hideTooltip() {
+    if(!completedTooltip) {
+        tooltip.style.visibility = "hidden";
+        audioCollection.tooltipCompleted.play();
+    }
+    completedTooltip = true;
 }
 
 function onResize() {
@@ -2489,9 +2559,10 @@ function initControls() {
                 if(interact.style.visibility == "visible") {
                     switch(interactableObject) {
                         case "totem":
-                            if(!audioCollection.totemSelect.isPlaying) {
-                                audioCollection.totemSelect.play();
+                            if(audioCollection.totemSelect.isPlaying) {
+                                audioCollection.totemSelect.stop();
                             }
+                            audioCollection.totemSelect.play();
                             updateTotemSelection();
                             break;
                         case "rockOverClueOne":
@@ -2699,6 +2770,7 @@ function initAudio() {
     loadAudio("audio/environment/level_one/correct_totem_order.wav", "correct_totem_order");
     loadAudio("audio/environment/level_one/rock_sink.wav", "rock_sink");
     loadAudio("audio/environment/level_one/rock_slide.wav", "rock_slide");
+    loadAudio("audio/hud/tooltip_completed.mp3", "tooltip_completed");
 }
 
 function initWorld() {
@@ -2741,7 +2813,7 @@ function init() {
     initLoaders();
     initSkybox();
     initPlayer();
-    initAliens();
+    // initAliens();
     initBountyHunter();
     initWeaponModel();
     initAudio();

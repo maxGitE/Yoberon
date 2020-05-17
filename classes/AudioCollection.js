@@ -11,6 +11,7 @@ class AudioCollection {
         this._correctTotemOrder;
         this._rockSink;
         this._rockSlide;
+        this._tooltipCompleted;
     }
 
     get wildlife() {
@@ -99,5 +100,13 @@ class AudioCollection {
 
     set rockSlide(audio) {
         this._rockSlide = audio;
+    }
+
+    get tooltipCompleted() {
+        return this._tooltipCompleted;
+    }
+
+    set tooltipCompleted(audio) {
+        this._tooltipCompleted = audio;
     }
 }
