@@ -2,8 +2,10 @@ class AudioCollection {
     constructor() {
         this._wildlife;
         this._weapon;
+        this._headshotAnnouncer;
         this._headshot;
         this._hitmarker;
+        this._alienWeapon;
         this._jumpboost;
         this._paper;
         this._totemSelect;
@@ -12,7 +14,9 @@ class AudioCollection {
         this._rockSink;
         this._rockSlide;
         this._tooltipCompleted;
-        this._played = false;
+        this._playerInjured;
+        this._playerDeath;
+        this._deathAudio;
     }
 
     get wildlife() {
@@ -45,6 +49,14 @@ class AudioCollection {
 
     set paper(audio) {
         this._paper = audio;
+    }
+
+    get headshotAnnouncer() {
+        return this._headshotAnnouncer;
+    }
+
+    set headshotAnnouncer(audio) {
+        this._headshotAnnouncer = audio;
     }
 
     get headshot() {
@@ -115,7 +127,35 @@ class AudioCollection {
         this._tooltipCompleted = audio;
     }
 
-    set played(songPlayed) {
-        this._played = songPlayed;
+    get alienWeapon() {
+        return this._alienWeapon;
+    }
+
+    set alienWeapon(audio) {
+        this._alienWeapon = audio;
+    }
+
+    get playerInjured() {
+        return this._playerInjured;
+    }
+
+    set playerInjured(audio) {
+        this._playerInjured = audio;
+    }
+
+    get playerDeath() {
+        return this._playerDeath;
+    }
+
+    set playerDeath(audio) {
+        this._playerDeath = audio;
+    }
+
+    get deathAudio() {
+        return this._deathAudio;
+    }
+
+    set deathAudio(audio) {
+        this._deathAudio = audio;
     }
 }

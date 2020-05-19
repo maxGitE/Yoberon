@@ -5,7 +5,13 @@ class Hitbox {
         this._head = undefined;
 
         switch(model) {
-            case "player": break;
+            case "player": 
+                this._body = new THREE.Mesh(new THREE.CylinderBufferGeometry(3, 5, 16), new THREE.MeshBasicMaterial( {transparent: true, opacity: 0} ));
+                this._body.position.y = 8;
+
+                this._mesh.add(this._body);
+
+                break;
 
             case "alien":
                 this._body = new THREE.Mesh(new THREE.CylinderBufferGeometry(0.2, 0.5, 2.8), new THREE.MeshBasicMaterial( {transparent: true, opacity: 0} ));
@@ -17,6 +23,7 @@ class Hitbox {
 
                 this._mesh.add(this._body);
                 this._mesh.add(this._head);
+
                 break;
         }
     }

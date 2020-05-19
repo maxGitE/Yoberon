@@ -1,12 +1,12 @@
 class Player {
     constructor(name) {
-        this._name = name;
         this._currentHealth = 100;
         this._maxHealth = 100;
         this._currentStamina = 100;
         this._maxStamina = 100;
         this._inventory = [];
-        this._weapon = {model: undefined, bulletStart: undefined, bullets: undefined, ammo: 10, cooldown: 0, recoil: {direction: "up", reachedTop: false, reachedBottom: false}};
+        this._hitbox = undefined;
+        this._weapon = {model: undefined, bulletStart: undefined, bullets: undefined, cooldown: 0, recoil: {direction: "up", reachedTop: false, reachedBottom: false}};
         this._bullet = undefined;
         this._upgrades = [];
         this._velocity = {x: 0, y: 0, z: 0};
@@ -19,6 +19,7 @@ class Player {
         this._running = false;
         this._runFactor = 1;
         this._playerModel = undefined;
+        this._currentAnimation = undefined;
         this._idleAnim = undefined;
         this._walkAnim = undefined;
         this._backwardsAnim = undefined;
@@ -57,6 +58,10 @@ class Player {
 
     get inventory() {
         return this._inventory;
+    }
+
+    get hitbox() {
+        return this._hitbox;
     }
 
     get weapon() {
@@ -178,6 +183,10 @@ class Player {
 
     set currentStamina(stamina) {
         this._currentStamina = stamina;
+    }
+
+    set hitbox(hitbox) {
+        this._hitbox = hitbox;
     }
 
     set velocityX(x) {

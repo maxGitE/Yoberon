@@ -5,11 +5,12 @@ class Alien {
         this._damaged = false;
         this._inventory = [];
         this._position = {x: 0, y: 0, z: 0};
-        this._scale = {x: 5, y: 5, z: 5};
+        this._scale = {x: 6.5, y: 6.5, z: 6.5};
         this._rotation = {x: 0, y: 0, z: 0};
         this._defaultAnim = "Idle";
         this._model = undefined;
         this._hitbox = undefined;
+        this._currentAnimation = undefined;
         this._idleAnim = undefined;
         this._walkAnim = undefined;
         this._strafeLAnim = undefined;
@@ -18,6 +19,9 @@ class Alien {
         this._deathAnim = undefined;        
         this._shootAnim = undefined;
         this._inRangeofPlayer = false;
+        this._weapon = {bulletStart: undefined, bullets: [], cooldown: 0};
+        this._canShoot = {level: undefined, box: undefined};
+        this._movement = {distanceMoved: 0, leftOrRight: undefined, moveOrRemain: undefined, boundary: undefined};
     }
 
     /** GETTERS */
@@ -43,6 +47,10 @@ class Alien {
 
     get hitbox() {
         return this._hitbox;
+    }
+
+    get currentAnimation() {
+        return this._currentAnimation;
     }
 
     get idleAnim() {
@@ -87,6 +95,22 @@ class Alien {
 
     get rotation() {
         return this._rotation;
+    }
+
+    get inRangeofPlayer() {
+        return this._inRangeofPlayer;
+    }
+
+    get weapon() {
+        return this._weapon;
+    }
+
+    get canShoot() {
+        return this._canShoot;
+    }
+
+    get movement() {
+        return this._movement;
     }
 
     /** SETTERS */
@@ -136,6 +160,10 @@ class Alien {
         this._hitbox = hitbox;
     }
 
+    set currentAnimation(animation) {
+        this._currentAnimation = animation;
+    }
+
     set idleAnim(animation) {
         this._idleAnim = animation;
     }
@@ -162,5 +190,9 @@ class Alien {
 
     set deathAnim(animation) {
         this._deathAnim = animation;
+    }
+
+    set inRangeofPlayer(value) {
+        this._inRangeofPlayer = value;
     }
 }
