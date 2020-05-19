@@ -290,6 +290,27 @@ button:active {
     visibility: hidden;
 }
 
+img {    
+    max-height: 100%;
+    max-width: 100%;
+}
+
+#dancecontrols {
+    position: fixed;
+    top: 90%;
+    left: 50%;
+    transform: translate(-50%, -90%);
+    text-align: center;
+    visibility: hidden;
+}
+
+.action {
+    width: 12%;
+    text-align: center;
+    display: inline-block;
+    margin: 3%;
+}
+
 #loadinginfo {
     position: fixed;
     top: 0;
@@ -307,7 +328,7 @@ button:active {
     left: 50%;
     -webkit-transform: translate(-50%, -50%) rotate(45deg) scale(1);
     transform: translate(-50%, -50%) rotate(45deg) scale(1);
-  }
+}
   
 .stroke-still {
     stroke: #232323;

@@ -28,6 +28,7 @@ const weaponCooldownBar = document.getElementById("weaponcooldown");
 const interact = document.getElementById("interact");
 const tooltip = document.getElementById("tooltip");
 const paper = document.getElementById("paper");
+const dancecontrols = document.getElementById("dancecontrols");
 const playButton = document.getElementById("play");
 const loadingInfo = document.getElementById("loadinginfo");
 const loadingSymbol = document.getElementById("loadingsymbol");
@@ -48,11 +49,13 @@ let scene;
 let camera;
 let thirdPersonCamera;
 let birdsEyeViewCamera;
+let puzzleTwoCamera;
 let cameraType;
 
 /** LIGHTS */
 let ambientLight;
 let pointLight;
+let spotLight;
 
 /** AUDIO */
 let listener;
@@ -131,6 +134,20 @@ let paper_clueFour;
 let clueWords = ["AIR", "WATER", "FIRE", "EARTH"];
 let levelOneCollidableMeshList = [];
 
+/** PUZZLE 2 */
+let inPuzzleTwo = false;
+let finishedPuzzleTwo = false;
+let inPosition = false;
+let spotLightColour = 0;
+let chickenDanceCorrect = false;
+let gangnamStyleCorrect = false;
+let macarenaDanceCorrect = false;
+let ymcaDanceCorrect = false;
+let danceIncorrect = 0;
+let answered = false;
+let lastPlayed;
+let countCorrect = 0;
+
 /** HUD */
 let tooltipVisible = false;
 let completedTooltip = false;
@@ -174,6 +191,24 @@ function gameLoop() {
             controls.moveRight(player.velocityX * clock.delta);
             controls.moveForward(-player.velocityZ * clock.delta); // Negate the value as moveForward() uses left-handed coordinates
             controls.getObject().position.y += player.velocityY * clock.delta;
+          
+            if(player.movingLeft) {
+                player.velocityX = player.velocityX - 400 * clock.delta * player.runFactor;
+            }
+            if(player.movingRight) {
+                player.velocityX = player.velocityX + 400 * clock.delta * player.runFactor;
+            }
+            if(player.movingForward) {
+                if(inPuzzleTwo && !finishedPuzzleTwo) {
+                    player.velocityZ = player.velocityZ - 150 * clock.delta;
+                }
+                else {
+                    player.velocityZ = player.velocityZ - 400 * clock.delta * player.runFactor;
+                }
+            }
+            if(player.movingBackward) {
+                player.velocityZ = player.velocityZ + 400 * clock.delta * player.runFactor;
+            }
 
             if(controls.getObject().position.y < 8) {
                 controls.getObject().position.y = 8;
@@ -195,11 +230,18 @@ function gameLoop() {
                 controls.getObject().rotation.z = 0;
                 controls.getObject().rotation.order = "YXZ";
             }
-            else {
-                player.playerModel.visible = false;
+            else if(cameraType != "puzzleTwo") {
+              player.playerModel.visible = false;
             }
             player.playerModel.rotation.set(0, controls.getObject().rotation.y, 0);
 
+            if(cameraType == "fp") { // Hide the weapon unless the player is in the first person camera mode
+                player.weapon.model.visible = true;
+            }
+            else {
+                player.weapon.model.visible = false;
+            }
+          
             // Update animations
             for (let i = 0; i < mixers.length; i++) {
                 mixers[i].update(clock.delta);            
@@ -220,7 +262,7 @@ function gameLoop() {
                     alien.model.lookAt(player.playerModel.position.clone());
                     createAlienBullet(alien);
                     updateAlienBullet(alien);
-
+        
                     if(alien.movement.distanceMoved >= alien.movement.boundary) { // Reached movement boundary
                         alien.movement.moveOrRemain = Math.floor(Math.random() * 2) == 0 ? "move" : "remain"; // Choose a random option to move again or stand still
 
@@ -440,6 +482,285 @@ function showClue(name) {
     hideTooltip(); // Hide the tool tip once a clue has been found
 }
 
+/********** LEVEL TWO START **********/
+function levelTwoPuzzle() {
+    if(!finishedPuzzleTwo) {
+        inPuzzleTwo = true;
+
+        /** Set the camera to look at the player from the front */
+        puzzleTwoCamera.position.set(camera.position.x, camera.position.y + 2, camera.position.z + 25);
+        puzzleTwoCamera.lookAt(camera.position.x, camera.position.y, camera.position.z);
+
+        /** Place the spotlight above the player looking down */
+        spotLight.position.set(camera.position.x, camera.position.y + 10, camera.position.z);
+        spotLight.target = player.playerModel;
+
+        /** Cycle through light colours */
+        if(spotLightColour >= 0) spotLight.color.setHex(0x00ffff);
+        if(spotLightColour >= 1) spotLight.color.setHex(0x00ff00);
+        if(spotLightColour >= 2) spotLight.color.setHex(0xffff00);
+        if(spotLightColour >= 3) spotLight.color.setHex(0xff0000);
+
+        if(spotLightColour > 3) {
+            spotLightColour = 0;
+        }
+        spotLightColour += 0.05;
+
+        /** Set up the hud and player model for the puzzle */
+        crosshair.style.visibility = "hidden";
+        player.playerModel.visible = true;
+        player.weapon.model.visible = false;
+        player.playerModel.rotation.set(0, Math.PI, 0);
+        cameraType = "puzzleTwo";
+        audioCollection.wildlife.stop();
+
+        /** Move the player to the center of the box */
+        if(controls.getObject().position.z < -1020) {
+            player.movingForward = true;
+            updatePlayerAnimation(player.walkAnim);
+
+            /** Slowly dim the point light */
+            if(pointLight.intensity > 0) {
+                pointLight.intensity -= 0.01;
+            }
+        }
+        else if(!inPosition) {
+            player.movingForward = false;
+            updatePlayerAnimation(player.idleAnim);
+            inPosition = true;
+            dancecontrols.style.visibility = "visible";
+            pointLight.intensity = 0;
+        }
+
+        if(inPosition) {        
+            setTimeout(() => {            
+                if(!audioCollection.recordScratch.isPlaying && danceIncorrect != 2) { // Start the music after a short delay
+                    playMusic(); 
+                }
+                spotLight.intensity = 2;
+            }, 500);
+        }
+        
+        initDanceChecks();
+
+         /** If the wrong dance is done two times, restart the puzzle */
+        if(danceIncorrect == 2) {
+            danceIncorrect = 0;
+            lastPlayed = "";
+            countCorrect = 0;
+        }        
+
+        /** If the player gets all four dances correct, end the puzzle */
+        if(chickenDanceCorrect && gangnamStyleCorrect && macarenaDanceCorrect && ymcaDanceCorrect) {
+            finishedPuzzleTwo = true;
+        }
+    }
+    else { // Solved puzzle        
+        dancecontrols.style.visibility = "hidden";
+        crosshair.style.visibility = "visible";
+        pointLight.intensity = 1.5;
+        scene.remove(spotLight);
+        cameraType = "fp";
+    }
+}
+
+/** Randomly plays each song for the second puzzle */
+function playMusic() {
+    /** Return if one of the songs is already playing */
+    if(audioCollection.chickenDance.isPlaying || audioCollection.gangnamStyle.isPlaying || audioCollection.macarenaDance.isPlaying || audioCollection.ymcaDance.isPlaying) return;
+
+    let songNumber = Math.floor(Math.random() * 4);
+
+    switch(songNumber) {
+        case 0:
+            if(!chickenDanceCorrect && (lastPlayed != "chicken_dance" || countCorrect == 2)) {
+                answered = false;
+                audioCollection.chickenDance.play();
+                lastPlayed = "chicken_dance";
+            }
+            break;
+        case 1:
+            if(!gangnamStyleCorrect && (lastPlayed != "gangnam_style" || countCorrect == 2)) {
+                answered = false;
+                audioCollection.gangnamStyle.play();
+                lastPlayed = "gangnam_style";
+            }
+            break;
+        case 2:
+            if(!macarenaDanceCorrect && (lastPlayed != "macarena_dance" || countCorrect == 2)) {
+                answered = false;
+                audioCollection.macarenaDance.play();
+                lastPlayed = "macarena_dance";
+            }
+            break;
+        case 3:
+            if(!ymcaDanceCorrect && (lastPlayed != "ymca_dance" || countCorrect == 2)) {
+                answered = false;
+                audioCollection.ymcaDance.play();
+                lastPlayed = "ymca_dance";
+            }
+            break;
+    }
+}
+
+/** Check if the player is doing the correct dance for the song */
+function checkDance() {
+    answered = true;
+
+    if(audioCollection.chickenDance.isPlaying) {
+        if(player.chickenDance.enabled) {
+            audioCollection.correct.play();
+
+            audioCollection.chickenDance.source.onended = function() {
+                chickenDanceCorrect = true;
+                countCorrect++;         
+                updatePlayerAnimation(player.idleAnim);
+                audioCollection.chickenDance.isPlaying = false;
+            };
+            
+        }
+        else {
+            audioCollection.chickenDance.stop();
+
+            audioCollection.recordScratch.play();
+            audioCollection.recordScratch.source.onended = function() {              
+                danceIncorrect++;  
+                updatePlayerAnimation(player.idleAnim);
+                audioCollection.recordScratch.isPlaying = false;
+            };
+        }
+    }
+
+    if(audioCollection.gangnamStyle.isPlaying) {
+        if(player.gangnamStyle.enabled) {
+            audioCollection.correct.play();
+
+            audioCollection.gangnamStyle.source.onended = function() {
+                gangnamStyleCorrect = true;
+                countCorrect++;     
+                updatePlayerAnimation(player.idleAnim);
+                audioCollection.gangnamStyle.isPlaying = false;
+            };
+        }
+        else {
+            audioCollection.gangnamStyle.stop();
+
+            audioCollection.recordScratch.play();
+            audioCollection.recordScratch.source.onended = function() {              
+                danceIncorrect++;  
+                updatePlayerAnimation(player.idleAnim);
+                audioCollection.recordScratch.isPlaying = false;
+            };
+        }
+    }
+
+    if(audioCollection.macarenaDance.isPlaying) {
+        if(player.macarenaDance.enabled) {
+            audioCollection.correct.play();
+
+            audioCollection.macarenaDance.source.onended = function() {
+                macarenaDanceCorrect = true;
+                countCorrect++;          
+                updatePlayerAnimation(player.idleAnim);
+                audioCollection.macarenaDance.isPlaying = false;
+            };
+        }
+        else {
+            audioCollection.macarenaDance.stop();
+
+            audioCollection.recordScratch.play();
+            audioCollection.recordScratch.source.onended = function() {              
+                danceIncorrect++;  
+                updatePlayerAnimation(player.idleAnim);
+                audioCollection.recordScratch.isPlaying = false;
+            };
+        }
+    }
+
+    if(audioCollection.ymcaDance.isPlaying) {
+        if(player.ymcaDance.enabled) {
+            audioCollection.correct.play();
+
+            audioCollection.ymcaDance.source.onended = function() {
+                ymcaDanceCorrect = true;
+                countCorrect++;          
+                updatePlayerAnimation(player.idleAnim);
+                audioCollection.ymcaDance.isPlaying = false;
+            };
+        }
+        else {
+            audioCollection.ymcaDance.stop();
+
+            audioCollection.recordScratch.play();
+            audioCollection.recordScratch.source.onended = function() {              
+                danceIncorrect++;  
+                updatePlayerAnimation(player.idleAnim);
+                audioCollection.recordScratch.isPlaying = false;
+            };
+        }
+    }
+}
+
+/** Mark the song as incorrect if the player does not answer */
+function initDanceChecks() {
+    if(!answered) {
+
+        if(audioCollection.chickenDance.isPlaying) {
+            audioCollection.chickenDance.source.onended = function() {                
+                audioCollection.chickenDance.isPlaying = false;
+                
+                audioCollection.recordScratch.play();
+                audioCollection.recordScratch.source.onended = function() {              
+                    danceIncorrect++;
+                    audioCollection.recordScratch.isPlaying = false;
+                };
+                
+            };
+        }
+
+        if(audioCollection.gangnamStyle.isPlaying) {
+            audioCollection.gangnamStyle.source.onended = function() {                
+                audioCollection.gangnamStyle.isPlaying = false;
+                
+                audioCollection.recordScratch.play();
+                audioCollection.recordScratch.source.onended = function() {              
+                    danceIncorrect++;
+                    audioCollection.recordScratch.isPlaying = false;
+                };
+                
+            };
+        }
+
+        if(audioCollection.macarenaDance.isPlaying) {
+            audioCollection.macarenaDance.source.onended = function() {                
+                audioCollection.macarenaDance.isPlaying = false;
+                
+                audioCollection.recordScratch.play();
+                audioCollection.recordScratch.source.onended = function() {              
+                    danceIncorrect++;
+                    audioCollection.recordScratch.isPlaying = false;
+                };
+                
+            };
+        }
+
+        if(audioCollection.ymcaDance.isPlaying) {
+            audioCollection.ymcaDance.source.onended = function() {                
+                audioCollection.ymcaDance.isPlaying = false;
+                
+                audioCollection.recordScratch.play();
+                audioCollection.recordScratch.source.onended = function() {              
+                    danceIncorrect++;
+                    audioCollection.recordScratch.isPlaying = false;
+                };
+                
+            };
+        }
+
+    }
+}
+/********** LEVEL TWO END **********/
+
 function initPlayerModel(gltf) {
     player.playerModel = gltf.scene;
     let animations = gltf.animations;
@@ -452,39 +773,56 @@ function initPlayerModel(gltf) {
     mixers.push(mixer);
 
     /** Animations without gun */
-    // player.walkAnim = mixer.clipAction(animations[0]);
-    // player.idleAnim = mixer.clipAction(animations[1]);
-    // player.backwardsAnim = mixer.clipAction(animations[2]);
-    // player.runAnim = mixer.clipAction(animations[3]);
-    // player.jumpAnim = mixer.clipAction(animations[4]);
+    player.walkAnim = mixer.clipAction(animations[0]);
+    player.idleAnim = mixer.clipAction(animations[1]);
+    player.backwardsAnim = mixer.clipAction(animations[2]);
+    player.runAnim = mixer.clipAction(animations[3]);
+    player.jumpAnim = mixer.clipAction(animations[4]);
+    player.strafeLAnim = mixer.clipAction(animations[5]);
+    player.strafeRAnim = mixer.clipAction(animations[6]);
+    player.chickenDance = mixer.clipAction(animations[7]);
+    player.gangnamStyle = mixer.clipAction(animations[8]);
+    player.macarenaDance = mixer.clipAction(animations[9]);
+    player.ymcaDance = mixer.clipAction(animations[10]);
+    player.breakdance = mixer.clipAction(animations[11]);
 
     /** Animations with gun */    
-    player.shootAnim = mixer.clipAction(animations[0]);    
-    player.walkAnim = mixer.clipAction(animations[1]);
-    player.runAnim = mixer.clipAction(animations[2]);
-    player.backwardsAnim = mixer.clipAction(animations[3]);
-    player.strafeLAnim = mixer.clipAction(animations[4]);
-    player.strafeRAnim = mixer.clipAction(animations[5]);
-    player.idleAnim = mixer.clipAction(animations[6]);
-    player.jumpAnim = mixer.clipAction(animations[7]);
+    // player.shootAnim = mixer.clipAction(animations[0]);    
+    // player.walkAnim = mixer.clipAction(animations[1]);
+    // player.runAnim = mixer.clipAction(animations[2]);
+    // player.backwardsAnim = mixer.clipAction(animations[3]);
+    // player.strafeLAnim = mixer.clipAction(animations[4]);
+    // player.strafeRAnim = mixer.clipAction(animations[5]);
+    // player.idleAnim = mixer.clipAction(animations[6]);
+    // player.jumpAnim = mixer.clipAction(animations[7]);
 
     player.walkAnim.play();
     player.idleAnim.play();
     player.backwardsAnim.play();
     player.jumpAnim.play();
     player.runAnim.play();
-    player.shootAnim.play();
+    // player.shootAnim.play();
     player.strafeLAnim.play();
     player.strafeRAnim.play();
+    player.chickenDance.play();
+    player.gangnamStyle.play();
+    player.macarenaDance.play();
+    player.ymcaDance.play();
+    player.breakdance.play();
 
     player.walkAnim.enabled = false;
     player.idleAnim.enabled = true;
     player.backwardsAnim.enabled = false;
     player.jumpAnim.enabled = false;
     player.runAnim.enabled = false;
-    player.shootAnim.enabled = false;
+    // player.shootAnim.enabled = false;
     player.strafeLAnim.enabled = false;
     player.strafeRAnim.enabled = false;
+    player.chickenDance.enabled = false;
+    player.gangnamStyle.enabled = false;
+    player.macarenaDance.enabled = false;
+    player.ymcaDance.enabled = false;
+    player.breakdance.enabled = false;
     
     player.currentAnimation = player.idleAnim;
 }
@@ -515,7 +853,7 @@ function initAlienModels(gltf) {
     instantiateUnits(gltf, alienArray, "Alien_(Armature)");  
 }
 
-function initBountyHunters(gltf) {
+function initBountyHunterModels(gltf) {
     bountyHunter1.setPosition(-10, 0, -15);
     bountyHunter1.setRotation(0, Math.PI, 0);
     bountyHunter1.defaultAnim = "Side";
@@ -1309,6 +1647,7 @@ function updateLevel() {
             levelTwoBoundingBox();
             break;
         case 2.5:
+            levelTwoPuzzle();
             puzzleTwoBoundingBox();
             break;
         case 3:
@@ -1707,6 +2046,7 @@ function puzzleTwoBoundingBox() {
             controls.getObject().position.x = boxTwoRight - boundaryFactor;
         }
         if(zPos > boxTwoBottom) { // Change the level once the player leaves the box
+            inPuzzleTwo = false;
             currentLevel = 3;
         }
     }
@@ -2425,7 +2765,7 @@ function loadModel(url, key) {
                 initAlienModels(gltf);
                 break;
             case "bounty_hunter":
-                initBountyHunters(gltf);
+                initBountyHunterModels(gltf);
                 break;
             case "weapon":
                 initWeapon(gltf);
@@ -2652,6 +2992,62 @@ function loadAudio(url, key) {
                 audioCollection.deathAudio.setVolume(0.5);
             });
             break;
+         case "chicken_dance":
+            audioCollection.chickenDance = new THREE.Audio(listener);
+            audioLoader.load(url, function(buffer) {
+                audioCollection.chickenDance.setBuffer(buffer);
+                audioCollection.chickenDance.setLoop(false);
+                audioCollection.chickenDance.setVolume(0.25);
+            });
+            break;
+        case "gangnam_style":
+            audioCollection.gangnamStyle = new THREE.Audio(listener);
+            audioLoader.load(url, function(buffer) {
+                audioCollection.gangnamStyle.setBuffer(buffer);
+                audioCollection.gangnamStyle.setLoop(false);
+                audioCollection.gangnamStyle.setVolume(0.25);
+            });
+            break;
+        case "macarena_dance":
+            audioCollection.macarenaDance = new THREE.Audio(listener);
+            audioLoader.load(url, function(buffer) {
+                audioCollection.macarenaDance.setBuffer(buffer);
+                audioCollection.macarenaDance.setLoop(false);
+                audioCollection.macarenaDance.setVolume(0.25);
+            });
+            break;
+        case "ymca_dance":
+            audioCollection.ymcaDance = new THREE.Audio(listener);
+            audioLoader.load(url, function(buffer) {
+                audioCollection.ymcaDance.setBuffer(buffer);
+                audioCollection.ymcaDance.setLoop(false);
+                audioCollection.ymcaDance.setVolume(0.25);
+            });
+            break;
+        case "incorrect":
+            audioCollection.incorrect = new THREE.Audio(listener);
+            audioLoader.load(url, function(buffer) {
+                audioCollection.incorrect.setBuffer(buffer);
+                audioCollection.incorrect.setLoop(false);
+                audioCollection.incorrect.setVolume(0.75);
+            });
+            break;
+        case "correct":
+            audioCollection.correct = new THREE.Audio(listener);
+            audioLoader.load(url, function(buffer) {
+                audioCollection.correct.setBuffer(buffer);
+                audioCollection.correct.setLoop(false);
+                audioCollection.correct.setVolume(0.75);
+            });
+            break;
+        case "record_scratch":
+            audioCollection.recordScratch = new THREE.Audio(listener);
+            audioLoader.load(url, function(buffer) {
+                audioCollection.recordScratch.setBuffer(buffer);
+                audioCollection.recordScratch.setLoop(false);
+                audioCollection.recordScratch.setVolume(0.5);
+            });
+            break;
     }
 }
 
@@ -2695,7 +3091,6 @@ function restartLastCheckpoint() {
             controls.getObject().position.set(0, 8, -720);
             camera.lookAt(0, 8, -720);
             respawnAliens();
-            break;
     }
 }
 
@@ -2754,20 +3149,22 @@ function initScene() {
 }
 
 function initCameras() {
-    camera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 1, 2500);
+    camera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 1, 4000);
     camera.position.set(0, 8, 0);
     scene.add(camera);
 
-    thirdPersonCamera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 1, 2500);
+    thirdPersonCamera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 1, 4000);
     thirdPersonCamera.position.set(camera.position.x, camera.position.y - 2, camera.position.z + 26);
     camera.add(thirdPersonCamera);
 
     cameraType = "fp";
 
-    birdsEyeViewCamera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 1, 2500);
+    birdsEyeViewCamera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 1, 4000);
     birdsEyeViewCamera.position.set(-15, 8, -20);
     birdsEyeViewCamera.lookAt(0, 8, -20);
     scene.add(birdsEyeViewCamera);
+
+    puzzleTwoCamera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 1, 4000);
 }
 
 function initLights() {
@@ -2780,6 +3177,9 @@ function initLights() {
     pointLight.shadow.bias = 0.005;
     camera.add(pointLight);
     camera.children[1].position.y = 5; // Lower the point light from 8 to 5
+
+    spotLight = new THREE.SpotLight("green", 0, 0, Math.PI/5, 0, 2);
+    scene.add(spotLight);
 }
 
 function initControls() {
@@ -2844,11 +3244,15 @@ function initControls() {
 
         switch(event.keyCode) {
             case 87:    // W
+                if(inPuzzleTwo && !finishedPuzzleTwo) return;
+
                 player.movingForward = true;
                 if(!player.movingLeft && !player.movingRight)
                     updatePlayerAnimation(player.walkAnim);
                 break;
             case 65:    // A
+                if(inPuzzleTwo && !finishedPuzzleTwo) return;
+
                 player.movingLeft = true;
                 if(player.running) {
                     player.running = false;
@@ -2857,11 +3261,15 @@ function initControls() {
                 updatePlayerAnimation(player.strafeLAnim);
                 break;
             case 83:    // S
+                if(inPuzzleTwo && !finishedPuzzleTwo) return;
+            
                 player.movingBackward = true;
                 if(!player.movingLeft && !player.movingRight)
                     updatePlayerAnimation(player.backwardsAnim);
                 break;
             case 68:    // D
+                if(inPuzzleTwo && !finishedPuzzleTwo) return;
+
                 player.movingRight = true;
                 if(player.running) {
                     player.running = false;
@@ -2870,6 +3278,8 @@ function initControls() {
                 updatePlayerAnimation(player.strafeRAnim);
                 break;
             case 32:    // Space
+                if(inPuzzleTwo && !finishedPuzzleTwo) return;
+
                 if(!player.jumping) {
                     player.jumping = true;
                     player.velocityY += 150;
@@ -2877,6 +3287,8 @@ function initControls() {
                 }
                 break;
             case 16:    // Shift
+                if(inPuzzleTwo && !finishedPuzzleTwo) return;
+
                 if(!player.running) {
                     player.running = true;
                     if(player.movingForward && !player.movingLeft && !player.movingRight) {
@@ -2885,12 +3297,16 @@ function initControls() {
                     }
                 }
                 break;
-            case 49:    // 1
+            case 112:   // F1
+                if(inPuzzleTwo && !finishedPuzzleTwo) return;
+
                 cameraType = "fp";
                 crosshair.style.top = "50.625%";
                 crosshair.style.transform = "translate(-50%, -50.625%)"; 
                 break;
-            case 50:    // 2
+            case 113:   // F2
+                if(inPuzzleTwo && !finishedPuzzleTwo) return;
+
                 cameraType = "tp";
                 if(player.movingForward) {
                     if(player.running) {
@@ -2906,11 +3322,18 @@ function initControls() {
                 crosshair.style.top = "55.625%";
                 crosshair.style.transform = "translate(-50%, -55.625%)";                 
                 break;
-            case 51:    // 3
+            case 114:   // F3
+                if(inPuzzleTwo && !finishedPuzzleTwo) return;
+
                 cameraType = "bev"; break;
             case 84:  // T
                 controls.getObject().position.set(0, 8, -720);
                 currentLevel = 2;
+                break;
+            case 89:    // T
+                currentLevel = 2;
+                controls.getObject().position.set(460, 8, -1090);
+                camera.lookAt(460, 8, -1080);
                 break;
             case 69:    // E
                 if(interact.style.visibility == "visible") {
@@ -2952,6 +3375,31 @@ function initControls() {
                             break;          
                     }
                 }
+                break;
+            case 49:    // 1
+                if(!inPuzzleTwo || finishedPuzzleTwo) return;
+                updatePlayerAnimation(player.chickenDance);
+                checkDance();
+                break;
+            case 50:    // 2
+                if(!inPuzzleTwo || finishedPuzzleTwo) return;
+                updatePlayerAnimation(player.breakdance);
+                checkDance();
+                break;
+            case 51:    // 3
+                if(!inPuzzleTwo || finishedPuzzleTwo) return;
+                updatePlayerAnimation(player.macarenaDance);
+                checkDance();
+                break;
+            case 52:    // 4
+                if(!inPuzzleTwo || finishedPuzzleTwo) return;
+                updatePlayerAnimation(player.ymcaDance);
+                checkDance();
+                break;
+            case 53:    // 5
+                if(!inPuzzleTwo || finishedPuzzleTwo) return;
+                updatePlayerAnimation(player.gangnamStyle);
+                checkDance();
                 break;
         }
     }
@@ -3013,7 +3461,7 @@ function initSkybox() {
             map: texture
         } ));
     }
-    let cube = new THREE.Mesh(new THREE.BoxGeometry(1500, 1000, 2000), material);
+    let cube = new THREE.Mesh(new THREE.BoxGeometry(3000, 1000, 4000), material);
     cube.position.y += 250;
     scene.add(cube);
 }
@@ -3044,7 +3492,8 @@ function initPlayer() {
     player = new Player();
     player.hitbox = new Hitbox("player");
 
-    loadModel("models/characters/player/player_gun.glb", "player");
+    loadModel("models/characters/player/player_gun.glb", "player_gun");
+    loadModel("models/characters/player/playermodel.glb", "player");
 }
 
 function initAliens() {
@@ -3105,7 +3554,7 @@ function initHealthPacks(gltf) {
 }
 
 function createPlayerBullet() {
-    if(lockingClick || player.weapon.cooldown != 0) return;
+    if(lockingClick || player.weapon.cooldown != 0 || (inPuzzleTwo && !finishedPuzzleTwo)) return;
 
     player.weapon.recoil.reachedBottom = false;
     player.weapon.recoil.reachedTop = false;
@@ -3189,11 +3638,18 @@ function initAudio() {
     loadAudio("audio/character/player_injured.wav", "player_injured");
     loadAudio("audio/character/player_death.wav", "player_death");
     loadAudio("audio/character/death_audio.wav", "death_audio");
+    loadAudio("audio/songs/chicken_dance.mp3", "chicken_dance");
+    loadAudio("audio/songs/gangnam_style.mp3", "gangnam_style");
+    loadAudio("audio/songs/macarena.mp3", "macarena_dance");
+    loadAudio("audio/songs/ymca.mp3", "ymca_dance");
+    loadAudio("audio/songs/incorrect.wav", "incorrect");
+    loadAudio("audio/songs/correct.mp3", "correct");
+    loadAudio("audio/songs/record_scratch.wav", "record_scratch");
 }
 
 function initWorld() {
-    drawTrees();
-    drawBushes();
+    // drawTrees();
+    // drawBushes();
     drawGround();
     drawRocks();
     drawStars();
@@ -3213,6 +3669,7 @@ function render() {
         case "fp": renderer.render(scene, camera); break;
         case "tp": renderer.render(scene, thirdPersonCamera); break;
         case "bev": renderer.render(scene, birdsEyeViewCamera); break;
+        case "puzzleTwo": renderer.render(scene, puzzleTwoCamera); break;
     }
     //renderer.render(scene, cameraToRender);
 }

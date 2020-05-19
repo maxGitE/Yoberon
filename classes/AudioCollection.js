@@ -103,6 +103,10 @@ class AudioCollection {
         return this._rockSink;
     }
 
+    get played() {
+        return this._played;
+    }
+
     set rockSink(audio) {
         this._rockSink = audio;
     }
