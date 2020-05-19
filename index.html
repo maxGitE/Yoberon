@@ -24,11 +24,23 @@
         <button id="controls" class="buttons">CONTROLS</button>
         <button id="credits" class="buttons">CREDITS</button>
     </div>
-    <div id="pause">
+    <div id="wake-up" class="unselectable">WAKE UP</div>
+    <div id="playerdeath" class="unselectable">YOU DIED</div>
+    <div id="deathmenu">
+        <button id="restart" class="buttons">RESTART LAST CHECKPOINT</button>
+    </div>
+    <div id="pausemenu">
         <button id="resume" class="buttons">RESUME</button>
         <button id="controlspause" class="buttons">CONTROLS</button>
     </div>
     <div id="hud">
+        <div id="health">
+            <div id="healthbar-outline">
+                <div id="healthbar-trailing"></div>
+                <div id="healthbar"></div>
+            </div>
+            <div id="health-number" class="unselectable">100</div>
+        </div>
         <div id="crosshair" class="unselectable"></div>
         <div id="weaponcooldown" class="unselectable"></div>
         <div id="interact" class="unselectable"></div>
