@@ -23,6 +23,8 @@ const health = document.getElementById("health");
 const healthbar = document.getElementById("healthbar");
 const healthbarTrailing = document.getElementById("healthbar-trailing");
 const healthNumber = document.getElementById("health-number");
+const puzzleBlock = document.getElementById("puzzle-failed");
+const restartPuzzle = document.getElementById("restart-puzzle")
 const crosshair = document.getElementById("crosshair");
 const weaponCooldownBar = document.getElementById("weaponcooldown");
 const interact = document.getElementById("interact");
@@ -154,6 +156,7 @@ let danceIncorrect = 0;
 let answered = false;
 let lastPlayed;
 let countCorrect = 0;
+let dancePlaying = false;
 
 /** HUD */
 let tooltipVisible = false;
@@ -482,6 +485,7 @@ function showClue(name) {
 
 /********** LEVEL TWO START **********/
 function levelTwoPuzzle() {
+    // TODO: Visual queues for correct and incorrect songs
     if(!finishedPuzzleTwo) {
         inPuzzleTwo = true;
 
@@ -505,9 +509,11 @@ function levelTwoPuzzle() {
         spotLightColour += 0.05;
 
         /** Set up the hud and player model for the puzzle */
-        crosshair.style.visibility = "hidden";
+        crosshair.style.visibility = "hidden";        
+        health.style.visibility = "hidden";
         player.playerModel.visible = true;
         player.weapon.model.visible = false;
+        controls.getObject().rotation.set(0, Math.PI, 0);
         player.playerModel.rotation.set(0, Math.PI, 0);
         cameraType = "puzzleTwo";
         audioCollection.wildlife.stop();
@@ -532,7 +538,7 @@ function levelTwoPuzzle() {
 
         if(inPosition) {        
             setTimeout(() => {            
-                if(!audioCollection.recordScratch.isPlaying && danceIncorrect != 2) { // Start the music after a short delay
+                if(!audioCollection.recordScratch.isPlaying && danceIncorrect < 2) { // Start the music after a short delay
                     playMusic(); 
                 }
                 spotLight.intensity = 2;
@@ -543,9 +549,35 @@ function levelTwoPuzzle() {
 
          /** If the wrong dance is done two times, restart the puzzle */
         if(danceIncorrect == 2) {
-            danceIncorrect = 0;
-            lastPlayed = "";
-            countCorrect = 0;
+            controls.unlock();
+            switch (lastPlayed) {
+                case "chicken_dance":
+                    audioCollection.chickenDance.stop();
+                    break;
+                case "gangnam_style":
+                    audioCollection.gangnamStyle.stop();
+                    break;
+                case "macarena_dance":
+                    audioCollection.macarenaDance.stop();
+                    break;
+                case "ymca_dance":
+                    audioCollection.ymcaDance.stop();
+                    break;
+            }
+
+            restartPuzzle.addEventListener("click", () => {
+                puzzleBlock.style.display = "none";               
+                controls.lock();
+
+                danceIncorrect = 0;
+                lastPlayed = "";
+                countCorrect = 0;
+               
+                chickenDanceCorrect = false;
+                gangnamStyleCorrect = false;
+                macarenaDanceCorrect = false;
+                ymcaDanceCorrect = false;
+            });          
         }        
 
         /** If the player gets all four dances correct, end the puzzle */
@@ -555,10 +587,12 @@ function levelTwoPuzzle() {
     }
     else { // Solved puzzle        
         dancecontrols.style.visibility = "hidden";
-        crosshair.style.visibility = "visible";
+        crosshair.style.visibility = "visible";        
+        health.style.visibility = "visible";
         pointLight.intensity = 1.5;
         scene.remove(spotLight);
         cameraType = "fp";
+        audioCollection.wildlife.play();
     }
 }
 
@@ -604,6 +638,7 @@ function playMusic() {
 /** Check if the player is doing the correct dance for the song */
 function checkDance() {
     answered = true;
+    dancePlaying = true;
 
     if(audioCollection.chickenDance.isPlaying) {
         if(player.chickenDance.enabled) {
@@ -613,6 +648,7 @@ function checkDance() {
                 chickenDanceCorrect = true;
                 countCorrect++;         
                 updatePlayerAnimation(player.idleAnim);
+                dancePlaying = false;
                 audioCollection.chickenDance.isPlaying = false;
             };
             
@@ -624,6 +660,7 @@ function checkDance() {
             audioCollection.recordScratch.source.onended = function() {              
                 danceIncorrect++;  
                 updatePlayerAnimation(player.idleAnim);
+                dancePlaying = false;
                 audioCollection.recordScratch.isPlaying = false;
             };
         }
@@ -637,6 +674,7 @@ function checkDance() {
                 gangnamStyleCorrect = true;
                 countCorrect++;     
                 updatePlayerAnimation(player.idleAnim);
+                dancePlaying = false;
                 audioCollection.gangnamStyle.isPlaying = false;
             };
         }
@@ -647,6 +685,7 @@ function checkDance() {
             audioCollection.recordScratch.source.onended = function() {              
                 danceIncorrect++;  
                 updatePlayerAnimation(player.idleAnim);
+                dancePlaying = false;
                 audioCollection.recordScratch.isPlaying = false;
             };
         }
@@ -660,6 +699,7 @@ function checkDance() {
                 macarenaDanceCorrect = true;
                 countCorrect++;          
                 updatePlayerAnimation(player.idleAnim);
+                dancePlaying = false;
                 audioCollection.macarenaDance.isPlaying = false;
             };
         }
@@ -670,6 +710,7 @@ function checkDance() {
             audioCollection.recordScratch.source.onended = function() {              
                 danceIncorrect++;  
                 updatePlayerAnimation(player.idleAnim);
+                dancePlaying = false;
                 audioCollection.recordScratch.isPlaying = false;
             };
         }
@@ -683,6 +724,7 @@ function checkDance() {
                 ymcaDanceCorrect = true;
                 countCorrect++;          
                 updatePlayerAnimation(player.idleAnim);
+                dancePlaying = false;
                 audioCollection.ymcaDance.isPlaying = false;
             };
         }
@@ -693,6 +735,7 @@ function checkDance() {
             audioCollection.recordScratch.source.onended = function() {              
                 danceIncorrect++;  
                 updatePlayerAnimation(player.idleAnim);
+                dancePlaying = false;
                 audioCollection.recordScratch.isPlaying = false;
             };
         }
@@ -3404,8 +3447,11 @@ function initControls() {
             tooltip.style.visibility = "hidden";
         }
 
-        if(player.currentHealth > 0) {
+        if(player.currentHealth > 0 && danceIncorrect < 2) {
             pauseBlock.style.display = "block";
+        }
+        else if(danceIncorrect == 2) {
+            puzzleBlock.style.display = "block";
         }
         else {
             setTimeout(() => deathBlock.style.display = "block", 5000);
@@ -3561,27 +3607,27 @@ function initControls() {
                 }
                 break;
             case 49:    // 1
-                if(!inPuzzleTwo || finishedPuzzleTwo) return;
+                if(!inPuzzleTwo || finishedPuzzleTwo || dancePlaying) return;
                 updatePlayerAnimation(player.chickenDance);
                 checkDance();
                 break;
             case 50:    // 2
-                if(!inPuzzleTwo || finishedPuzzleTwo) return;
+                if(!inPuzzleTwo || finishedPuzzleTwo || dancePlaying) return;
                 updatePlayerAnimation(player.breakdance);
                 checkDance();
                 break;
             case 51:    // 3
-                if(!inPuzzleTwo || finishedPuzzleTwo) return;
+                if(!inPuzzleTwo || finishedPuzzleTwo || dancePlaying) return;
                 updatePlayerAnimation(player.macarenaDance);
                 checkDance();
                 break;
             case 52:    // 4
-                if(!inPuzzleTwo || finishedPuzzleTwo) return;
+                if(!inPuzzleTwo || finishedPuzzleTwo || dancePlaying) return;
                 updatePlayerAnimation(player.ymcaDance);
                 checkDance();
                 break;
             case 53:    // 5
-                if(!inPuzzleTwo || finishedPuzzleTwo) return;
+                if(!inPuzzleTwo || finishedPuzzleTwo || dancePlaying) return;
                 updatePlayerAnimation(player.gangnamStyle);
                 checkDance();
                 break;
