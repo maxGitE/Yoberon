@@ -12,6 +12,7 @@ class AudioCollection {
         this._rockSink;
         this._rockSlide;
         this._tooltipCompleted;
+        this._played = false;
     }
 
     get wildlife() {
@@ -90,6 +91,10 @@ class AudioCollection {
         return this._rockSink;
     }
 
+    get played() {
+        return this._played;
+    }
+
     set rockSink(audio) {
         this._rockSink = audio;
     }
@@ -108,5 +113,9 @@ class AudioCollection {
 
     set tooltipCompleted(audio) {
         this._tooltipCompleted = audio;
+    }
+
+    set played(songPlayed) {
+        this._played = songPlayed;
     }
 }

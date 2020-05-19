@@ -27,8 +27,14 @@ class Player {
         this._shootAnim = undefined;
         this._strafeLAnim = undefined;
         this._strafeRAnim = undefined;
+        this._chickenDance = undefined;
+        this._gangnamStyle = undefined;
+        this._macarenaDance = undefined;
+        this._ymcaDance = undefined;
+        this._breakdance = undefined;
     }
 
+    /** GETTERS */
     get name() {
         return this._name;
     }
@@ -141,6 +147,27 @@ class Player {
         return this._strafeRAnim;
     }
 
+    get chickenDance() {
+        return this._chickenDance;
+    }
+
+    get gangnamStyle() {
+        return this._gangnamStyle;
+    }
+
+    get macarenaDance() {
+        return this._macarenaDance;
+    }
+
+    get ymcaDance() {
+        return this._ymcaDance;
+    }
+
+    get breakdance() {
+        return this._breakdance;
+    }
+
+    /** SETTERS */
     set currentHealth(health) {
         this._currentHealth = health;
     }
@@ -231,6 +258,26 @@ class Player {
 
     set strafeRAnim(animation) {
         this._strafeRAnim = animation;
+    }
+
+    set chickenDance(animation) {
+        this._chickenDance = animation;
+    }
+
+    set gangnamStyle(animation) {
+        this._gangnamStyle = animation;
+    }
+
+    set macarenaDance(animation) {
+        this._macarenaDance = animation;
+    }
+
+    set ymcaDance(animation) {
+        this._ymcaDance = animation;
+    }
+
+    set breakdance(animation) {
+        this._breakdance = animation;
     }
 
     addItem(item) {
