@@ -169,7 +169,7 @@ button:active {
 }
 
 #health {
-    visibility: hidden;
+    visibility: visible;
 }
 
 #healthbar-outline {
@@ -178,7 +178,7 @@ button:active {
     left: 4.2%;
     width: 10.5%;
     height: 3%;
-    border: 0.2vw solid #a91301;
+    border: 3px solid #a91301;
     text-align: center;
 }
 

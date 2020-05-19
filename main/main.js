@@ -78,6 +78,13 @@ let alien3;
 let alien4;
 let alien5;
 let alien6;
+let alien7;
+let alien8;
+let alien9;
+let alien10;
+let alien11;
+let alien12;
+let alien13;
 
 /** BOUNTY HUNTER */
 let bountyArray = [];
@@ -156,7 +163,11 @@ let healthbarTrailingWidth = healthbarWidth;
 
 let lockingClick = true;
 let bulletCollidableMeshList = [];
-let healthPacks = [];
+
+/** HEALTH PACKS */
+let healthPackCollidableMeshList = [];
+let selectedHealthPack;
+let pickedUpHealthPacks = [];
 
 let interactableObject;
 
@@ -182,23 +193,6 @@ function gameLoop() {
                 player.velocityX = player.velocityX + 400 * clock.delta * player.runFactor;
             }
             if(player.movingForward) {
-                player.velocityZ = player.velocityZ - 400 * clock.delta * player.runFactor;
-            }
-            if(player.movingBackward) {
-                player.velocityZ = player.velocityZ + 400 * clock.delta * player.runFactor;
-            }
-
-            controls.moveRight(player.velocityX * clock.delta);
-            controls.moveForward(-player.velocityZ * clock.delta); // Negate the value as moveForward() uses left-handed coordinates
-            controls.getObject().position.y += player.velocityY * clock.delta;
-          
-            if(player.movingLeft) {
-                player.velocityX = player.velocityX - 400 * clock.delta * player.runFactor;
-            }
-            if(player.movingRight) {
-                player.velocityX = player.velocityX + 400 * clock.delta * player.runFactor;
-            }
-            if(player.movingForward) {
                 if(inPuzzleTwo && !finishedPuzzleTwo) {
                     player.velocityZ = player.velocityZ - 150 * clock.delta;
                 }
@@ -209,6 +203,10 @@ function gameLoop() {
             if(player.movingBackward) {
                 player.velocityZ = player.velocityZ + 400 * clock.delta * player.runFactor;
             }
+
+            controls.moveRight(player.velocityX * clock.delta);
+            controls.moveForward(-player.velocityZ * clock.delta); // Negate the value as moveForward() uses left-handed coordinates
+            controls.getObject().position.y += player.velocityY * clock.delta;
 
             if(controls.getObject().position.y < 8) {
                 controls.getObject().position.y = 8;
@@ -838,17 +836,60 @@ function initAlienModels(gltf) {
     alien2.canShoot.box = 2;
     alienArray.push(alien2);
 
-    alien3.setPosition(0, 0, -45);
-    //alienArray.push(alien3);
+    alien3.setPosition(-170, 0, -920);
+    alien3.canShoot.level = 2;
+    alien3.canShoot.box = 2;
+    alienArray.push(alien3);
 
-    alien4.setPosition(-5, 0, -50);
-   // alienArray.push(alien4);
+    alien4.setPosition(-100, 0, -1140);
+    alien4.canShoot.level = 2;
+    alien4.canShoot.box = 4;
+    alienArray.push(alien4);
 
-    alien5.setPosition(5, 0, -50);
-   // alienArray.push(alien5);
+    alien5.setPosition(-90, 0, -1160);
+    alien5.canShoot.level = 2;
+    alien5.canShoot.box = 4;
+    alienArray.push(alien5);
 
-    alien6.setPosition(0, 0, -55);
-   // alienArray.push(alien6);
+    alien6.setPosition(-80, 0, -1120);
+    alien6.canShoot.level = 2;
+    alien6.canShoot.box = 4;
+    alienArray.push(alien6);
+
+    alien7.setPosition(400, 0, -1150);
+    alien7.canShoot.level = 2;
+    alien7.canShoot.box = 4;
+    alienArray.push(alien7);
+
+    alien8.setPosition(400, 0, -1130);
+    alien8.canShoot.level = 2;
+    alien8.canShoot.box = 4;
+    alienArray.push(alien8);
+
+    alien9.setPosition(230, 0, -620);
+    alien9.canShoot.level = 3;
+    alien9.canShoot.box = 2;
+    alienArray.push(alien9);
+
+    alien10.setPosition(270, 0, -635);
+    alien10.canShoot.level = 3;
+    alien10.canShoot.box = 2;
+    alienArray.push(alien10);
+
+    alien11.setPosition(220, 0, -660);
+    alien11.canShoot.level = 3;
+    alien11.canShoot.box = 2;
+    alienArray.push(alien11);
+
+    alien12.setPosition(375, 0, -435);
+    alien12.canShoot.level = 3;
+    alien12.canShoot.box = 4;
+    alienArray.push(alien12);
+
+    alien13.setPosition(380, 0, -400);
+    alien13.canShoot.level = 3;
+    alien13.canShoot.box = 4;
+    alienArray.push(alien13);
 
     instantiateUnits(gltf, alienArray, "Alien_(Armature)");  
 }
@@ -880,6 +921,14 @@ function instantiateUnits(gltf, units, meshName) {
     for (let i = 0; i < units.length; i++) {        
         let clonedScene = SkeletonUtils.clone(gltf.scene);
         units[i].model = clonedScene;
+
+        units[i].model.traverse((child) => { // Prevent frustum culling of the mesh
+            if(child.isMesh) {
+                // child.frustumCulled = false;
+                child.geometry.computeBoundingBox();
+                child.geometry.boundingBox.expandByScalar(2);
+            }
+        })
 
         if(clonedScene) { // THREE.Scene is cloned properly
             let clonedMesh = clonedScene.getObjectByName(meshName);
@@ -935,16 +984,17 @@ function instantiateUnits(gltf, units, meshName) {
                 units[i].model.add(units[i].hitbox.mesh);
                 units[i].model.name = "alien" + (i + 1);
 
+                bulletCollidableMeshList.push(units[i].hitbox.mesh);
+
                 /** Add an object3D to each alien that controls the position where their bullets originate from */
                 units[i].weapon.bulletStart = new THREE.Object3D();
                 units[i].weapon.bulletStart.position.set(0, 1, 1);
                 units[i].model.add(units[i].weapon.bulletStart);
+                units[i].weapon.cooldown = Math.floor(Math.random() * 30 + 30); // Random cooldown between 30 and 60
 
                 units[i].movement.moveOrRemain = Math.floor(Math.random() * 2) == 0 ? "move" : "remain"; // Choose a random initial value of whether to move or remain in place
                 units[i].movement.leftOrRight = Math.floor(Math.random() * 2) == 0 ? "left" : "right"; // Choose a random initial direction to move
                 units[i].movement.boundary = Math.floor(Math.random() * 3) + 5; // Choose a random initial integer boundary factor between 5 and 8, i.e. max distance that the alien can move in a movement cycle 
-
-                bulletCollidableMeshList.push(units[i].hitbox.mesh);
             }
 
             /** Play default animation */
@@ -1628,6 +1678,46 @@ function drawPaper() {
 
 function drawHealthPacks() {
     loadModel("models/environment/healthpack/healthpack.glb", "healthpack");
+    // let healthPack = new THREE.Object3D();
+
+    // let healthPackGeometry = new THREE.BoxBufferGeometry(1, 1, 1);
+    // let healthPackMaterial = new THREE.MeshLambertMaterial( {color: "#ff0000", transparent: true} );
+
+    // let centre = new THREE.Mesh(healthPackGeometry, healthPackMaterial.clone());
+
+    // let left = new THREE.Mesh(healthPackGeometry, healthPackMaterial.clone());
+    // left.position.set(-0.5, 0, 0);
+
+    // let right = new THREE.Mesh(healthPackGeometry, healthPackMaterial.clone());
+    // right.position.set(0.5, 0, 0);
+
+    // let top = new THREE.Mesh(healthPackGeometry, healthPackMaterial.clone());
+    // top.position.set(0, 0.5, 0);
+
+    // let bottom = new THREE.Mesh(healthPackGeometry, healthPackMaterial.clone());
+    // bottom.position.set(0, -0.5, 0);
+
+    // healthPack.add(centre);
+    // healthPack.add(left);
+    // healthPack.add(right);
+    // healthPack.add(top);
+    // healthPack.add(bottom);
+
+    // let healthPackOne = healthPack.clone();
+    // let healthPackTwo = healthPack.clone();
+    // let healthPackThree = healthPack.clone();
+
+    // healthPackOne.position.set(-245, 1, -1050);
+    // healthPackTwo.position.set(-240, 1, -1050);
+    // healthPackThree.position.set(-235, 1, -1050);
+
+    // healthPackCollidableMeshList.push(healthPackOne);
+    // healthPackCollidableMeshList.push(healthPackTwo);
+    // healthPackCollidableMeshList.push(healthPackThree);
+
+    // scene.add(healthPackOne);
+    // scene.add(healthPackTwo);
+    // scene.add(healthPackThree);
 }
 
 /** Changes which bounding boxes to load depending on what the current level is */
@@ -1881,7 +1971,7 @@ function levelTwoBoundingBox() {
         boulder_one.position.y += 0.02;
     }
 
-    hideTooltip();
+    hideTooltip(); // Hides the first puzzle's tooltip if it's still visible
 
     // Boundary values for the respective box divisions
     let boxOneBottom = -715;
@@ -1918,6 +2008,7 @@ function levelTwoBoundingBox() {
     }
     else if(xPos > boxThreeLeft && xPos < boxThreeRight && zPos < boxThreeBottom && zPos > boxThreeTop) {
         setBox(3, 2);
+        handleHealthPacks();
     }
     else if(xPos > boxFourLeft && xPos < boxFourRight && zPos < boxFourBottom && zPos > boxFourTop) {
         setBox(4, 2);
@@ -2372,6 +2463,27 @@ function updateBullets() {
                         case "alien6":
                             damageAlien(alien6, intersect);
                             break;
+                        case "alien7":
+                            damageAlien(alien7, intersect);
+                            break;
+                        case "alien8":
+                            damageAlien(alien8, intersect);
+                            break;
+                        case "alien9":
+                            damageAlien(alien9, intersect);
+                            break;
+                        case "alien10":
+                            damageAlien(alien10, intersect);
+                            break;
+                        case "alien11":
+                            damageAlien(alien11, intersect);
+                            break;
+                        case "alien12":
+                            damageAlien(alien12, intersect);
+                            break;
+                        case "alien13":
+                            damageAlien(alien13, intersect);
+                            break;
                     }
                 }
             }
@@ -2518,6 +2630,7 @@ function updateHealthBar() {
             }
             
             if(healthbarTrailingWidth < healthbarWidth) {
+                console.log('matched width');
                 healthbarTrailingWidth = healthbarWidth;
             }
             healthbarTrailing.setAttribute("style", "width: " + healthbarTrailingWidth + "%");
@@ -2530,14 +2643,20 @@ function updateHealthBar() {
  * Updates the CSS elements (health bar, health number) appropriately.
  */
 function updatePlayerHealth() {
-    healthbar.setAttribute("style", "width: " + player.currentHealth / 10.25 + "%");
+    if(player.currentHealth >= 100) { // Account for the extra 0.25% on the width of the health bar
+        healthbar.setAttribute("style", "width: 10.25%");
+        healthbarWidth = 10.25;
+    }
+    else {
+        healthbar.setAttribute("style", "width: " + player.currentHealth / 10.25 + "%");
+        healthbarWidth = player.currentHealth / 10.25;
+    }
     healthNumber.innerHTML = player.currentHealth;
-    healthbarWidth = player.currentHealth / 10.25;
 }
 
 function alienCanShoot(alien) {
     return alien.currentHealth > 0 && player.currentHealth > 0 && inRangeOfPlayer(alien) && 
-        alien.canShoot.level == currentLevel && alien.canShoot.box == currentBox;
+        alien.canShoot.level == currentLevel && alien.canShoot.box <= currentBox;
 }
 
 function boundingBoxVis() {
@@ -2732,14 +2851,51 @@ function updateAlienAnimation(alien, newAnimation) {
     }
 }
 
+/**
+ * Called when the player is in an area with health packs.
+ * Handles the raycasting logic to allow them to pick up the health packs and regenerate health.
+ */
 function handleHealthPacks() {
-    cameraDirection = new THREE.Vector3();
+    let cameraDirection = new THREE.Vector3();
     cameraDirection.normalize();
     controls.getDirection(cameraDirection);
     let playerRaycaster = new THREE.Raycaster(controls.getObject().position, cameraDirection);
 
-    let intersects = playerRaycaster.intersectObjects(healthPacks, false);
+    let intersects = playerRaycaster.intersectObjects(healthPackCollidableMeshList, true);
 
+    if(intersects.length > 0 && intersects[0].distance < 10) {
+        interact.style.visibility = "visible";
+        interactableObject = "healthpack";
+        selectedHealthPack = intersects[0];
+    }
+    else {
+        interact.style.visibility = "hidden";
+    }
+}
+
+function healthPackPickup() {
+    if(player.currentHealth == 100) {
+        audioCollection.wrongTotemOrder.play(); 
+        return;
+    }
+
+    pickedUpHealthPacks.push(selectedHealthPack.object);
+    let indexOfHealthPack = healthPackCollidableMeshList.indexOf(selectedHealthPack.object);
+    healthPackCollidableMeshList.splice(indexOfHealthPack, 1);
+    scene.remove(selectedHealthPack.object);
+
+    if(player.currentHealth < 100) {
+        player.currentHealth += 25;
+        if(player.currentHealth > 100) {
+            player.currentHealth = 100;
+        }
+        updatePlayerHealth();
+    }
+
+    if(audioCollection.healthRefill.isPlaying) {
+        audioCollection.healthRefill.stop();
+    }
+    audioCollection.healthRefill.play();
 }
 
 function loadTexture(url) {
@@ -3048,6 +3204,14 @@ function loadAudio(url, key) {
                 audioCollection.recordScratch.setVolume(0.5);
             });
             break;
+        case "health_refill":
+            audioCollection.healthRefill = new THREE.Audio(listener);
+            audioLoader.load(url, function(buffer) {
+                audioCollection.healthRefill.setBuffer(buffer);
+                audioCollection.healthRefill.setLoop(false);
+                audioCollection.healthRefill.setVolume(0.5);
+            });
+            break;
     }
 }
 
@@ -3057,6 +3221,7 @@ function respawnAliens() {
             alien.currentHealth = 100;
             alien.model.add(alien.hitbox.mesh);
             bulletCollidableMeshList.push(alien.hitbox.mesh);
+            alien.deathAnim.clampWhenFinished = false;
         }
     });
 }
@@ -3065,6 +3230,13 @@ function restartLastCheckpoint() {
     if(audioCollection.deathAudio.isPlaying) {
         audioCollection.deathAudio.stop();
     }
+
+    pickedUpHealthPacks.forEach(healthPack => {
+        scene.add(healthPack);
+        healthPackCollidableMeshList.push(healthPack);
+    });
+
+    pickedUpHealthPacks = [];
 
     playerDeath.classList.remove("fadein");
     playerDeath.style.visibility = "hidden";
@@ -3111,8 +3283,13 @@ function hideTooltip() {
     tooltipVisible = false;
 }
 
+/**
+ * Called in the game loop when checking if a given alien must shoot at the player.
+ * Returns true if the player is within 250 units of the alien in question.
+ * @param {alien} alien The alien that is checked to see if they are in range of the player.
+ */
 function inRangeOfPlayer(alien) {
-    return alien.model.position.clone().distanceTo(player.playerModel.position.clone()) < 200;
+    return alien.model.position.clone().distanceTo(player.playerModel.position.clone()) < 250;
 }
 
 function onResize() {
@@ -3326,11 +3503,15 @@ function initControls() {
                 if(inPuzzleTwo && !finishedPuzzleTwo) return;
 
                 cameraType = "bev"; break;
-            case 84:  // T
+            case 84:  // R
                 controls.getObject().position.set(0, 8, -720);
                 currentLevel = 2;
                 break;
-            case 89:    // T
+            case 84:  // T
+                controls.getObject().position.set(460, 8, -945);
+                currentLevel = 3;
+                break;
+            case 89:    // Y
                 currentLevel = 2;
                 controls.getObject().position.set(460, 8, -1090);
                 camera.lookAt(460, 8, -1080);
@@ -3372,7 +3553,10 @@ function initControls() {
                         case "clueFour":
                             audioCollection.paper.play();
                             showClue("clueFour");
-                            break;          
+                            break;   
+                        case "healthpack":
+                            healthPackPickup();
+                            break;       
                     }
                 }
                 break;
@@ -3503,6 +3687,14 @@ function initAliens() {
     alien4 = new Alien();
     alien5 = new Alien();
     alien6 = new Alien();
+    alien7 = new Alien();
+    alien8 = new Alien();
+    alien9 = new Alien();
+    alien10 = new Alien();
+    alien11 = new Alien();
+    alien12 = new Alien();
+    alien13 = new Alien();
+
     loadModel("models/characters/enemy/alien.mintexture.glb", "alien");
 }
 
@@ -3533,21 +3725,24 @@ function initWeapon(gltf) {
 }
 
 function initHealthPacks(gltf) {
-    let healthPackOne = gltf.scene;
+    let healthPackOne = gltf.scene.children[0];
+    healthPackOne.scale.set(0.5, 0.5, 0.5);
     let healthPackTwo = healthPackOne.clone();
     let healthPackThree = healthPackOne.clone();
 
-    healthPackOne.position.set(-245, 0.75, -1050);
+    healthPackOne.position.set(-245, 1, -1050);
     healthPackOne.rotation.y = Math.random() * 2*Math.PI;
-    healthPackTwo.position.set(-240, 0.75, -1050);
+
+    healthPackTwo.position.set(-240, 1, -1050);
     healthPackTwo.rotation.y = Math.random() * 2*Math.PI;
-    healthPackThree.position.set(-235, 0.75, -1050);
+
+    healthPackThree.position.set(-235, 1, -1050);
     healthPackThree.rotation.y = Math.random() * 2*Math.PI;
 
-    healthPacks.push(healthPackOne);
-    healthPacks.push(healthPackTwo);
-    healthPacks.push(healthPackThree);
-
+    healthPackCollidableMeshList.push(healthPackOne);
+    healthPackCollidableMeshList.push(healthPackTwo);
+    healthPackCollidableMeshList.push(healthPackThree);
+    
     scene.add(healthPackOne);
     scene.add(healthPackTwo);
     scene.add(healthPackThree);
@@ -3612,7 +3807,7 @@ function createAlienBullet(alien) {
 
     updateAlienAnimation(alien, alien.shootAnim);
     
-    alien.weapon.cooldown = Math.floor(Math.random() * 30 + 30); // Random cooldown between 50 and 70
+    alien.weapon.cooldown = Math.floor(Math.random() * 30 + 30); // Random cooldown between 30 and 60
 }
 
 function initAudio() {
@@ -3645,6 +3840,7 @@ function initAudio() {
     loadAudio("audio/songs/incorrect.wav", "incorrect");
     loadAudio("audio/songs/correct.mp3", "correct");
     loadAudio("audio/songs/record_scratch.wav", "record_scratch");
+    loadAudio("audio/character/health_refill.wav", "health_refill");
 }
 
 function initWorld() {

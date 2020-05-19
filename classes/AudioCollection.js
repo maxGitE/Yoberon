@@ -17,6 +17,7 @@ class AudioCollection {
         this._playerInjured;
         this._playerDeath;
         this._deathAudio;
+        this._healthRefill;
     }
 
     get wildlife() {
@@ -158,4 +159,12 @@ class AudioCollection {
     set deathAudio(audio) {
         this._deathAudio = audio;
     }
+
+    get healthRefill() {
+        return this._healthRefill;
+    }
+
+    set healthRefill(audio) {
+        this._healthRefill = audio;
+    }   
 }
