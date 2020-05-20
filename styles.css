@@ -199,7 +199,7 @@ button:active {
 }
 
 #health {
-    visibility: visible;
+    visibility: hidden;
 }
 
 #healthbar-outline {
