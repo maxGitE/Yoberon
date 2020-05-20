@@ -94,6 +94,7 @@ let bountyHunter3;
 /** LOADERS */
 let textureLoader;
 let gltfLoader;
+let gltfLoader2;
 let audioLoader;
 let loadingManager;
 
@@ -145,6 +146,7 @@ let removedLevelTwoAliens = false
 let inPuzzleTwo = false;
 let finishedPuzzleTwo = false;
 let inPosition = false;
+let droppedGun = false;
 let spotLightColour = 0;
 let chickenDanceCorrect = false;
 let gangnamStyleCorrect = false;
@@ -243,7 +245,7 @@ function gameLoop() {
             }
             player.playerModel.rotation.set(0, controls.getObject().rotation.y, 0);
 
-            if(cameraType == "fp") { // Hide the weapon unless the player is in the first person camera mode
+            if(cameraType == "fp" && !droppedGun) { // Hide the weapon unless the player is in the first person camera mode
                 player.weapon.model.visible = true;
             }
             else {
@@ -494,7 +496,7 @@ function showClue(name) {
 
 /********** LEVEL TWO START **********/
 function levelTwoPuzzle() {
-    // TODO: Visual queues for correct and incorrect songs + success and fail sounds
+    // TODO: Visual queues for correct and incorrect songs
     if(!finishedPuzzleTwo) {
         inPuzzleTwo = true;
 
@@ -503,7 +505,7 @@ function levelTwoPuzzle() {
         puzzleTwoCamera.lookAt(camera.position.x, camera.position.y, camera.position.z);
 
         /** Place the spotlight above the player looking down */
-        puzzleSpotLight.position.set(camera.position.x, camera.position.y + 10, camera.position.z);
+        puzzleSpotLight.position.set(460, 18, -1020);
         puzzleSpotLight.target = player.playerModel;
 
         /** Cycle through light colours */
@@ -512,7 +514,7 @@ function levelTwoPuzzle() {
         if(spotLightColour >= 2) puzzleSpotLight.color.setHex(0xffff00);
         if(spotLightColour >= 3) puzzleSpotLight.color.setHex(0xff0000);
 
-        if(spotLightColour > 3) {
+        if(spotLightColour > 4) {
             spotLightColour = 0;
         }
         spotLightColour += 0.05;
@@ -521,7 +523,6 @@ function levelTwoPuzzle() {
         crosshair.style.visibility = "hidden";        
         health.style.visibility = "hidden";
         player.playerModel.visible = true;
-        player.weapon.model.visible = false;
         controls.getObject().rotation.set(0, Math.PI, 0);
         player.playerModel.rotation.set(0, Math.PI, 0);
         cameraType = "puzzleTwo";
@@ -558,21 +559,11 @@ function levelTwoPuzzle() {
 
          /** If the wrong dance is done two times, restart the puzzle */
         if(danceIncorrect == 2) {
+            if(!audioCollection.losePuzzle.isPlaying)
+                audioCollection.losePuzzle.play();
             controls.unlock();
-            switch (lastPlayed) {
-                case "chicken_dance":
-                    audioCollection.chickenDance.stop();
-                    break;
-                case "gangnam_style":
-                    audioCollection.gangnamStyle.stop();
-                    break;
-                case "macarena_dance":
-                    audioCollection.macarenaDance.stop();
-                    break;
-                case "ymca_dance":
-                    audioCollection.ymcaDance.stop();
-                    break;
-            }
+            pauseSongs();
+            puzzleSpotLight.color.setHex(0xff0000);
 
             restartPuzzle.addEventListener("click", () => {
                 puzzleBlock.style.display = "none";               
@@ -592,6 +583,7 @@ function levelTwoPuzzle() {
         /** If the player gets all four dances correct, end the puzzle */
         if(chickenDanceCorrect && gangnamStyleCorrect && macarenaDanceCorrect && ymcaDanceCorrect) {
             finishedPuzzleTwo = true;
+            audioCollection.winPuzzle.play();
         }
     }
     else { // Solved puzzle        
@@ -602,13 +594,21 @@ function levelTwoPuzzle() {
         scene.remove(puzzleSpotLight);
         cameraType = "fp";
         audioCollection.wildlife.play();
+
+        if(!player.hasGun) {
+            player.hasGun = true;
+            droppedGun = false;
+            audioCollection.gunCock.play();
+            scene.remove(player.playerModel);
+            gltfLoader2.load("models/characters/player/player_gun.glb", initPlayerGunModel, undefined, (error) => console.log(error)); // Load player model with gun
+        }
     }
 }
 
 /** Randomly plays each song for the second puzzle */
 function playMusic() {
     /** Return if one of the songs is already playing */
-    if(audioCollection.chickenDance.isPlaying || audioCollection.gangnamStyle.isPlaying || audioCollection.macarenaDance.isPlaying || audioCollection.ymcaDance.isPlaying) return;
+    if(audioCollection.chickenDance.isPlaying || audioCollection.gangnamStyle.isPlaying || audioCollection.macarenaDance.isPlaying || audioCollection.ymcaDance.isPlaying || !controls.isLocked) return;
 
     let songNumber = Math.floor(Math.random() * 4);
 
@@ -651,11 +651,12 @@ function checkDance() {
 
     if(audioCollection.chickenDance.isPlaying) {
         if(player.chickenDance.enabled) {
-            audioCollection.correct.play();
+            audioCollection.correct.play();           
 
-            audioCollection.chickenDance.source.onended = function() {
+            audioCollection.chickenDance.source.onended = function() {  
                 chickenDanceCorrect = true;
-                countCorrect++;         
+                countCorrect++;   
+                    
                 updatePlayerAnimation(player.idleAnim);
                 dancePlaying = false;
                 audioCollection.chickenDance.isPlaying = false;
@@ -679,9 +680,10 @@ function checkDance() {
         if(player.gangnamStyle.enabled) {
             audioCollection.correct.play();
 
-            audioCollection.gangnamStyle.source.onended = function() {
+            audioCollection.gangnamStyle.source.onended = function() { 
                 gangnamStyleCorrect = true;
-                countCorrect++;     
+                countCorrect++;  
+
                 updatePlayerAnimation(player.idleAnim);
                 dancePlaying = false;
                 audioCollection.gangnamStyle.isPlaying = false;
@@ -704,9 +706,10 @@ function checkDance() {
         if(player.macarenaDance.enabled) {
             audioCollection.correct.play();
 
-            audioCollection.macarenaDance.source.onended = function() {
+            audioCollection.macarenaDance.source.onended = function() {  
                 macarenaDanceCorrect = true;
-                countCorrect++;          
+                countCorrect++; 
+
                 updatePlayerAnimation(player.idleAnim);
                 dancePlaying = false;
                 audioCollection.macarenaDance.isPlaying = false;
@@ -729,9 +732,10 @@ function checkDance() {
         if(player.ymcaDance.enabled) {
             audioCollection.correct.play();
 
-            audioCollection.ymcaDance.source.onended = function() {
+            audioCollection.ymcaDance.source.onended = function() {                
                 ymcaDanceCorrect = true;
-                countCorrect++;          
+                countCorrect++; 
+                    
                 updatePlayerAnimation(player.idleAnim);
                 dancePlaying = false;
                 audioCollection.ymcaDance.isPlaying = false;
@@ -809,6 +813,26 @@ function initDanceChecks() {
 
     }
 }
+
+function pauseSongs() {
+    updatePlayerAnimation(player.idleAnim);
+    dancePlaying = false;
+
+    switch (lastPlayed) {
+        case "chicken_dance":
+            audioCollection.chickenDance.stop();
+            break;
+        case "gangnam_style":
+            audioCollection.gangnamStyle.stop();
+            break;
+        case "macarena_dance":
+            audioCollection.macarenaDance.stop();
+            break;
+        case "ymca_dance":
+            audioCollection.ymcaDance.stop();
+            break;
+    }
+}
 /********** LEVEL TWO END **********/
 
 function initPlayerModel(gltf) {
@@ -822,7 +846,6 @@ function initPlayerModel(gltf) {
     let mixer = new THREE.AnimationMixer(player.playerModel);
     mixers.push(mixer);
 
-    /** Animations without gun */
     player.walkAnim = mixer.clipAction(animations[0]);
     player.idleAnim = mixer.clipAction(animations[1]);
     player.backwardsAnim = mixer.clipAction(animations[2]);
@@ -836,22 +859,11 @@ function initPlayerModel(gltf) {
     player.ymcaDance = mixer.clipAction(animations[10]);
     player.breakdance = mixer.clipAction(animations[11]);
 
-    /** Animations with gun */    
-    // player.shootAnim = mixer.clipAction(animations[0]);    
-    // player.walkAnim = mixer.clipAction(animations[1]);
-    // player.runAnim = mixer.clipAction(animations[2]);
-    // player.backwardsAnim = mixer.clipAction(animations[3]);
-    // player.strafeLAnim = mixer.clipAction(animations[4]);
-    // player.strafeRAnim = mixer.clipAction(animations[5]);
-    // player.idleAnim = mixer.clipAction(animations[6]);
-    // player.jumpAnim = mixer.clipAction(animations[7]);
-
     player.walkAnim.play();
     player.idleAnim.play();
     player.backwardsAnim.play();
     player.jumpAnim.play();
     player.runAnim.play();
-    // player.shootAnim.play();
     player.strafeLAnim.play();
     player.strafeRAnim.play();
     player.chickenDance.play();
@@ -865,7 +877,6 @@ function initPlayerModel(gltf) {
     player.backwardsAnim.enabled = false;
     player.jumpAnim.enabled = false;
     player.runAnim.enabled = false;
-    // player.shootAnim.enabled = false;
     player.strafeLAnim.enabled = false;
     player.strafeRAnim.enabled = false;
     player.chickenDance.enabled = false;
@@ -874,6 +885,47 @@ function initPlayerModel(gltf) {
     player.ymcaDance.enabled = false;
     player.breakdance.enabled = false;
     
+    player.currentAnimation = player.idleAnim;
+}
+
+function initPlayerGunModel(gltf) {
+    player.playerModel = gltf.scene;
+    let animations = gltf.animations;
+
+    player.playerModel.scale.set(-0.5, 0.5, -0.5);
+    player.playerModel.add(player.hitbox.mesh);
+    scene.add(player.playerModel);
+    
+    let mixer = new THREE.AnimationMixer(player.playerModel);
+    mixers.push(mixer);
+
+    player.shootAnim = mixer.clipAction(animations[0]);    
+    player.walkAnim = mixer.clipAction(animations[1]);
+    player.runAnim = mixer.clipAction(animations[2]);
+    player.backwardsAnim = mixer.clipAction(animations[3]);
+    player.strafeLAnim = mixer.clipAction(animations[4]);
+    player.strafeRAnim = mixer.clipAction(animations[5]);
+    player.idleAnim = mixer.clipAction(animations[6]);
+    player.jumpAnim = mixer.clipAction(animations[7]);
+
+    player.walkAnim.play();
+    player.idleAnim.play();
+    player.backwardsAnim.play();
+    player.jumpAnim.play();
+    player.runAnim.play();
+    player.shootAnim.play();
+    player.strafeLAnim.play();
+    player.strafeRAnim.play();
+
+    player.walkAnim.enabled = false;
+    player.idleAnim.enabled = true;
+    player.backwardsAnim.enabled = false;
+    player.jumpAnim.enabled = false;
+    player.runAnim.enabled = false;
+    player.shootAnim.enabled = false;
+    player.strafeLAnim.enabled = false;
+    player.strafeRAnim.enabled = false;
+
     player.currentAnimation = player.idleAnim;
 }
 
@@ -2029,8 +2081,6 @@ function levelTwoBoundingBox() {
         boulder_one.position.y += 0.02;
     }
 
-    hideTooltip(); // Hides the first puzzle's tooltip if it's still visible
-
     // Boundary values for the respective box divisions
     let boxOneBottom = -715;
     let boxOneLeft = -40;
@@ -2077,6 +2127,22 @@ function levelTwoBoundingBox() {
     }
 
     if(boxArr[1]) { // In box one
+        if(zPos > -730) {
+            cameraType = "fp"; // Lock the player into first person to avoid visual glitches when loading the new model
+        }
+        if(zPos <= -730 && !player.hasGun) {            
+            player.hasGun = true;
+            audioCollection.gunCock.play();
+            scene.remove(player.weapon.model);
+            scene.remove(player.playerModel);
+            gltfLoader2.load("models/characters/player/player_gun.glb", initPlayerGunModel, undefined, (error) => console.log(error)); // Load player model with gun
+            player.weapon.model.position.set(0, -3, -4);
+            player.weapon.model.rotation.set(0, 0, 0);
+            camera.add(player.weapon.model);
+
+            displayTooltip("Use this to protect yourself, soldier.");
+        }
+
         if(zPos > boxOneBottom) { // Place bottom boundary
             controls.getObject().position.z = boxOneBottom;
         }
@@ -2089,6 +2155,7 @@ function levelTwoBoundingBox() {
         }
     }
     else if(boxArr[2]) { // In box two
+        hideTooltip();
         if(zPos > boxTwoBottom - boundaryFactor) { // Place bottom boundary except at box one overlap
             if(xPos < boxOneLeft)
                 controls.getObject().position.z = boxTwoBottom - boundaryFactor;
@@ -2129,14 +2196,28 @@ function levelTwoBoundingBox() {
         }
     }
     else if(boxArr[5]) { // In box five
+        cameraType = "fp"; // Lock the player into first person to avoid visual glitches when loading the new model
+
+        if(player.hasGun) {
+            scene.remove(player.playerModel);
+            gltfLoader2.load("models/characters/player/playermodel.glb", initPlayerModel, undefined, (error) => console.log(error)); // Load original player model
+            player.hasGun = false;
+            droppedGun = true;
+            audioCollection.gunCock.play();
+            
+            completedTooltip = false;
+            displayTooltip("No guns allowed passed this point.")
+        }
+
         if(xPos < boxFiveLeft + boundaryFactor) { // Place left boundary
             controls.getObject().position.x = boxFiveLeft + boundaryFactor;
         }
         if(xPos > boxFiveRight - boundaryFactor) { // Place right boundary
             controls.getObject().position.x = boxFiveRight - boundaryFactor;
         }
-        if(zPos > boxFiveBottom) { // Change the level once the player leaves the box
+        if(zPos > boxFiveBottom) { // Change the level once the player leaves the box            
             currentLevel = 2.5;
+            hideTooltip();
         }
     }
 }
@@ -3346,12 +3427,12 @@ function loadAudio(url, key) {
                 audioCollection.ymcaDance.setVolume(0.25);
             });
             break;
-        case "incorrect":
-            audioCollection.incorrect = new THREE.Audio(listener);
+        case "lose_puzzle":
+            audioCollection.losePuzzle = new THREE.Audio(listener);
             audioLoader.load(url, function(buffer) {
-                audioCollection.incorrect.setBuffer(buffer);
-                audioCollection.incorrect.setLoop(false);
-                audioCollection.incorrect.setVolume(0.75);
+                audioCollection.losePuzzle.setBuffer(buffer);
+                audioCollection.losePuzzle.setLoop(false);
+                audioCollection.losePuzzle.setVolume(0.5);
             });
             break;
         case "correct":
@@ -3360,6 +3441,14 @@ function loadAudio(url, key) {
                 audioCollection.correct.setBuffer(buffer);
                 audioCollection.correct.setLoop(false);
                 audioCollection.correct.setVolume(0.75);
+            });
+            break;
+        case "win_puzzle":
+            audioCollection.winPuzzle = new THREE.Audio(listener);
+            audioLoader.load(url, function(buffer) {
+                audioCollection.winPuzzle.setBuffer(buffer);
+                audioCollection.winPuzzle.setLoop(false);
+                audioCollection.winPuzzle.setVolume(0.75);
             });
             break;
         case "record_scratch":
@@ -3376,6 +3465,14 @@ function loadAudio(url, key) {
                 audioCollection.healthRefill.setBuffer(buffer);
                 audioCollection.healthRefill.setLoop(false);
                 audioCollection.healthRefill.setVolume(0.5);
+            });
+            break;
+        case "gun_cock":
+            audioCollection.gunCock = new THREE.Audio(listener);
+            audioLoader.load(url, function(buffer) {
+                audioCollection.gunCock.setBuffer(buffer);
+                audioCollection.gunCock.setLoop(false);
+                audioCollection.gunCock.setVolume(0.5);
             });
             break;
     }
@@ -3699,6 +3796,7 @@ function initControls() {
         if(tooltipVisible) {
             tooltip.style.visibility = "hidden";
         }
+        pauseSongs();
 
         if(player.currentHealth > 0 && danceIncorrect < 2) {
             pauseBlock.style.display = "block";
@@ -3812,7 +3910,7 @@ function initControls() {
                 break;
             case 89:    // Y
                 currentLevel = 2;
-                controls.getObject().position.set(460, 8, -1090);
+                controls.getObject().position.set(460, 8, -1120);
                 camera.lookAt(460, 8, -1080);
                 break;
             case 69:    // E
@@ -3968,14 +4066,14 @@ function initLoadingManager() {
 function initLoaders() {
     textureLoader = new THREE.TextureLoader(loadingManager);
     gltfLoader = new GLTFLoader(loadingManager);
+    gltfLoader2 = new GLTFLoader();
     audioLoader = new THREE.AudioLoader(loadingManager);
 }
 
 function initPlayer() {
     player = new Player();
     player.hitbox = new Hitbox("player");
-
-    loadModel("models/characters/player/player_gun.glb", "player_gun");
+    
     loadModel("models/characters/player/playermodel.glb", "player");
 }
 
@@ -4011,8 +4109,9 @@ function initWeaponModel() {
 function initWeapon(gltf) {
     player.weapon.model = gltf.scene;
     player.weapon.model.scale.set(0.75, 0.75, -0.75);
-    player.weapon.model.position.set(0, -3, -4);
-    camera.add(player.weapon.model);
+    player.weapon.model.position.set(0, 0.5, -730);
+    player.weapon.model.rotation.set(0, Math.PI/4, -Math.PI/2);
+    scene.add(player.weapon.model);    
 
     player.weapon.bulletStart = new THREE.Object3D();
     player.weapon.bulletStart.position.set(0, -0.5, -1);
@@ -4098,7 +4197,7 @@ function initHealthPacks(gltf) {
 }
 
 function createPlayerBullet() {
-    if(lockingClick || player.weapon.cooldown != 0 || (inPuzzleTwo && !finishedPuzzleTwo)) return;
+    if(lockingClick || player.weapon.cooldown != 0 || !player.hasGun || (inPuzzleTwo && !finishedPuzzleTwo)) return;
 
     player.weapon.recoil.reachedBottom = false;
     player.weapon.recoil.reachedTop = false;
@@ -4186,15 +4285,17 @@ function initAudio() {
     loadAudio("audio/songs/gangnam_style.mp3", "gangnam_style");
     loadAudio("audio/songs/macarena.mp3", "macarena_dance");
     loadAudio("audio/songs/ymca.mp3", "ymca_dance");
-    loadAudio("audio/songs/incorrect.wav", "incorrect");
+    loadAudio("audio/songs/lose.wav", "lose_puzzle");
     loadAudio("audio/songs/correct.mp3", "correct");
+    loadAudio("audio/songs/success.wav", "win_puzzle");
     loadAudio("audio/songs/record_scratch.wav", "record_scratch");
     loadAudio("audio/character/health_refill.wav", "health_refill");
+    loadAudio("audio/weapon/gun_cock.wav", "gun_cock");
 }
 
 function initWorld() {
     drawTrees();
-    // drawBushes();
+    drawBushes();
     drawGround();
     drawRocks();
     drawStars();

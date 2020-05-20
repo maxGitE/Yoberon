@@ -18,6 +18,7 @@ class Player {
         this._jumping = false;
         this._running = false;
         this._runFactor = 1;
+        this._hasGun = false;
         this._playerModel = undefined;
         this._currentAnimation = undefined;
         this._idleAnim = undefined;
@@ -110,6 +111,10 @@ class Player {
 
     get runFactor() {
         return this._runFactor;
+    }
+
+    get hasGun() {
+        return this._hasGun;
     }
 
     get playerModel() {
@@ -227,6 +232,10 @@ class Player {
 
     set runFactor(value) {
         this._runFactor = value;
+    }
+
+    set hasGun(value) {
+        this._hasGun = value;
     }
 
     set playerModel(model) {
