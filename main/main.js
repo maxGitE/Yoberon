@@ -29,6 +29,7 @@ const crosshair = document.getElementById("crosshair");
 const weaponCooldownBar = document.getElementById("weaponcooldown");
 const interact = document.getElementById("interact");
 const tooltip = document.getElementById("tooltip");
+const checkpoint = document.getElementById("checkpoint");
 const paper = document.getElementById("paper");
 const dancecontrols = document.getElementById("dancecontrols");
 const playButton = document.getElementById("play");
@@ -83,11 +84,6 @@ let alien5;
 let alien6;
 let alien7;
 let alien8;
-let alien9;
-let alien10;
-let alien11;
-let alien12;
-let alien13;
 
 /** BOUNTY HUNTER */
 let bountyArray = [];
@@ -145,6 +141,7 @@ let clueWords = ["AIR", "WATER", "FIRE", "EARTH"];
 let levelOneCollidableMeshList = [];
 
 /** PUZZLE 2 */
+let removedLevelTwoAliens = false
 let inPuzzleTwo = false;
 let finishedPuzzleTwo = false;
 let inPosition = false;
@@ -172,6 +169,7 @@ let tooltipVisible = false;
 let completedTooltip = false;
 let healthbarWidth = 10.25;
 let healthbarTrailingWidth = healthbarWidth;
+let checkpointDisplayed = false;
 
 let lockingClick = true;
 let bulletCollidableMeshList = [];
@@ -2062,6 +2060,7 @@ function levelTwoBoundingBox() {
     // Check which box the player is in at any point in time
     if(xPos > boxOneLeft && xPos < boxOneRight && zPos < boxOneBottom && zPos > boxOneTop) {
         setBox(1, 2);
+        setCheckPoint();
     }
     else if(xPos > boxTwoLeft && xPos < boxTwoRight && zPos < boxTwoBottom && zPos > boxTwoTop) {
         setBox(2, 2);
@@ -2147,6 +2146,16 @@ function levelTwoBoundingBox() {
  *  Called by updateLevel() if currentLevel = 2.5.
  */
 function puzzleTwoBoundingBox() {
+    if(!removedLevelTwoAliens){
+        removedLevelTwoAliens = true;
+        for(let i = 5; i < alienArray.length; i++) {
+            scene.remove(alienArray[i].model);
+        }
+        alienArray.splice(5, 3);
+    }
+
+    checkpointDisplayed = false;
+
     // Boundary values for the respective box divisions
     let boxOneBottom = -970;
     let boxOneLeft = 420;
@@ -2258,6 +2267,7 @@ function levelThreeBoundingBox() {
     // Check which box the player is in at any point in time
     if(xPos > boxOneLeft && xPos < boxOneRight && zPos < boxOneBottom && zPos > boxOneTop) {
         setBox(1, 3);
+        setCheckPoint();
     }
     else if(xPos > boxTwoLeft && xPos < boxTwoRight && zPos < boxTwoBottom && zPos > boxTwoTop) {
         setBox(2, 3);
@@ -2379,6 +2389,8 @@ function levelThreeBoundingBox() {
  *  Called by updateLevel() if currentLevel = 3.5.
  */
 function puzzleThreeBoundingBox() {
+    checkpointDisplayed = false;
+
     // Boundary values for the respective box divisions
     let boxOneBottom = -370;
     let boxOneLeft = 430;
@@ -2450,6 +2462,7 @@ function levelFourBoundingBox() {
     // Check which box the player is in at any point in time
     if(xPos > boxOneLeft && xPos < boxOneRight && zPos < boxOneBottom && zPos > boxOneTop) {
         setBox(1, 4);
+        setCheckPoint();
     }
 
     if(boxArr[1]) { // In box one
@@ -3182,7 +3195,7 @@ function loadAudio(url, key) {
             audioLoader.load(url, function(buffer) {
                 audioCollection.rockSink.setBuffer(buffer);
                 audioCollection.rockSink.setLoop(false);
-                audioCollection.rockSink.setVolume(0.5);
+                audioCollection.rockSink.setVolume(0.75);
             });
             break;
         case "rock_slide":
@@ -3198,7 +3211,7 @@ function loadAudio(url, key) {
             audioLoader.load(url, function(buffer) {
                 audioCollection.tooltipCompleted.setBuffer(buffer);
                 audioCollection.tooltipCompleted.setLoop(false);
-                audioCollection.tooltipCompleted.setVolume(0.5);
+                audioCollection.tooltipCompleted.setVolume(0.8);
             });
             break;
         case "alien_weapon_shot":
@@ -3310,7 +3323,23 @@ function respawnAliens() {
     });
 }
 
-function restartLastCheckpoint() {
+function setCheckPoint() {
+    if(!checkpointDisplayed) {
+        if(player.currentHealth < 100) {
+            player.currentHealth = 100;
+            updatePlayerHealth();
+            audioCollection.healthRefill.play();
+        }
+
+        checkpoint.style.visibility = "visible";
+        setTimeout(() => {
+            checkpoint.style.visibility = "hidden";
+        }, 2000);
+        checkpointDisplayed = true;
+    }
+}
+
+function restartCheckpoint() {
     if(audioCollection.deathAudio.isPlaying) {
         audioCollection.deathAudio.stop();
     }
@@ -3362,14 +3391,19 @@ function restartLastCheckpoint() {
 }
 
 function spawnLevelThreeAliens() {
+    bulletCollidableMeshList.length = 0;
+
+    for(let i = 0; i < alienArray.length; i++) {
+        alienArray[i].model.remove(alienArray[i].hitbox.mesh);
+    }
+
     for(let i = 0; i < 5; i++) {
         if(alienArray[i].currentHealth < 100) {
-            if(alienArray[i].currentHealth <= 0) {
-                alienArray[i].model.add(alienArray[i].hitbox.mesh);
-                bulletCollidableMeshList.push(alienArray[i].hitbox.mesh);
-            }
             alienArray[i].currentHealth = 100;
         }
+
+        alienArray[i].model.add(alienArray[i].hitbox.mesh);
+        bulletCollidableMeshList.push(alienArray[i].hitbox.mesh);
 
         switch(i) {
             case 0: 
@@ -3570,7 +3604,7 @@ function initControls() {
         document.body.appendChild(stats.dom);
         document.removeEventListener("click", initialPointerLock);
         resume.addEventListener("click", () => controls.lock());
-        restart.addEventListener("click", restartLastCheckpoint);
+        restart.addEventListener("click", restartCheckpoint);
         lockingClick = false;
     }
 

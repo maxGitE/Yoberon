@@ -163,7 +163,7 @@ button:active {
     height: 100%;
     color: white;
     font-family: monospace;
-    font-size: 25px;
+    font-size: 45px;
     font-weight: bold;
     visibility: hidden;
 }
@@ -290,7 +290,22 @@ button:active {
     color: white;
     font-family: monospace;
     font-size: 20px;
+    font-weight: bold;
+    visibility: hidden;
+}
+
+#checkpoint {
+    position: fixed;
+    top: 2%;
+    left: 50%;
+    transform: translate(-50%, -2%);
+    width: 20%;
+    height: 5%;
+    background-color: rgb(255, 255, 255, 0);
+    text-align: center;
+    color: white;
     font-family: monospace;
+    font-size: 20px;
     font-weight: bold;
     visibility: hidden;
 }
