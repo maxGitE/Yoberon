@@ -57,7 +57,8 @@ let cameraType;
 /** LIGHTS */
 let ambientLight;
 let pointLight;
-let spotLight;
+let puzzleSpotLight;
+let alienSpotLight;
 
 /** AUDIO */
 let listener;
@@ -485,7 +486,7 @@ function showClue(name) {
 
 /********** LEVEL TWO START **********/
 function levelTwoPuzzle() {
-    // TODO: Visual queues for correct and incorrect songs
+    // TODO: Visual queues for correct and incorrect songs + success and fail sounds
     if(!finishedPuzzleTwo) {
         inPuzzleTwo = true;
 
@@ -494,14 +495,14 @@ function levelTwoPuzzle() {
         puzzleTwoCamera.lookAt(camera.position.x, camera.position.y, camera.position.z);
 
         /** Place the spotlight above the player looking down */
-        spotLight.position.set(camera.position.x, camera.position.y + 10, camera.position.z);
-        spotLight.target = player.playerModel;
+        puzzleSpotLight.position.set(camera.position.x, camera.position.y + 10, camera.position.z);
+        puzzleSpotLight.target = player.playerModel;
 
         /** Cycle through light colours */
-        if(spotLightColour >= 0) spotLight.color.setHex(0x00ffff);
-        if(spotLightColour >= 1) spotLight.color.setHex(0x00ff00);
-        if(spotLightColour >= 2) spotLight.color.setHex(0xffff00);
-        if(spotLightColour >= 3) spotLight.color.setHex(0xff0000);
+        if(spotLightColour >= 0) puzzleSpotLight.color.setHex(0x00ffff);
+        if(spotLightColour >= 1) puzzleSpotLight.color.setHex(0x00ff00);
+        if(spotLightColour >= 2) puzzleSpotLight.color.setHex(0xffff00);
+        if(spotLightColour >= 3) puzzleSpotLight.color.setHex(0xff0000);
 
         if(spotLightColour > 3) {
             spotLightColour = 0;
@@ -541,7 +542,7 @@ function levelTwoPuzzle() {
                 if(!audioCollection.recordScratch.isPlaying && danceIncorrect < 2) { // Start the music after a short delay
                     playMusic(); 
                 }
-                spotLight.intensity = 2;
+                puzzleSpotLight.intensity = 2;
             }, 500);
         }
         
@@ -590,7 +591,7 @@ function levelTwoPuzzle() {
         crosshair.style.visibility = "visible";        
         health.style.visibility = "visible";
         pointLight.intensity = 1.5;
-        scene.remove(spotLight);
+        scene.remove(puzzleSpotLight);
         cameraType = "fp";
         audioCollection.wildlife.play();
     }
@@ -1037,7 +1038,13 @@ function instantiateUnits(gltf, units, meshName) {
 
                 units[i].movement.moveOrRemain = Math.floor(Math.random() * 2) == 0 ? "move" : "remain"; // Choose a random initial value of whether to move or remain in place
                 units[i].movement.leftOrRight = Math.floor(Math.random() * 2) == 0 ? "left" : "right"; // Choose a random initial direction to move
-                units[i].movement.boundary = Math.floor(Math.random() * 3) + 5; // Choose a random initial integer boundary factor between 5 and 8, i.e. max distance that the alien can move in a movement cycle 
+                units[i].movement.boundary = Math.floor(Math.random() * 3) + 5; // Choose a random initial integer boundary factor between 5 and 8, i.e. max distance that the alien can move in a movement cycle
+                
+                // alienSpotLight.target = units[i].model;
+                // clonedScene.add(alienSpotLight);
+                let alienLight = alienSpotLight.clone();
+                units[i].model.add(alienLight);
+                units[i].model.children[12].position.set(units[i].position.x, units[i].position.y + 5, units[i].position.z);
             }
 
             /** Play default animation */
@@ -2192,25 +2199,25 @@ function puzzleTwoBoundingBox() {
  */
 function levelThreeBoundingBox() {
     // Boundary values for the respective box divisions
-    let boxOneBottom = -600;
+    let boxOneBottom = -680;
     let boxOneLeft = 420;
     let boxOneRight = 500;
     let boxOneTop = -940;
 
-    let boxTwoBottom = boxOneBottom;
+    let boxTwoBottom = -600;
     let boxTwoLeft = 200;
     let boxTwoRight = boxOneRight;
-    let boxTwoTop = -680;
+    let boxTwoTop = boxOneBottom;
 
-    let boxThreeBottom = -370;
+    let boxThreeBottom = -450;
     let boxThreeLeft = boxTwoLeft;
     let boxThreeRight = 280;
-    let boxThreeTop = boxTwoTop;
+    let boxThreeTop = boxTwoBottom;
 
-    let boxFourBottom = boxThreeBottom;
-    let boxFourLeft = boxThreeRight;
+    let boxFourBottom = -370;
+    let boxFourLeft = boxThreeLeft;
     let boxFourRight = 400;
-    let boxFourTop = -450;
+    let boxFourTop = boxThreeBottom;
 
     let boxFiveBottom = -395;
     let boxFiveLeft = boxFourRight;
@@ -2260,15 +2267,11 @@ function levelThreeBoundingBox() {
     }
 
     if(boxArr[1]) { // In box one
-        if(zPos > boxOneBottom - boundaryFactor) { // Place bottom boundary
-            controls.getObject().position.z = boxOneBottom - boundaryFactor;
-        }
         if(zPos < boxOneTop) { // Place top boundary
             controls.getObject().position.z = boxOneTop;
         }
-        if(xPos < boxOneLeft + boundaryFactor) { // Place left boundary except at box two overlap
-            if(zPos < boxTwoTop)
-                controls.getObject().position.x = boxOneLeft + boundaryFactor;
+        if(xPos < boxOneLeft + boundaryFactor) { // Place left boundary
+            controls.getObject().position.x = boxOneLeft + boundaryFactor;
         }
         if(xPos > boxOneRight - boundaryFactor) { // Place right boundary except at secret path entrance and exit
             if( (zPos < boxSixTop || zPos > boxSixBottom) && (zPos < boxEightTop || zPos > boxEightBottom) )
@@ -2280,35 +2283,32 @@ function levelThreeBoundingBox() {
             if(xPos > boxThreeRight)
                 controls.getObject().position.z = boxTwoBottom - boundaryFactor;
         }
-        if(zPos < boxTwoTop + boundaryFactor) { // Place top boundary
-            controls.getObject().position.z = boxTwoTop + boundaryFactor;
+        if(zPos < boxTwoTop + boundaryFactor) { // Place top boundary except at box one overlap
+            if(xPos < boxOneLeft)
+                controls.getObject().position.z = boxTwoTop + boundaryFactor;
         }
         if(xPos < boxThreeLeft + boundaryFactor) { // Place left boundary
             controls.getObject().position.x = boxTwoLeft + boundaryFactor;
         }
-        if(xPos > boxTwoRight - boundaryFactor) { // Place right boundary except at box one overlap
-            if(xPos < boxOneLeft)
-                controls.getObject().position.x = boxTwoRight - boundaryFactor;
+        if(xPos > boxTwoRight - boundaryFactor) { // Place right boundary 
+            controls.getObject().position.x = boxTwoRight - boundaryFactor;
         }
     }
     else if(boxArr[3]) { // In box three
-        if(zPos > boxThreeBottom - boundaryFactor) { // Place bottom boundary
-            controls.getObject().position.z = boxThreeBottom - boundaryFactor;
-        }
         if(xPos < boxThreeLeft + boundaryFactor) { // Place left boundary
             controls.getObject().position.x = boxThreeLeft + boundaryFactor;
         }
-        if(xPos > boxThreeRight - boundaryFactor) { // Place right boundary except at box four overlap
-            if(zPos < boxFourTop)
-                controls.getObject().position.x = boxThreeRight - boundaryFactor;
+        if(xPos > boxThreeRight - boundaryFactor) { // Place right boundary
+            controls.getObject().position.x = boxThreeRight - boundaryFactor;
         }
     }
     else if(boxArr[4]) { // In box four
         if(zPos > boxFourBottom - boundaryFactor) { // Place bottom boundary
             controls.getObject().position.z = boxFourBottom - boundaryFactor;
         }
-        if(zPos < boxFourTop + boundaryFactor) { // Place top boundary
-            controls.getObject().position.z = boxFourTop + boundaryFactor;
+        if(zPos < boxFourTop + boundaryFactor) { // Place top boundary except at box three overlap
+            if(xPos > boxThreeRight)
+                controls.getObject().position.z = boxFourTop + boundaryFactor;
         }
         if(xPos > boxFourRight - boundaryFactor) { // Place right boundary except at box five entrance
             if(zPos < boxFiveTop || zPos > boxFiveBottom)
@@ -3264,7 +3264,6 @@ function respawnAliens() {
             alien.currentHealth = 100;
             alien.model.add(alien.hitbox.mesh);
             bulletCollidableMeshList.push(alien.hitbox.mesh);
-            alien.deathAnim.clampWhenFinished = false;
         }
     });
 }
@@ -3398,8 +3397,11 @@ function initLights() {
     camera.add(pointLight);
     camera.children[1].position.y = 5; // Lower the point light from 8 to 5
 
-    spotLight = new THREE.SpotLight("green", 0, 0, Math.PI/5, 0, 2);
-    scene.add(spotLight);
+    puzzleSpotLight = new THREE.SpotLight("green", 0, 0, Math.PI/5, 0, 2);
+    scene.add(puzzleSpotLight);
+
+    alienSpotLight = new THREE.PointLight("green", 1);
+    alienSpotLight.distance = 10;
 }
 
 function initControls() {
