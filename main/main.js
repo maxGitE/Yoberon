@@ -1662,7 +1662,7 @@ function drawGround() {
 }
 
 function drawRocks() {
-    loadModel("models/environment/rocks/rock_three.glb", "rock_three");
+    loadModel("models/environment/rocks/rock_three_test.glb", "rock_three");
     loadModel("models/environment/rocks/rock_four.glb", "rock_four");
     loadModel("models/environment/rocks/rock_five.glb", "rock_five");
     loadModel("models/environment/rocks/rock_over_clue_one.glb", "rock_over_clue_one");
@@ -1686,7 +1686,7 @@ function drawTotems() {
     let normalMap = loadTexture("textures/totem_wood_normal.png");
 
     let totemGeometry = new THREE.CylinderBufferGeometry(3, 3, 12, 32);
-    let totemOneMaterial = new THREE.MeshStandardMaterial( {color: "#706d71", map: totemTexture, normalMap: normalMap} );
+    let totemOneMaterial = new THREE.MeshStandardMaterial( {color: "#706d71", map: totemTexture} );
     let totemTwoMaterial = totemOneMaterial.clone();
     let totemThreeMaterial = totemOneMaterial.clone();
     let totemFourMaterial = totemOneMaterial.clone();
