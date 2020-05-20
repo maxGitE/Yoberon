@@ -29,6 +29,7 @@ const crosshair = document.getElementById("crosshair");
 const weaponCooldownBar = document.getElementById("weaponcooldown");
 const interact = document.getElementById("interact");
 const tooltip = document.getElementById("tooltip");
+const checkpoint = document.getElementById("checkpoint");
 const paper = document.getElementById("paper");
 const dancecontrols = document.getElementById("dancecontrols");
 const playButton = document.getElementById("play");
@@ -83,11 +84,6 @@ let alien5;
 let alien6;
 let alien7;
 let alien8;
-let alien9;
-let alien10;
-let alien11;
-let alien12;
-let alien13;
 
 /** BOUNTY HUNTER */
 let bountyArray = [];
@@ -116,7 +112,7 @@ let starFieldA;
 let starFieldB;
 let blockingTrees;
 
-/** LEVEL 1 */
+/** PUZZLE 1 */
 let cameraDirectionLevelOne;
 let totemCollection;
 let totemOne;
@@ -146,6 +142,7 @@ let clueWords = ["AIR", "WATER", "FIRE", "EARTH"];
 let levelOneCollidableMeshList = [];
 
 /** PUZZLE 2 */
+let removedLevelTwoAliens = false
 let inPuzzleTwo = false;
 let finishedPuzzleTwo = false;
 let inPosition = false;
@@ -161,11 +158,20 @@ let lastPlayed;
 let countCorrect = 0;
 let dancePlaying = false;
 
+/** LEVEL 3 */
+let spawnedLevelThreeAliens = false;
+
+/** LEVEL 4 */
+let spawnedLevelFourAliens = false;
+let waveDefeated = false;
+let inWaveTimeout = false;
+
 /** HUD */
 let tooltipVisible = false;
 let completedTooltip = false;
 let healthbarWidth = 10.25;
 let healthbarTrailingWidth = healthbarWidth;
+let checkpointDisplayed = false;
 
 let lockingClick = true;
 let bulletCollidableMeshList = [];
@@ -327,6 +333,8 @@ function gameLoop() {
             // Updates the animations on the healthbar if the player has been damaged
             updateHealthBar();
 
+            updateHealthPackAnimation();
+
             // Update clock time
             clock.timeBefore = clock.timeNow;
         }
@@ -434,7 +442,7 @@ function updateTotemSelection() {
                 interact.style.visibility = "hidden";
             }
             else {
-                audioCollection.wrongTotemOrder.play();
+                audioCollection.wrongMove.play();
                 selectedTotems.forEach(totem => {
                     totem.object.material.color.setHex(0x706d71);
                     totem.object.userData.selected = false;
@@ -962,30 +970,30 @@ function initAlienModels(gltf) {
     alien8.canShoot.box = 4;
     alienArray.push(alien8);
 
-    alien9.setPosition(230, 0, -620);
-    alien9.canShoot.level = 3;
-    alien9.canShoot.box = 2;
-    alienArray.push(alien9);
+    // alien9.setPosition(230, 0, -620);
+    // alien9.canShoot.level = 3;
+    // alien9.canShoot.box = 2;
+    // alienArray.push(alien9);
 
-    alien10.setPosition(270, 0, -635);
-    alien10.canShoot.level = 3;
-    alien10.canShoot.box = 2;
-    alienArray.push(alien10);
+    // alien10.setPosition(270, 0, -635);
+    // alien10.canShoot.level = 3;
+    // alien10.canShoot.box = 2;
+    // alienArray.push(alien10);
 
-    alien11.setPosition(220, 0, -660);
-    alien11.canShoot.level = 3;
-    alien11.canShoot.box = 2;
-    alienArray.push(alien11);
+    // alien11.setPosition(220, 0, -660);
+    // alien11.canShoot.level = 3;
+    // alien11.canShoot.box = 2;
+    // alienArray.push(alien11);
 
-    alien12.setPosition(375, 0, -435);
-    alien12.canShoot.level = 3;
-    alien12.canShoot.box = 4;
-    alienArray.push(alien12);
+    // alien12.setPosition(375, 0, -435);
+    // alien12.canShoot.level = 3;
+    // alien12.canShoot.box = 4;
+    // alienArray.push(alien12);
 
-    alien13.setPosition(380, 0, -400);
-    alien13.canShoot.level = 3;
-    alien13.canShoot.box = 4;
-    alienArray.push(alien13);
+    // alien13.setPosition(380, 0, -400);
+    // alien13.canShoot.level = 3;
+    // alien13.canShoot.box = 4;
+    // alienArray.push(alien13);
 
     instantiateUnits(gltf, alienArray, "Alien_(Armature)");  
 }
@@ -1021,8 +1029,8 @@ function instantiateUnits(gltf, units, meshName) {
         units[i].model.traverse((child) => { // Prevent frustum culling of the mesh
             if(child.isMesh) {
                 // child.frustumCulled = false;
-                child.geometry.computeBoundingBox();
-                child.geometry.boundingBox.expandByScalar(2);
+                // child.geometry.computeBoundingBox();
+                // child.geometry.boundingBox.expandByScalar(2);
             }
         })
 
@@ -2102,6 +2110,7 @@ function levelTwoBoundingBox() {
     // Check which box the player is in at any point in time
     if(xPos > boxOneLeft && xPos < boxOneRight && zPos < boxOneBottom && zPos > boxOneTop) {
         setBox(1, 2);
+        setCheckPoint();
     }
     else if(xPos > boxTwoLeft && xPos < boxTwoRight && zPos < boxTwoBottom && zPos > boxTwoTop) {
         setBox(2, 2);
@@ -2218,6 +2227,16 @@ function levelTwoBoundingBox() {
  *  Called by updateLevel() if currentLevel = 2.5.
  */
 function puzzleTwoBoundingBox() {
+    if(!removedLevelTwoAliens){
+        removedLevelTwoAliens = true;
+        for(let i = 5; i < alienArray.length; i++) {
+            scene.remove(alienArray[i].model);
+        }
+        alienArray.splice(5, 3);
+    }
+
+    checkpointDisplayed = false;
+
     // Boundary values for the respective box divisions
     let boxOneBottom = -970;
     let boxOneLeft = 420;
@@ -2279,6 +2298,11 @@ function puzzleTwoBoundingBox() {
  *  Called by updateLevel() if currentLevel = 3.
  */
 function levelThreeBoundingBox() {
+    if(!spawnedLevelThreeAliens) {
+        spawnLevelThreeAliens();
+        spawnedLevelThreeAliens = true;
+    }
+
     // Boundary values for the respective box divisions
     let boxOneBottom = -680;
     let boxOneLeft = 420;
@@ -2324,12 +2348,14 @@ function levelThreeBoundingBox() {
     // Check which box the player is in at any point in time
     if(xPos > boxOneLeft && xPos < boxOneRight && zPos < boxOneBottom && zPos > boxOneTop) {
         setBox(1, 3);
+        setCheckPoint();
     }
     else if(xPos > boxTwoLeft && xPos < boxTwoRight && zPos < boxTwoBottom && zPos > boxTwoTop) {
         setBox(2, 3);
     }
     else if(xPos > boxThreeLeft && xPos < boxThreeRight && zPos < boxThreeBottom && zPos > boxThreeTop) {
         setBox(3, 3);
+        handleHealthPacks();
     }
     else if(xPos > boxFourLeft && xPos < boxFourRight && zPos < boxFourBottom && zPos > boxFourTop) {
         setBox(4, 3);
@@ -2445,6 +2471,8 @@ function levelThreeBoundingBox() {
  *  Called by updateLevel() if currentLevel = 3.5.
  */
 function puzzleThreeBoundingBox() {
+    checkpointDisplayed = false;
+
     // Boundary values for the respective box divisions
     let boxOneBottom = -370;
     let boxOneLeft = 430;
@@ -2505,6 +2533,8 @@ function puzzleThreeBoundingBox() {
  *  Called by updateLevel() if currentLevel = 4.
  */
 function levelFourBoundingBox() {
+    spawnLevelFourAliens();
+
     // Boundary values for the respective box divisions
     let boxOneBottom = -40;
     let boxOneLeft = 330;
@@ -2514,6 +2544,8 @@ function levelFourBoundingBox() {
     // Check which box the player is in at any point in time
     if(xPos > boxOneLeft && xPos < boxOneRight && zPos < boxOneBottom && zPos > boxOneTop) {
         setBox(1, 4);
+        setCheckPoint();
+        handleHealthPacks();
     }
 
     if(boxArr[1]) { // In box one
@@ -2532,17 +2564,31 @@ function levelFourBoundingBox() {
     }
 }
 
+/**
+ * Called when a bullet should be removed from the scene.
+ * Disposes of the bullet's geometry and material.
+ * @param {*} entity Player or alien whose bullet is being removed from the scene.
+ * @param {bullet} bullet Bullet to be removed.
+ * @param {number} index The index of the bullet in the entity's bullets array.
+ */
+function removeBullet(entity, bullet, index) {
+    bullet.geometry.dispose();
+    bullet.material.dispose();
+    renderer.renderLists.dispose();
+    scene.remove(bullet); // Remove the bullet from the scene
+    entity.weapon.bullets.splice(index, 1); // Remove the bullet from the array
+}
+
 function updateBullets() {
-    if(player.weapon.bullets.length > 5) {
-        scene.remove(player.weapon.bullets[0].bullet);
-        player.weapon.bullets.shift();
-    }
+    // if(player.weapon.bullets.length > 5) {
+    //     scene.remove(player.weapon.bullets[0].bullet);
+    //     player.weapon.bullets.shift();
+    // }
     
     player.weapon.bullets.forEach((item, index) => {
 
-        if(item.originalPosition.distanceTo(item.bullet.position) > 200) { // Restrict the bullet from travelling past 200 units
-            scene.remove(item.bullet); // Remove the bullet from the scene
-            player.weapon.bullets.splice(index, 1); // Remove the bullet from the array
+        if(item.originalPosition.distanceTo(item.bullet.position) > 250) { // Restrict the bullet from travelling past 250 units
+            removeBullet(player, item.bullet, index);
             return; // Iterate to the next bullet
         }
 
@@ -2556,7 +2602,7 @@ function updateBullets() {
         // scene.add(new THREE.ArrowHelper(item.raycaster.ray.direction, item.raycaster.ray.origin, 1));
 
         let intersects = item.raycaster.intersectObjects(bulletCollidableMeshList, true);
-        
+
         if(intersects.length > 0) {
             let intersect = intersects[0];
             let distance_one = intersect.distance;
@@ -2565,49 +2611,80 @@ function updateBullets() {
             let distance_two = distance_twoVec.length();
 
             if(distance_one <= distance_two) {
-                audioCollection.hitmarker.play();
-
+               
                 if(intersect.object.parent.parent.name != null) {
                     switch(intersect.object.parent.parent.name) { // The name of the model that the hitbox mesh is attached to
                         case "alien1":
-                            damageAlien(alien1, intersect);
+                            if(item.box >= alien1.canShoot.box) { // Only allow the player's bullet to deal damage if the player is in the same bounding box as the alien
+                                audioCollection.hitmarker.play();
+                                damageAlien(alien1, intersect);
+                                removeBullet(player, item.bullet, index); // Remove the bullet from the scene after hitting an alien
+                            }
                             break;
                         case "alien2":
-                            damageAlien(alien2, intersect);
+                            if(item.box >= alien2.canShoot.box) {
+                                audioCollection.hitmarker.play();
+                                damageAlien(alien2, intersect);
+                                removeBullet(player, item.bullet, index);
+                            }
                             break;
                         case "alien3":
-                            damageAlien(alien3, intersect);
+                            if(item.box >= alien3.canShoot.box) {
+                                audioCollection.hitmarker.play();
+                                damageAlien(alien3, intersect);
+                                removeBullet(player, item.bullet, index);
+                            }
                             break;
                         case "alien4":
-                            damageAlien(alien4, intersect);
+                            if(item.box >= alien4.canShoot.box) {
+                                audioCollection.hitmarker.play();
+                                damageAlien(alien4, intersect);
+                                removeBullet(player, item.bullet, index);
+                            }
                             break;
                         case "alien5":
-                            damageAlien(alien5, intersect);
+                            if(item.box >= alien5.canShoot.box) {
+                                audioCollection.hitmarker.play();
+                                damageAlien(alien5, intersect);
+                                removeBullet(player, item.bullet, index);
+                            }
                             break;
                         case "alien6":
-                            damageAlien(alien6, intersect);
+                            if(item.box >= alien6.canShoot.box) {
+                                audioCollection.hitmarker.play();
+                                damageAlien(alien6, intersect);
+                                removeBullet(player, item.bullet, index);
+                            }
                             break;
                         case "alien7":
-                            damageAlien(alien7, intersect);
+                            if(item.box >= alien7.canShoot.box) {
+                                audioCollection.hitmarker.play();
+                                damageAlien(alien7, intersect);
+                                removeBullet(player, item.bullet, index);
+                            }
                             break;
                         case "alien8":
-                            damageAlien(alien8, intersect);
+                            if(item.box >= alien8.canShoot.box) {
+                                audioCollection.hitmarker.play();
+                                damageAlien(alien8, intersect);
+                                removeBullet(player, item.bullet, index);
+                            }
                             break;
-                        case "alien9":
-                            damageAlien(alien9, intersect);
-                            break;
-                        case "alien10":
-                            damageAlien(alien10, intersect);
-                            break;
-                        case "alien11":
-                            damageAlien(alien11, intersect);
-                            break;
-                        case "alien12":
-                            damageAlien(alien12, intersect);
-                            break;
-                        case "alien13":
-                            damageAlien(alien13, intersect);
-                            break;
+                        // case "alien9":
+                        //     damageAlien(alien9, intersect);
+                        //     break;
+                        // case "alien10":
+                        //     damageAlien(alien10, intersect);
+                        //     break;
+                        // case "alien11":
+                        //     damageAlien(alien11, intersect);
+                        //     break;
+                        // case "alien12":
+                        //     damageAlien(alien12, intersect);
+                        //     break;
+                        // case "alien13":
+                        //     damageAlien(alien13, intersect);
+                        //     break;
                     }
                 }
             }
@@ -2643,16 +2720,11 @@ function updateBullets() {
 }
 
 function updateAlienBullet(alien) {
-    if(alien.weapon.bullets.length > 2) {
-        scene.remove(alien.weapon.bullets[0].bullet);
-        alien.weapon.bullets.shift();
-    }
-    
+
     alien.weapon.bullets.forEach((item, index) => {
 
-        if(item.originalPosition.distanceTo(item.bullet.position) > 200) { // Restrict the bullet from travelling past 200 units
-            scene.remove(item.bullet); // Remove the bullet from the scene
-            alien.weapon.bullets.splice(index, 1); // Remove the bullet from the array
+        if(item.originalPosition.distanceTo(item.bullet.position) > 250) { // Restrict the bullet from travelling past 250 units
+            removeBullet(alien, item.bullet, index);
             return; // Iterate to the next bullet
         }
 
@@ -2673,6 +2745,7 @@ function updateAlienBullet(alien) {
             let distance_two = distance_twoVec.length();
 
             if(distance_one <= distance_two) { // Alien bullet hit player
+
                 if(audioCollection.playerInjured.isPlaying) {
                     audioCollection.playerInjured.stop();
                 }
@@ -2686,6 +2759,9 @@ function updateAlienBullet(alien) {
                     playerDeath.style.visibility = "visible";
                     setTimeout(() => audioCollection.deathAudio.play(), 500);
                     controls.unlock();
+                }
+                else {
+                    removeBullet(alien, item.bullet, index); // Remove alien's bullet from the scene
                 }
                 updatePlayerHealth();
             }
@@ -2729,6 +2805,7 @@ function damageAlien(alien, intersect) {
     }
 
     if(alien.currentHealth <= 0) {
+        alien.deathAnim.reset();
         updateAlienAnimation(alien, alien.deathAnim);
         let indexOfCollidableMesh = bulletCollidableMeshList.indexOf(alien.hitbox.mesh);
         bulletCollidableMeshList.splice(indexOfCollidableMesh, 1);
@@ -2754,7 +2831,6 @@ function updateHealthBar() {
             }
             
             if(healthbarTrailingWidth < healthbarWidth) {
-                console.log('matched width');
                 healthbarTrailingWidth = healthbarWidth;
             }
             healthbarTrailing.setAttribute("style", "width: " + healthbarTrailingWidth + "%");
@@ -2978,6 +3054,7 @@ function updateAlienAnimation(alien, newAnimation) {
 /**
  * Called when the player is in an area with health packs.
  * Handles the raycasting logic to allow them to pick up the health packs and regenerate health.
+ * This function must be called in a bounding box check.
  */
 function handleHealthPacks() {
     let cameraDirection = new THREE.Vector3();
@@ -2997,9 +3074,13 @@ function handleHealthPacks() {
     }
 }
 
+/**
+ * Called when the player interacts with a health pack.
+ * If the player has less than 100HP, they are healed for 25HP and the health pack is removed from the scene.
+ */
 function healthPackPickup() {
     if(player.currentHealth == 100) {
-        audioCollection.wrongTotemOrder.play(); 
+        audioCollection.wrongMove.play(); 
         return;
     }
 
@@ -3008,18 +3089,60 @@ function healthPackPickup() {
     healthPackCollidableMeshList.splice(indexOfHealthPack, 1);
     scene.remove(selectedHealthPack.object);
 
-    if(player.currentHealth < 100) {
+    if(selectedHealthPack.object.material.color.g == 0) { // Regular health pack
+        console.log("picked up health pack");
         player.currentHealth += 25;
         if(player.currentHealth > 100) {
             player.currentHealth = 100;
         }
-        updatePlayerHealth();
     }
+    else { // Super health pack
+        player.currentHealth = 100;
+    }
+    updatePlayerHealth();
 
     if(audioCollection.healthRefill.isPlaying) {
         audioCollection.healthRefill.stop();
     }
     audioCollection.healthRefill.play();
+}
+
+/**
+ * Called every game loop.
+ * Handles the animation of the health packs in the scene.
+ */
+function updateHealthPackAnimation() {
+    healthPackCollidableMeshList.forEach(healthPack => {
+        if(healthPack.material.color.g == 0) { // Regular health pack
+            if(healthPack.position.y <= 1.25 || healthPack.position.y >= 2.75) {
+                if(healthPack.direction == "down") {
+                    healthPack.direction = "up";
+                }
+                else {
+                    healthPack.direction = "down";
+                }
+            }
+        }
+        else { // Super health pack
+            if(healthPack.position.y <= 2.5 || healthPack.position.y >= 5.5) {
+                if(healthPack.direction == "down") {
+                    healthPack.direction = "up";
+                }
+                else {
+                    healthPack.direction = "down";
+                }
+            }
+        }
+       
+        if(healthPack.direction == "down") {
+            healthPack.position.y -= 0.01;
+        }
+        else {
+            healthPack.position.y += 0.01;
+        }
+
+        healthPack.rotation.y += 0.01;
+    });
 }
 
 function loadTexture(url) {
@@ -3197,15 +3320,15 @@ function loadAudio(url, key) {
             audioLoader.load(url, function(buffer) {
                 audioCollection.totemSelect.setBuffer(buffer);
                 audioCollection.totemSelect.setLoop(false);
-                audioCollection.totemSelect.setVolume(0.3);
+                audioCollection.totemSelect.setVolume(0.35);
             });
             break;
-        case "wrong_totem_order":
-            audioCollection.wrongTotemOrder = new THREE.Audio(listener);
+        case "wrong_move":
+            audioCollection.wrongMove = new THREE.Audio(listener);
             audioLoader.load(url, function(buffer) {
-                audioCollection.wrongTotemOrder.setBuffer(buffer);
-                audioCollection.wrongTotemOrder.setLoop(false);
-                audioCollection.wrongTotemOrder.setVolume(0.3);
+                audioCollection.wrongMove.setBuffer(buffer);
+                audioCollection.wrongMove.setLoop(false);
+                audioCollection.wrongMove.setVolume(0.5);
             });
             break;
         case "correct_totem_order":
@@ -3213,7 +3336,7 @@ function loadAudio(url, key) {
             audioLoader.load(url, function(buffer) {
                 audioCollection.correctTotemOrder.setBuffer(buffer);
                 audioCollection.correctTotemOrder.setLoop(false);
-                audioCollection.correctTotemOrder.setVolume(0.3);
+                audioCollection.correctTotemOrder.setVolume(0.4);
             });
             break;
         case "rock_sink":
@@ -3221,7 +3344,7 @@ function loadAudio(url, key) {
             audioLoader.load(url, function(buffer) {
                 audioCollection.rockSink.setBuffer(buffer);
                 audioCollection.rockSink.setLoop(false);
-                audioCollection.rockSink.setVolume(0.5);
+                audioCollection.rockSink.setVolume(0.75);
             });
             break;
         case "rock_slide":
@@ -3237,7 +3360,7 @@ function loadAudio(url, key) {
             audioLoader.load(url, function(buffer) {
                 audioCollection.tooltipCompleted.setBuffer(buffer);
                 audioCollection.tooltipCompleted.setLoop(false);
-                audioCollection.tooltipCompleted.setVolume(0.5);
+                audioCollection.tooltipCompleted.setVolume(0.8);
             });
             break;
         case "alien_weapon_shot":
@@ -3365,7 +3488,23 @@ function respawnAliens() {
     });
 }
 
-function restartLastCheckpoint() {
+function setCheckPoint() {
+    if(!checkpointDisplayed) {
+        if(player.currentHealth < 100) {
+            player.currentHealth = 100;
+            updatePlayerHealth();
+            audioCollection.healthRefill.play();
+        }
+
+        checkpoint.style.visibility = "visible";
+        setTimeout(() => {
+            checkpoint.style.visibility = "hidden";
+        }, 2000);
+        checkpointDisplayed = true;
+    }
+}
+
+function restartCheckpoint() {
     if(audioCollection.deathAudio.isPlaying) {
         audioCollection.deathAudio.stop();
     }
@@ -3375,7 +3514,7 @@ function restartLastCheckpoint() {
         healthPackCollidableMeshList.push(healthPack);
     });
 
-    pickedUpHealthPacks = [];
+    pickedUpHealthPacks.length = 0;
 
     playerDeath.classList.remove("fadein");
     playerDeath.style.visibility = "hidden";
@@ -3402,6 +3541,118 @@ function restartLastCheckpoint() {
             controls.getObject().position.set(0, 8, -720);
             camera.lookAt(0, 8, -720);
             respawnAliens();
+            break;
+        case 3:
+            controls.getObject().position.set(460, 8, -935);
+            camera.lookAt(460, 8, 1);
+            respawnAliens();
+            break;
+        case 4:
+            controls.getObject().position.set(480, 8, -335);
+            camera.lookAt(480, 8, 1);
+            spawnedLevelFourAliens = false;
+            break;
+    }
+}
+
+function spawnLevelThreeAliens() {
+    bulletCollidableMeshList.length = 0;
+
+    for(let i = 0; i < alienArray.length; i++) {
+        alienArray[i].model.remove(alienArray[i].hitbox.mesh);
+    }
+
+    for(let i = 0; i < 5; i++) {
+        if(alienArray[i].currentHealth < 100) {
+            alienArray[i].currentHealth = 100;
+        }
+
+        alienArray[i].model.add(alienArray[i].hitbox.mesh);
+        bulletCollidableMeshList.push(alienArray[i].hitbox.mesh);
+
+        switch(i) {
+            case 0: 
+                alienArray[i].model.position.set(230, 0, -620);
+                alienArray[i].canShoot.level = 3;
+                alienArray[i].canShoot.box = 2;
+                break;
+            case 1: 
+                alienArray[i].model.position.set(270, 0, -635);
+                alienArray[i].canShoot.level = 3;
+                alienArray[i].canShoot.box = 2;
+                break;
+            case 2:
+                alienArray[i].model.position.set(220, 0, -660); 
+                alienArray[i].canShoot.level = 3;
+                alienArray[i].canShoot.box = 2;
+                break;
+            case 3: 
+                alienArray[i].model.position.set(375, 0, -435);
+                alienArray[i].canShoot.level = 3;
+                alienArray[i].canShoot.box = 4;
+                break;
+            case 4:
+                alienArray[i].model.position.set(380, 0, -400); 
+                alienArray[i].canShoot.level = 3;
+                alienArray[i].canShoot.box = 4;
+                break;
+        }
+    }
+}
+
+function spawnLevelFourAliens() {
+    if(waveDefeated) {
+        waveDefeated = false;
+        inWaveTimeout = true;
+        setTimeout(() => { // Wait 8 seconds until the next wave is spawned
+            spawnedLevelFourAliens = false;
+            inWaveTimeout = false;
+        }, 8000);
+    }
+    else {
+        if(!spawnedLevelFourAliens) {
+            bulletCollidableMeshList.length = 0;
+            for(let i = 0; i < alienArray.length; i++) {
+                alienArray[i].model.remove(alienArray[i].hitbox.mesh);
+            }
+
+            for(let i = 0; i < 4; i++) {
+                if(alienArray[i].currentHealth < 100) {
+                    alienArray[i].currentHealth = 100;
+                }
+
+                alienArray[i].model.add(alienArray[i].hitbox.mesh);
+                bulletCollidableMeshList.push(alienArray[i].hitbox.mesh);
+
+                switch(i) {
+                    case 0: 
+                        alienArray[i].model.position.set(340, 0, -330);
+                        alienArray[i].canShoot.level = 4;
+                        alienArray[i].canShoot.box = 1;
+                        break;
+                    case 1: 
+                        alienArray[i].model.position.set(620, 0, -330);
+                        alienArray[i].canShoot.level = 4;
+                        alienArray[i].canShoot.box = 1;
+                        break;
+                    case 2:
+                        alienArray[i].model.position.set(340, 0, -50); 
+                        alienArray[i].canShoot.level = 4;
+                        alienArray[i].canShoot.box = 1;
+                        break;
+                    case 3: 
+                        alienArray[i].model.position.set(620, 0, -50);
+                        alienArray[i].canShoot.level = 4;
+                        alienArray[i].canShoot.box = 1;
+                        break;
+                }
+            }
+            spawnedLevelFourAliens = true;
+        } 
+        else {
+            if(inWaveTimeout) return;
+            if(bulletCollidableMeshList.length == 0) waveDefeated = true; // All 4 aliens have died
+        }   
     }
 }
 
@@ -3428,7 +3679,7 @@ function hideTooltip() {
  * @param {alien} alien The alien that is checked to see if they are in range of the player.
  */
 function inRangeOfPlayer(alien) {
-    return alien.model.position.clone().distanceTo(player.playerModel.position.clone()) < 250;
+    return alien.model.position.clone().distanceTo(player.playerModel.position.clone()) < alien.range;
 }
 
 function onResize() {
@@ -3514,7 +3765,7 @@ function initControls() {
         document.body.appendChild(stats.dom);
         document.removeEventListener("click", initialPointerLock);
         resume.addEventListener("click", () => controls.lock());
-        restart.addEventListener("click", restartLastCheckpoint);
+        restart.addEventListener("click", restartCheckpoint);
         lockingClick = false;
     }
 
@@ -3554,7 +3805,7 @@ function initControls() {
             puzzleBlock.style.display = "block";
         }
         else {
-            setTimeout(() => deathBlock.style.display = "block", 5000);
+            setTimeout(() => deathBlock.style.display = "block", 3000);
         }
     }
 
@@ -3650,8 +3901,8 @@ function initControls() {
 
                 cameraType = "bev"; break;
             case 84:  // R
-                controls.getObject().position.set(0, 8, -720);
-                currentLevel = 2;
+                controls.getObject().position.set(280, 8, -410);
+                currentLevel = 3;
                 break;
             case 84:  // T
                 controls.getObject().position.set(460, 8, -945);
@@ -3835,11 +4086,11 @@ function initAliens() {
     alien6 = new Alien();
     alien7 = new Alien();
     alien8 = new Alien();
-    alien9 = new Alien();
-    alien10 = new Alien();
-    alien11 = new Alien();
-    alien12 = new Alien();
-    alien13 = new Alien();
+    // alien9 = new Alien();
+    // alien10 = new Alien();
+    // alien11 = new Alien();
+    // alien12 = new Alien();
+    // alien13 = new Alien();
 
     loadModel("models/characters/enemy/alien.mintexture.glb", "alien");
 }
@@ -3876,23 +4127,73 @@ function initHealthPacks(gltf) {
     healthPackOne.scale.set(0.5, 0.5, 0.5);
     let healthPackTwo = healthPackOne.clone();
     let healthPackThree = healthPackOne.clone();
+    let healthPackFour = healthPackOne.clone();
+    let healthPackFive = healthPackOne.clone();
+    let healthPackSix = healthPackOne.clone();
+    let healthPackSeven = healthPackOne.clone();
+    let healthPackEight = healthPackOne.clone();
 
-    healthPackOne.position.set(-245, 1, -1050);
+    let superHealthPack = healthPackOne.clone();
+    superHealthPack.geometry = healthPackOne.geometry.clone();
+    superHealthPack.material = healthPackOne.material.clone();
+
+    healthPackOne.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
+    healthPackOne.position.set(-245, Math.random() * 1.5 + 1.25, -1050); // Random height between 1.25 and 2.75
     healthPackOne.rotation.y = Math.random() * 2*Math.PI;
 
-    healthPackTwo.position.set(-240, 1, -1050);
+    healthPackTwo.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
+    healthPackTwo.position.set(-240, Math.random() * 1.5 + 1.25, -1050);
     healthPackTwo.rotation.y = Math.random() * 2*Math.PI;
 
-    healthPackThree.position.set(-235, 1, -1050);
+    healthPackThree.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
+    healthPackThree.position.set(-235, Math.random() * 1.5 + 1.25, -1050);
     healthPackThree.rotation.y = Math.random() * 2*Math.PI;
+
+    healthPackFour.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
+    healthPackFour.position.set(240, Math.random() * 1.5 + 1.25, -525);
+    healthPackFour.rotation.y = Math.random() * 2*Math.PI;
+    
+    healthPackFive.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
+    healthPackFive.position.set(360, Math.random() * 1.5 + 1.25, -265);
+    healthPackFive.rotation.y = Math.random() * 2*Math.PI;
+
+    healthPackSix.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
+    healthPackSix.position.set(360, Math.random() * 1.5 + 1.25, -115);
+    healthPackSix.rotation.y = Math.random() * 2*Math.PI;
+
+    healthPackSeven.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
+    healthPackSeven.position.set(600, Math.random() * 1.5 + 1.25, -265);
+    healthPackSeven.rotation.y = Math.random() * 2*Math.PI;
+
+    healthPackEight.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
+    healthPackEight.position.set(600, Math.random() * 1.5 + 1.25, -115);
+    healthPackEight.rotation.y = Math.random() * 2*Math.PI;
+
+    superHealthPack.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
+    superHealthPack.scale.set(1, 1, 1);
+    superHealthPack.position.set(480, Math.random() * 3 + 2.5, -70); // Random height between 2.5 and 5.5
+    superHealthPack.rotation.y = Math.random() * 2*Math.PI;
+    superHealthPack.material.color.setHex(0x21ad0a);
 
     healthPackCollidableMeshList.push(healthPackOne);
     healthPackCollidableMeshList.push(healthPackTwo);
     healthPackCollidableMeshList.push(healthPackThree);
+    healthPackCollidableMeshList.push(healthPackFour);
+    healthPackCollidableMeshList.push(healthPackFive);
+    healthPackCollidableMeshList.push(healthPackSix);
+    healthPackCollidableMeshList.push(healthPackSeven);
+    healthPackCollidableMeshList.push(healthPackEight);
+    healthPackCollidableMeshList.push(superHealthPack);
     
     scene.add(healthPackOne);
     scene.add(healthPackTwo);
     scene.add(healthPackThree);
+    scene.add(healthPackFour);
+    scene.add(healthPackFive);
+    scene.add(healthPackSix);
+    scene.add(healthPackSeven);
+    scene.add(healthPackEight);
+    scene.add(superHealthPack);
 }
 
 function createPlayerBullet() {
@@ -3918,7 +4219,7 @@ function createPlayerBullet() {
 
     let raycaster = new THREE.Raycaster(origin, direction.normalize());
 
-    player.weapon.bullets.push({bullet: singleBullet, raycaster: raycaster, lastPosition: lastPosition, originalPosition: originalPosition});
+    player.weapon.bullets.push({bullet: singleBullet, raycaster: raycaster, lastPosition: lastPosition, originalPosition: originalPosition, box: currentBox});
     scene.add(singleBullet);
     audioCollection.weapon.play();
     player.weapon.cooldown = 50;
@@ -3971,7 +4272,7 @@ function initAudio() {
     loadAudio("audio/items/paper.wav", "paper");
     loadAudio("audio/character/jump_boost.wav", "jump_boost");
     loadAudio("audio/environment/level_one/totem_select.wav", "totem_select");
-    loadAudio("audio/environment/level_one/wrong_totem_order.wav", "wrong_totem_order");
+    loadAudio("audio/character/wrong_move.wav", "wrong_move");
     loadAudio("audio/environment/level_one/correct_totem_order.wav", "correct_totem_order");
     loadAudio("audio/environment/level_one/rock_sink.wav", "rock_sink");
     loadAudio("audio/environment/level_one/rock_slide.wav", "rock_slide");

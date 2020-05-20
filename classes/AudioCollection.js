@@ -9,7 +9,7 @@ class AudioCollection {
         this._jumpboost;
         this._paper;
         this._totemSelect;
-        this._wrongTotemOrder;
+        this._wrongMove;
         this._correctTotemOrder;
         this._rockSink;
         this._rockSlide;
@@ -84,12 +84,12 @@ class AudioCollection {
         this._totemSelect = audio;
     }
 
-    get wrongTotemOrder() {
-        return this._wrongTotemOrder
+    get wrongMove() {
+        return this._wrongMove;
     }
 
-    set wrongTotemOrder(audio) {
-        this._wrongTotemOrder = audio;
+    set wrongMove(audio) {
+        this._wrongMove = audio;
     }
 
     get correctTotemOrder() {
