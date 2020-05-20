@@ -18,9 +18,9 @@ class Alien {
         this._walkBackwardsAnim = undefined;
         this._deathAnim = undefined;        
         this._shootAnim = undefined;
-        this._inRangeofPlayer = false;
         this._weapon = {bulletStart: undefined, bullets: [], cooldown: 0};
         this._canShoot = {level: undefined, box: undefined};
+        this._range = 250;
         this._movement = {distanceMoved: 0, leftOrRight: undefined, moveOrRemain: undefined, boundary: undefined};
     }
 
@@ -109,6 +109,10 @@ class Alien {
         return this._canShoot;
     }
 
+    get range() {
+        return this._range;
+    }
+
     get movement() {
         return this._movement;
     }
@@ -158,6 +162,10 @@ class Alien {
 
     set hitbox(hitbox) {
         this._hitbox = hitbox;
+    }
+
+    set range(range) {
+        this._range = range;
     }
 
     set currentAnimation(animation) {
