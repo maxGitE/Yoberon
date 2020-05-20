@@ -2274,6 +2274,7 @@ function levelThreeBoundingBox() {
     }
     else if(xPos > boxThreeLeft && xPos < boxThreeRight && zPos < boxThreeBottom && zPos > boxThreeTop) {
         setBox(3, 3);
+        handleHealthPacks();
     }
     else if(xPos > boxFourLeft && xPos < boxFourRight && zPos < boxFourBottom && zPos > boxFourTop) {
         setBox(4, 3);
@@ -2463,6 +2464,7 @@ function levelFourBoundingBox() {
     if(xPos > boxOneLeft && xPos < boxOneRight && zPos < boxOneBottom && zPos > boxOneTop) {
         setBox(1, 4);
         setCheckPoint();
+        handleHealthPacks();
     }
 
     if(boxArr[1]) { // In box one
@@ -2481,6 +2483,21 @@ function levelFourBoundingBox() {
     }
 }
 
+/**
+ * Called when a bullet should be removed from the scene.
+ * Disposes of the bullet's geometry and material.
+ * @param {*} entity Player or alien whose bullet is being removed from the scene.
+ * @param {bullet} bullet Bullet to be removed.
+ * @param {number} index The index of the bullet in the entity's bullets array.
+ */
+function removeBullet(entity, bullet, index) {
+    bullet.geometry.dispose();
+    bullet.material.dispose();
+    renderer.renderLists.dispose();
+    scene.remove(bullet); // Remove the bullet from the scene
+    entity.weapon.bullets.splice(index, 1); // Remove the bullet from the array
+}
+
 function updateBullets() {
     // if(player.weapon.bullets.length > 5) {
     //     scene.remove(player.weapon.bullets[0].bullet);
@@ -2489,12 +2506,8 @@ function updateBullets() {
     
     player.weapon.bullets.forEach((item, index) => {
 
-        if(item.originalPosition.distanceTo(item.bullet.position) > 200) { // Restrict the bullet from travelling past 200 units
-            item.bullet.geometry.dispose();
-            item.bullet.material.dispose();
-            scene.remove(item.bullet); // Remove the bullet from the scene
-            player.weapon.bullets.splice(index, 1); // Remove the bullet from the array
-            renderer.renderLists.dispose();
+        if(item.originalPosition.distanceTo(item.bullet.position) > 250) { // Restrict the bullet from travelling past 250 units
+            removeBullet(player, item.bullet, index);
             return; // Iterate to the next bullet
         }
 
@@ -2517,33 +2530,64 @@ function updateBullets() {
             let distance_two = distance_twoVec.length();
 
             if(distance_one <= distance_two) {
-                audioCollection.hitmarker.play();
-
+               
                 if(intersect.object.parent.parent.name != null) {
                     switch(intersect.object.parent.parent.name) { // The name of the model that the hitbox mesh is attached to
                         case "alien1":
-                            damageAlien(alien1, intersect);
+                            if(item.box >= alien1.canShoot.box) { // Only allow the player's bullet to deal damage if the player is in the same bounding box as the alien
+                                audioCollection.hitmarker.play();
+                                damageAlien(alien1, intersect);
+                                removeBullet(player, item.bullet, index); // Remove the bullet from the scene after hitting an alien
+                            }
                             break;
                         case "alien2":
-                            damageAlien(alien2, intersect);
+                            if(item.box >= alien2.canShoot.box) {
+                                audioCollection.hitmarker.play();
+                                damageAlien(alien2, intersect);
+                                removeBullet(player, item.bullet, index);
+                            }
                             break;
                         case "alien3":
-                            damageAlien(alien3, intersect);
+                            if(item.box >= alien3.canShoot.box) {
+                                audioCollection.hitmarker.play();
+                                damageAlien(alien3, intersect);
+                                removeBullet(player, item.bullet, index);
+                            }
                             break;
                         case "alien4":
-                            damageAlien(alien4, intersect);
+                            if(item.box >= alien4.canShoot.box) {
+                                audioCollection.hitmarker.play();
+                                damageAlien(alien4, intersect);
+                                removeBullet(player, item.bullet, index);
+                            }
                             break;
                         case "alien5":
-                            damageAlien(alien5, intersect);
+                            if(item.box >= alien5.canShoot.box) {
+                                audioCollection.hitmarker.play();
+                                damageAlien(alien5, intersect);
+                                removeBullet(player, item.bullet, index);
+                            }
                             break;
                         case "alien6":
-                            damageAlien(alien6, intersect);
+                            if(item.box >= alien6.canShoot.box) {
+                                audioCollection.hitmarker.play();
+                                damageAlien(alien6, intersect);
+                                removeBullet(player, item.bullet, index);
+                            }
                             break;
                         case "alien7":
-                            damageAlien(alien7, intersect);
+                            if(item.box >= alien7.canShoot.box) {
+                                audioCollection.hitmarker.play();
+                                damageAlien(alien7, intersect);
+                                removeBullet(player, item.bullet, index);
+                            }
                             break;
                         case "alien8":
-                            damageAlien(alien8, intersect);
+                            if(item.box >= alien8.canShoot.box) {
+                                audioCollection.hitmarker.play();
+                                damageAlien(alien8, intersect);
+                                removeBullet(player, item.bullet, index);
+                            }
                             break;
                         // case "alien9":
                         //     damageAlien(alien9, intersect);
@@ -2598,13 +2642,8 @@ function updateAlienBullet(alien) {
 
     alien.weapon.bullets.forEach((item, index) => {
 
-        if(item.originalPosition.distanceTo(item.bullet.position) > 200) { // Restrict the bullet from travelling past 200 units
-            item.bullet.geometry.dispose();
-            item.bullet.material.dispose();
-            scene.remove(item.bullet); // Remove the bullet from the scene
-            alien.weapon.bullets.splice(index, 1); // Remove the bullet from the array
-            renderer.renderLists.dispose();
-
+        if(item.originalPosition.distanceTo(item.bullet.position) > 250) { // Restrict the bullet from travelling past 250 units
+            removeBullet(alien, item.bullet, index);
             return; // Iterate to the next bullet
         }
 
@@ -2625,6 +2664,7 @@ function updateAlienBullet(alien) {
             let distance_two = distance_twoVec.length();
 
             if(distance_one <= distance_two) { // Alien bullet hit player
+
                 if(audioCollection.playerInjured.isPlaying) {
                     audioCollection.playerInjured.stop();
                 }
@@ -2638,6 +2678,9 @@ function updateAlienBullet(alien) {
                     playerDeath.style.visibility = "visible";
                     setTimeout(() => audioCollection.deathAudio.play(), 500);
                     controls.unlock();
+                }
+                else {
+                    removeBullet(alien, item.bullet, index); // Remove alien's bullet from the scene
                 }
                 updatePlayerHealth();
             }
@@ -2930,6 +2973,7 @@ function updateAlienAnimation(alien, newAnimation) {
 /**
  * Called when the player is in an area with health packs.
  * Handles the raycasting logic to allow them to pick up the health packs and regenerate health.
+ * This function must be called in a bounding box check.
  */
 function handleHealthPacks() {
     let cameraDirection = new THREE.Vector3();
@@ -2949,6 +2993,10 @@ function handleHealthPacks() {
     }
 }
 
+/**
+ * Called when the player interacts with a health pack.
+ * If the player has less than 100HP, they are healed for 25HP and the health pack is removed from the scene.
+ */
 function healthPackPickup() {
     if(player.currentHealth == 100) {
         audioCollection.wrongMove.play(); 
@@ -2960,13 +3008,17 @@ function healthPackPickup() {
     healthPackCollidableMeshList.splice(indexOfHealthPack, 1);
     scene.remove(selectedHealthPack.object);
 
-    if(player.currentHealth < 100) {
+    if(selectedHealthPack.object.material.color.g == 0) { // Regular health pack
+        console.log("picked up health pack");
         player.currentHealth += 25;
         if(player.currentHealth > 100) {
             player.currentHealth = 100;
         }
-        updatePlayerHealth();
     }
+    else { // Super health pack
+        player.currentHealth = 100;
+    }
+    updatePlayerHealth();
 
     if(audioCollection.healthRefill.isPlaying) {
         audioCollection.healthRefill.stop();
@@ -2974,17 +3026,33 @@ function healthPackPickup() {
     audioCollection.healthRefill.play();
 }
 
+/**
+ * Called every game loop.
+ * Handles the animation of the health packs in the scene.
+ */
 function updateHealthPackAnimation() {
     healthPackCollidableMeshList.forEach(healthPack => {
-        if(healthPack.position.y <= 1.25 || healthPack.position.y >= 2.75) {
-            if(healthPack.direction == "down") {
-                healthPack.direction = "up";
-            }
-            else {
-                healthPack.direction = "down";
+        if(healthPack.material.color.g == 0) { // Regular health pack
+            if(healthPack.position.y <= 1.25 || healthPack.position.y >= 2.75) {
+                if(healthPack.direction == "down") {
+                    healthPack.direction = "up";
+                }
+                else {
+                    healthPack.direction = "down";
+                }
             }
         }
-
+        else { // Super health pack
+            if(healthPack.position.y <= 2.5 || healthPack.position.y >= 5.5) {
+                if(healthPack.direction == "down") {
+                    healthPack.direction = "up";
+                }
+                else {
+                    healthPack.direction = "down";
+                }
+            }
+        }
+       
         if(healthPack.direction == "down") {
             healthPack.position.y -= 0.01;
         }
@@ -3374,7 +3442,7 @@ function restartCheckpoint() {
             break;
         case 2:
             controls.getObject().position.set(0, 8, -720);
-            camera.lookAt(0, 8, -1);
+            camera.lookAt(0, 8, -720);
             respawnAliens();
             break;
         case 3:
@@ -3464,25 +3532,21 @@ function spawnLevelFourAliens() {
                         alienArray[i].model.position.set(340, 0, -330);
                         alienArray[i].canShoot.level = 4;
                         alienArray[i].canShoot.box = 1;
-                        alienArray[i].range = 300;
                         break;
                     case 1: 
                         alienArray[i].model.position.set(620, 0, -330);
                         alienArray[i].canShoot.level = 4;
                         alienArray[i].canShoot.box = 1;
-                        alienArray[i].range = 300;
                         break;
                     case 2:
                         alienArray[i].model.position.set(340, 0, -50); 
                         alienArray[i].canShoot.level = 4;
                         alienArray[i].canShoot.box = 1;
-                        alienArray[i].range = 300;
                         break;
                     case 3: 
                         alienArray[i].model.position.set(620, 0, -50);
                         alienArray[i].canShoot.level = 4;
                         alienArray[i].canShoot.box = 1;
-                        alienArray[i].range = 300;
                         break;
                 }
             }
@@ -3643,7 +3707,7 @@ function initControls() {
             puzzleBlock.style.display = "block";
         }
         else {
-            setTimeout(() => deathBlock.style.display = "block", 5000);
+            setTimeout(() => deathBlock.style.display = "block", 3000);
         }
     }
 
@@ -3964,9 +4028,18 @@ function initHealthPacks(gltf) {
     healthPackOne.scale.set(0.5, 0.5, 0.5);
     let healthPackTwo = healthPackOne.clone();
     let healthPackThree = healthPackOne.clone();
+    let healthPackFour = healthPackOne.clone();
+    let healthPackFive = healthPackOne.clone();
+    let healthPackSix = healthPackOne.clone();
+    let healthPackSeven = healthPackOne.clone();
+    let healthPackEight = healthPackOne.clone();
+
+    let superHealthPack = healthPackOne.clone();
+    superHealthPack.geometry = healthPackOne.geometry.clone();
+    superHealthPack.material = healthPackOne.material.clone();
 
     healthPackOne.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
-    healthPackOne.position.set(-245, Math.random() * 1.5 + 1.25, -1050);
+    healthPackOne.position.set(-245, Math.random() * 1.5 + 1.25, -1050); // Random height between 1.25 and 2.75
     healthPackOne.rotation.y = Math.random() * 2*Math.PI;
 
     healthPackTwo.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
@@ -3977,13 +4050,51 @@ function initHealthPacks(gltf) {
     healthPackThree.position.set(-235, Math.random() * 1.5 + 1.25, -1050);
     healthPackThree.rotation.y = Math.random() * 2*Math.PI;
 
+    healthPackFour.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
+    healthPackFour.position.set(240, Math.random() * 1.5 + 1.25, -525);
+    healthPackFour.rotation.y = Math.random() * 2*Math.PI;
+    
+    healthPackFive.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
+    healthPackFive.position.set(360, Math.random() * 1.5 + 1.25, -265);
+    healthPackFive.rotation.y = Math.random() * 2*Math.PI;
+
+    healthPackSix.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
+    healthPackSix.position.set(360, Math.random() * 1.5 + 1.25, -115);
+    healthPackSix.rotation.y = Math.random() * 2*Math.PI;
+
+    healthPackSeven.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
+    healthPackSeven.position.set(600, Math.random() * 1.5 + 1.25, -265);
+    healthPackSeven.rotation.y = Math.random() * 2*Math.PI;
+
+    healthPackEight.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
+    healthPackEight.position.set(600, Math.random() * 1.5 + 1.25, -115);
+    healthPackEight.rotation.y = Math.random() * 2*Math.PI;
+
+    superHealthPack.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
+    superHealthPack.scale.set(1, 1, 1);
+    superHealthPack.position.set(480, Math.random() * 3 + 2.5, -70); // Random height between 2.5 and 5.5
+    superHealthPack.rotation.y = Math.random() * 2*Math.PI;
+    superHealthPack.material.color.setHex(0x21ad0a);
+
     healthPackCollidableMeshList.push(healthPackOne);
     healthPackCollidableMeshList.push(healthPackTwo);
     healthPackCollidableMeshList.push(healthPackThree);
+    healthPackCollidableMeshList.push(healthPackFour);
+    healthPackCollidableMeshList.push(healthPackFive);
+    healthPackCollidableMeshList.push(healthPackSix);
+    healthPackCollidableMeshList.push(healthPackSeven);
+    healthPackCollidableMeshList.push(healthPackEight);
+    healthPackCollidableMeshList.push(superHealthPack);
     
     scene.add(healthPackOne);
     scene.add(healthPackTwo);
     scene.add(healthPackThree);
+    scene.add(healthPackFour);
+    scene.add(healthPackFive);
+    scene.add(healthPackSix);
+    scene.add(healthPackSeven);
+    scene.add(healthPackEight);
+    scene.add(superHealthPack);
 }
 
 function createPlayerBullet() {
@@ -4009,7 +4120,7 @@ function createPlayerBullet() {
 
     let raycaster = new THREE.Raycaster(origin, direction.normalize());
 
-    player.weapon.bullets.push({bullet: singleBullet, raycaster: raycaster, lastPosition: lastPosition, originalPosition: originalPosition});
+    player.weapon.bullets.push({bullet: singleBullet, raycaster: raycaster, lastPosition: lastPosition, originalPosition: originalPosition, box: currentBox});
     scene.add(singleBullet);
     audioCollection.weapon.play();
     player.weapon.cooldown = 50;
