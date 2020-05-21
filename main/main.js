@@ -74,7 +74,7 @@ let currentLevel = 1;
 let xPos;
 let zPos;
 
-/** ALIEN */
+/** ENEMIES */
 let alienArray = [];
 let alien1;
 let alien2;
@@ -84,6 +84,7 @@ let alien5;
 let alien6;
 let alien7;
 let alien8;
+let boss;
 
 /** BOUNTY HUNTER */
 let bountyArray = [];
@@ -998,6 +999,11 @@ function initAlienModels(gltf) {
     instantiateUnits(gltf, alienArray, "Alien_(Armature)");  
 }
 
+function initBossModel(gltf) {
+    boss = gltf.scene;
+    scene.add(boss);
+}
+
 function initBountyHunterModels(gltf) {
     bountyHunter1.setPosition(-10, 0, -15);
     bountyHunter1.setRotation(0, Math.PI, 0);
@@ -1656,8 +1662,6 @@ function drawGround() {
                                     }));
     ground.rotation.x = -Math.PI/2;
     ground.position.set(0, 0, -350);
-    ground.castShadow = false;
-    ground.receiveShadow = true;
     scene.add(ground);
 }
 
@@ -1696,10 +1700,10 @@ function drawTotems() {
     totemThree = new THREE.Mesh(totemGeometry, totemThreeMaterial);
     totemFour = new THREE.Mesh(totemGeometry, totemFourMaterial);
 
-    totemOne.castShadow = true;
-    totemTwo.castShadow = true;
-    totemThree.castShadow = true;
-    totemFour.castShadow = true;
+    // totemOne.castShadow = true;
+    // totemTwo.castShadow = true;
+    // totemThree.castShadow = true;
+    // totemFour.castShadow = true;
 
     totemOne.position.set(-16.5, 6, 0);
     totemTwo.position.set(-5.5, 6, 0);
@@ -3167,6 +3171,9 @@ function loadModel(url, key) {
             case "alien":
                 initAlienModels(gltf);
                 break;
+            case "boss":
+                initBossModel(gltf);
+                break;
             case "bounty_hunter":
                 initBountyHunterModels(gltf);
                 break;
@@ -3738,10 +3745,8 @@ function initLights() {
     ambientLight = new THREE.AmbientLight("white", 0.15);
     scene.add(ambientLight);
 
-    pointLight = new THREE.PointLight("white", 1.5);
+    pointLight = new THREE.PointLight("white", 2);
     pointLight.distance = 40;
-    pointLight.castShadow = true;
-    pointLight.shadow.bias = 0.005;
     camera.add(pointLight);
     camera.children[1].position.y = 5; // Lower the point light from 8 to 5
 
@@ -4095,6 +4100,10 @@ function initAliens() {
     loadModel("models/characters/enemy/alien.mintexture.glb", "alien");
 }
 
+function initBoss() {
+    loadModel("models/characters/enemy/boss.glb", "boss");
+}
+
 function initBountyHunter() {
     bountyHunter1 = new BountyHunter();
     bountyHunter2 = new BountyHunter();
@@ -4336,6 +4345,7 @@ function init() {
     initSkybox();
     initPlayer();
     initAliens();
+    initBoss();
     initBountyHunter();
     initWeaponModel();
     initAudio();
