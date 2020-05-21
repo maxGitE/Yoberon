@@ -1562,7 +1562,7 @@ function initBushTwo(gltf) {
 }
 
 function initBushThree(gltf) {
-    let bush = gltf.scene;    
+    let bush = gltf.scene;   
     let leafGeometry = bush.children[0].children[2].geometry;
     let leafMaterial = bush.children[0].children[2].material;
 
@@ -4099,7 +4099,7 @@ function initBountyHunter() {
     bountyHunter1 = new BountyHunter();
     bountyHunter2 = new BountyHunter();
     bountyHunter3 = new BountyHunter();
-    loadModel("models/characters/bounty hunter/bounty_hunter.glb", "bounty_hunter");
+    loadModel("models/characters/bountyhunter/bounty_hunter.glb", "bounty_hunter");
 }
 
 function initWeaponModel() {
