@@ -25,6 +25,20 @@ class Hitbox {
                 this._mesh.add(this._head);
 
                 break;
+
+            case "boss":
+                this._body = new THREE.Mesh(new THREE.CylinderBufferGeometry(0.5, 0.7, 3.25), new THREE.MeshBasicMaterial( {transparent: true, opacity: 0} ));
+                // this._head = new THREE.Mesh(new THREE.SphereBufferGeometry(0.1, 8, 6, 0, 2*Math.PI, 0, Math.PI/2), new THREE.MeshBasicMaterial( {transparent: true, opacity: 0.5} ));
+                // this._head.position.set(0, 1.3, 0.5);
+                // this._head.rotation.x = Math.PI/2;
+
+                this._body.name = "body";
+                // this._head.name = "head";
+
+                this._mesh.add(this._body);
+                // this._mesh.add(this._head);
+
+                break;
         }
     }
 

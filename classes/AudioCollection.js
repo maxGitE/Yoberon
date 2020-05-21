@@ -18,6 +18,11 @@ class AudioCollection {
         this._playerDeath;
         this._deathAudio;
         this._healthRefill;
+        this._bossRoar;
+        this._bossFightMusic;
+        this._bossAttack;
+        this._bossFootstep;
+        this._bossDeath;
     }
 
     get wildlife() {
@@ -166,5 +171,45 @@ class AudioCollection {
 
     set healthRefill(audio) {
         this._healthRefill = audio;
+    } 
+
+    get bossRoar() {
+        return this._bossRoar;
+    }
+
+    set bossRoar(audio) {
+        this._bossRoar = audio;
+    }   
+
+    get bossFightMusic() {
+        return this._bossFightMusic;
+    }
+
+    set bossFightMusic(audio) {
+        this._bossFightMusic = audio;
+    }   
+
+    get bossAttack() {
+        return this._bossAttack;
+    }
+
+    set bossAttack(audio) {
+        this._bossAttack = audio;
+    }
+
+    get bossFootstep() {
+        return this._bossFootstep;
+    }
+
+    set bossFootstep(audio) {
+        this._bossFootstep = audio;
+    }   
+
+    get bossDeath() {
+        return this._bossDeath;
+    }
+
+    set bossDeath(audio) {
+        this._bossDeath = audio;
     }   
 }

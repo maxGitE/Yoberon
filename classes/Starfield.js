@@ -3,9 +3,9 @@ class Starfield {
         this._starVertices = [];
 
         for(let i = 0; i < 500; i++) {
-            let x = Math.random() * 2200 - 1000;
+            let x = Math.random() * 3000 - 1500;
             let y = Math.random() * 500 + 500;
-            let z = Math.random() * 2200 - 1000;
+            let z = Math.random() * 4000 - 2000;
 
             this._starVertices.push(x, y, z);
         }
