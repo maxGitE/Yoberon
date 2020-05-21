@@ -5,11 +5,11 @@ import Stats from 'https://cdn.rawgit.com/mrdoob/stats.js/master/src/Stats.js';
 let stats = new Stats();
 stats.showPanel(0);
 
-let rendererStats = new THREEx.RendererStats();
-rendererStats.domElement.style.position	= 'fixed'
-rendererStats.domElement.style.right = '0px'
-rendererStats.domElement.style.bottom = '0px'
-document.body.appendChild(rendererStats.domElement);
+// let rendererStats = new THREEx.RendererStats();
+// rendererStats.domElement.style.position	= 'fixed'
+// rendererStats.domElement.style.right = '0px'
+// rendererStats.domElement.style.bottom = '0px'
+// document.body.appendChild(rendererStats.domElement);
 
 const title = document.getElementById("title");
 const menuBlock = document.getElementById("menu");
@@ -55,6 +55,8 @@ let camera;
 let thirdPersonCamera;
 let birdsEyeViewCamera;
 let puzzleTwoCamera;
+let minimapCamera;
+let minimapToggle = false;
 let cameraType;
 
 /** LIGHTS */
@@ -229,6 +231,8 @@ function gameLoop() {
             if(player.movingBackward) {
                 player.velocityZ = player.velocityZ + 400 * clock.delta * player.runFactor;
             }
+
+            minimapCamera.position.set(camera.position.x, 0, camera.position.z);
 
             controls.moveRight(player.velocityX * clock.delta);
             controls.moveForward(-player.velocityZ * clock.delta); // Negate the value as moveForward() uses left-handed coordinates
@@ -2854,6 +2858,11 @@ function damageBoss() {
     crosshair.style.background = "url(hud/crosshairs/crosshair_hitmarker.svg)";
 
     if(boss.currentHealth <= 0) {
+        checkpoint.style.visibility = "visible";
+        setTimeout(() => {
+            checkpoint.style.visibility = "hidden";
+        }, 2000);
+        
         crosshair.style.filter = "brightness(0) saturate(100%) invert(11%) sepia(96%) saturate(6875%) hue-rotate(0deg) brightness(91%) contrast(126%)";
         boss.deathAnim.reset();
         updateBossAnimation(boss.deathAnim);
@@ -3668,8 +3677,10 @@ function restartCheckpoint() {
             camera.lookAt(480, 8, 1);
             if(boss.currentHealth > 0) {
                 bossHealth.style.visibility = "visible";
+                boss.model.position.set(480, 0, -90);
+                boss.currentHealth = 1000;
+                bossHealthBar.setAttribute("style", "width: 30%");
             }
-            // boss.model.position.set(480, 0, -90);
             spawnedLevelFourAliens = false;
             break;
     }
@@ -3917,6 +3928,7 @@ function initRenderer() {
         antialias: true
     } );
     // renderer.shadowMap.enabled = true;
+    renderer.autoClear = false;
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(canvas.width, canvas.height);
     renderer.outputEncoding = THREE.sRGBEncoding;
@@ -3933,11 +3945,11 @@ function initCameras() {
     camera.position.set(0, 8, 0);
     scene.add(camera);
 
+    cameraType = "fp";
+
     thirdPersonCamera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 1, 4000);
     thirdPersonCamera.position.set(camera.position.x, camera.position.y - 2, camera.position.z + 26);
     camera.add(thirdPersonCamera);
-
-    cameraType = "fp";
 
     birdsEyeViewCamera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 1, 4000);
     birdsEyeViewCamera.position.set(-15, 8, -20);
@@ -3945,6 +3957,13 @@ function initCameras() {
     scene.add(birdsEyeViewCamera);
 
     puzzleTwoCamera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 1, 4000);
+
+    minimapCamera = new THREE.OrthographicCamera(canvas.width / -2, canvas.width / 2, canvas.height / 2, canvas.height / -2, -100, 500); // Left, right, top, bottom, near, far 
+    minimapCamera.up = new THREE.Vector3(0, 0, -1);
+    minimapCamera.lookAt(new THREE.Vector3(0, -1, 0));
+    minimapCamera.zoom = 10;
+    minimapCamera.updateProjectionMatrix();
+    scene.add(minimapCamera);
 }
 
 function initLights() {
@@ -4194,6 +4213,9 @@ function initControls() {
                 if(!inPuzzleTwo || finishedPuzzleTwo || dancePlaying) return;
                 updatePlayerAnimation(player.gangnamStyle);
                 checkDance();
+                break;
+            case 77:    // M
+                minimapToggle = !minimapToggle;
                 break;
         }
     }
@@ -4561,16 +4583,29 @@ function initWorld() {
 
 function render() {
     stats.update();
-    rendererStats.update(renderer);
+    // rendererStats.update(renderer);
 
-    //let cameraToRender = cameraType == "fp" ? camera : thirdPersonCamera;
-    switch(cameraType) {
-        case "fp": renderer.render(scene, camera); break;
-        case "tp": renderer.render(scene, thirdPersonCamera); break;
-        case "bev": renderer.render(scene, birdsEyeViewCamera); break;
-        case "puzzleTwo": renderer.render(scene, puzzleTwoCamera); break;
+    renderer.setViewport(0, 0, canvas.width, canvas.height);
+    renderer.setScissor(0, 0, canvas.width, canvas.height);
+    renderer.setScissorTest(true);
+
+    renderer.render(scene, camera);
+
+    // let cameraToRender = cameraType == "fp" ? camera : thirdPersonCamera;
+    // switch(cameraType) {
+    //     case "fp": renderer.render(scene, camera); break;
+    //     case "tp": renderer.render(scene, thirdPersonCamera); break;
+    //     case "bev": renderer.render(scene, birdsEyeViewCamera); break;
+    //     case "puzzleTwo": renderer.render(scene, puzzleTwoCamera); break;
+    // }
+    // renderer.render(scene, cameraToRender);
+
+    if(minimapToggle) {
+        renderer.setViewport(canvas.width - canvas.width * 0.2 - 10, 10, canvas.width * 0.2, canvas.height * 0.3);
+        renderer.setScissor(canvas.width - canvas.width * 0.2 - 10, 10, canvas.width * 0.2, canvas.height * 0.3);
+        renderer.setScissorTest(true);
+        renderer.render(scene, minimapCamera);
     }
-    //renderer.render(scene, cameraToRender);
 }
 
 function init() {
