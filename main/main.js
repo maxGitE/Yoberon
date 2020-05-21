@@ -59,7 +59,7 @@ let cameraType;
 let ambientLight;
 let pointLight;
 let puzzleSpotLight;
-let alienSpotLight;
+let alienLight;
 
 /** AUDIO */
 let listener;
@@ -1105,12 +1105,12 @@ function instantiateUnits(gltf, units, meshName) {
                 units[i].movement.moveOrRemain = Math.floor(Math.random() * 2) == 0 ? "move" : "remain"; // Choose a random initial value of whether to move or remain in place
                 units[i].movement.leftOrRight = Math.floor(Math.random() * 2) == 0 ? "left" : "right"; // Choose a random initial direction to move
                 units[i].movement.boundary = Math.floor(Math.random() * 3) + 5; // Choose a random initial integer boundary factor between 5 and 8, i.e. max distance that the alien can move in a movement cycle
-                
-                // alienSpotLight.target = units[i].model;
-                // clonedScene.add(alienSpotLight);
-                let alienLight = alienSpotLight.clone();
-                units[i].model.add(alienLight);
-                units[i].model.children[12].position.set(units[i].position.x, units[i].position.y + 5, units[i].position.z);
+
+                /** Add a spotlight to each alien */
+                let clonedSpotLight = alienLight.clone();
+                clonedSpotLight.position.set(0, 2, 0);
+                // clonedSpotLight.target = units[i].model;
+                units[i].model.add(clonedSpotLight);
             }
 
             /** Play default animation */
@@ -2080,7 +2080,7 @@ function puzzleOneBoundingBox() {
  *  Handles bound checking for the second level.
  *  Called by updateLevel() if currentLevel = 2.
  */
-function levelTwoBoundingBox() {
+function levelTwoBoundingBox() { 
     if(boulder_one.position.y < 0) { // Move the rock back up to it's original position
         boulder_one.position.y += 0.02;
     }
@@ -3753,8 +3753,21 @@ function initLights() {
     puzzleSpotLight = new THREE.SpotLight("green", 0, 0, Math.PI/5, 0, 2);
     scene.add(puzzleSpotLight);
 
-    alienSpotLight = new THREE.PointLight("green", 1);
-    alienSpotLight.distance = 10;
+    /** Lights on the aliens */
+    alienLight = new THREE.PointLight("white", 1);
+    alienLight.distance = 30;
+    let geometry = new THREE.BoxGeometry( 1, 1, 1 );
+    let material = new THREE.MeshBasicMaterial();
+    // material.transparent = true;
+    // material.opacity = 0;
+    // let alienLightOneTarget = new THREE.Mesh(geometry, material);
+    // alienLightOneTarget.position.set(-160, 5, -940);
+    // scene.add(alienLightOneTarget);
+
+    // let alienLightOne = alienLight.clone();
+    // alienLightOne.position.set(-200, 20, -940);
+    // alienLightOne.target = alienLightOneTarget;
+    // scene.add(alienLightOne);
 }
 
 function initControls() {
@@ -3905,9 +3918,9 @@ function initControls() {
                 if(inPuzzleTwo && !finishedPuzzleTwo) return;
 
                 cameraType = "bev"; break;
-            case 84:  // R
-                controls.getObject().position.set(280, 8, -410);
-                currentLevel = 3;
+            case 82:  // R
+                controls.getObject().position.set(0, 0, -720);
+                currentLevel = 2;
                 break;
             case 84:  // T
                 controls.getObject().position.set(460, 8, -945);
@@ -4345,7 +4358,7 @@ function init() {
     initSkybox();
     initPlayer();
     initAliens();
-    initBoss();
+    // initBoss();
     initBountyHunter();
     initWeaponModel();
     initAudio();
