@@ -23,6 +23,8 @@ const health = document.getElementById("health");
 const healthbar = document.getElementById("healthbar");
 const healthbarTrailing = document.getElementById("healthbar-trailing");
 const healthNumber = document.getElementById("health-number");
+const bossHealth = document.getElementById("boss-health");
+const bossHealthBar = document.getElementById("boss-healthbar");
 const puzzleBlock = document.getElementById("puzzle-failed");
 const restartPuzzle = document.getElementById("restart-puzzle")
 const crosshair = document.getElementById("crosshair");
@@ -1020,7 +1022,6 @@ function initBossModel(gltf) {
     boss.model.add(boss.hitbox.mesh);
     boss.model.add(audioCollection.bossFootstep);
     boss.model.name = "boss";
-    scene.add(boss.model);
 
     bulletCollidableMeshList.push(boss.hitbox.mesh);
 
@@ -1059,7 +1060,7 @@ function initBossModel(gltf) {
     // boss.flexAnim.enabled = false;
     // boss.deathAnim.enabled = false;
 
-    boss.currentAnimation = player.idleAnim;
+    boss.currentAnimation = boss.idleAnim;
 }
 
 function initBountyHunterModels(gltf) {
@@ -2708,7 +2709,7 @@ function updateBullets() {
                             }
                             break;
                         case "boss": // Boss
-                            if(!bossFightStarted) return;
+                            if(!bossFightStarted) return; // Prevent player from shooting boss before combat is enabled
                             audioCollection.hitmarker.play();
                             damageBoss();
                             removeBullet(player, item.bullet, index);
@@ -2847,7 +2848,9 @@ function damageAlien(alien, intersect) {
 }
 
 function damageBoss() {
-    boss.currentHealth -= 100;
+    boss.currentHealth -= 35;
+    bossHealthBar.setAttribute("style", "width: " + boss.currentHealth / 33.33 + "%");
+
     crosshair.style.background = "url(hud/crosshairs/crosshair_hitmarker.svg)";
 
     if(boss.currentHealth <= 0) {
@@ -2859,6 +2862,7 @@ function damageBoss() {
         bulletCollidableMeshList.splice(indexOfCollidableMesh, 1);
         boss.model.remove(boss.hitbox.mesh);
         defeatedBoss = true;
+        bossHealth.style.visibility = "hidden";
     }
 
     setTimeout(() => {
@@ -3662,6 +3666,9 @@ function restartCheckpoint() {
         case 4:
             controls.getObject().position.set(480, 8, -335);
             camera.lookAt(480, 8, 1);
+            if(boss.currentHealth > 0) {
+                bossHealth.style.visibility = "visible";
+            }
             // boss.model.position.set(480, 0, -90);
             spawnedLevelFourAliens = false;
             break;
@@ -3823,6 +3830,7 @@ function bossFight() {
     if(inBossFightStartedTimeout) return;
 
     if(!playedRoarAudio) {
+        scene.add(boss.model);
         audioCollection.bossRoar.play();
         playedRoarAudio = true;
     }
@@ -3844,6 +3852,7 @@ function bossFight() {
             boss.movement.distanceMoved += 0.3;
         }
         else {
+            bossHealth.style.visibility = "visible";
             intro = false;
             boss.movement.distanceMoved = 0;
             startWaves = true;
@@ -3996,6 +4005,7 @@ function initControls() {
         audioCollection.wildlife.pause();
         health.style.visibility = "hidden";
         crosshair.style.visibility = "hidden";
+
         if(tooltipVisible) {
             tooltip.style.visibility = "hidden";
         }

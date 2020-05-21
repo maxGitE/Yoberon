@@ -245,6 +245,31 @@ button:active {
     /* background-color: seashell; */
 }
 
+#boss-health {
+    visibility: hidden;
+}
+
+#boss-healthbar-outline {
+    position: fixed;            
+    top: 2%;
+    left: 50%;
+    transform: translate(-50%, -2%);
+    width: 30.25%;
+    height: 3%;
+    border: 3px solid #2c7e7d;
+}
+
+#boss-healthbar {
+    position: fixed;            
+    top: 2.5%;
+    left: 50%;
+    transform: translate(-50%, -2.5%);
+    width: 30%;
+    height: 2.5%;
+    background-color: #19f5f2;
+    background-image: url("hud/textures/healthbar_trailing_texture.png");
+}
+
 #crosshair {
     position: fixed;
     top: 50.625%;
