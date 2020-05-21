@@ -4097,7 +4097,7 @@ function initAliens() {
     // alien12 = new Alien();
     // alien13 = new Alien();
 
-    loadModel("models/characters/enemy/alien.mintexture.glb", "alien");
+    loadModel("models/characters/enemy/alien.min.mintexture.glb", "alien");
 }
 
 function initBoss() {
