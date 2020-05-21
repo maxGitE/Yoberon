@@ -92,11 +92,15 @@ let bountyHunter1;
 let bountyHunter2;
 let bountyHunter3;
 
+/** SHIP */
+let ship;
+
 /** LOADERS */
 let textureLoader;
 let gltfLoader;
 let gltfLoader2;
 let audioLoader;
+let cubeTextureLoader;
 let loadingManager;
 
 /** ANIMATION */
@@ -111,7 +115,6 @@ let skyboxURLs = ["cubemap/space_one/px.png", "cubemap/space_one/nx.png",
 /** OBJECTS */
 let starFieldA;
 let starFieldB;
-let blockingTrees;
 
 /** PUZZLE 1 */
 let cameraDirectionLevelOne;
@@ -1106,11 +1109,10 @@ function instantiateUnits(gltf, units, meshName) {
                 units[i].movement.leftOrRight = Math.floor(Math.random() * 2) == 0 ? "left" : "right"; // Choose a random initial direction to move
                 units[i].movement.boundary = Math.floor(Math.random() * 3) + 5; // Choose a random initial integer boundary factor between 5 and 8, i.e. max distance that the alien can move in a movement cycle
 
-                /** Add a spotlight to each alien */
-                let clonedSpotLight = alienLight.clone();
-                clonedSpotLight.position.set(0, 2, 0);
-                // clonedSpotLight.target = units[i].model;
-                units[i].model.add(clonedSpotLight);
+                /** Add a light to each alien */
+                let clonedLight = alienLight.clone();
+                clonedLight.position.set(0, 2, 0);
+                units[i].model.add(clonedLight);
             }
 
             /** Play default animation */
@@ -1305,25 +1307,6 @@ function initBroadLeaf(gltf) {
     broadLeafGroup.add(broadleaf_four);
 
     scene.add(broadLeafGroup);
-}
-
-function initBlockingTree(gltf) {
-    let blockingTreeOne = gltf.scene;
-    let blockingTreeTwo = blockingTreeOne.clone();
-    let blockingTreeThree = blockingTreeOne.clone();
-
-    blockingTrees = new THREE.Object3D();
-
-    blockingTreeOne.position.set(-5, 0, 0);
-    blockingTreeTwo.position.set(0, 0, 0);
-    blockingTreeThree.position.set(5, 0, 0);
-
-    blockingTrees.add(blockingTreeOne);
-    blockingTrees.add(blockingTreeTwo);
-    blockingTrees.add(blockingTreeThree);
-
-    blockingTrees.position.set(0, 0, -10);
-    scene.add(blockingTrees);
 }
 
 function initRockOne(gltf) {
@@ -1639,7 +1622,6 @@ function initBushThree(gltf) {
 function drawTrees() {
     loadModel("models/environment/trees/pinetree.glb", "pinetree");
     loadModel("models/environment/trees/broadleaf.glb", "broadleaf");
-    loadModel("models/environment/trees/blocking_tree.glb", "blocking_tree");
 }
 
 function drawBushes() {
@@ -2208,9 +2190,6 @@ function levelTwoBoundingBox() {
             player.hasGun = false;
             droppedGun = true;
             audioCollection.gunCock.play();
-            
-            completedTooltip = false;
-            displayTooltip("No guns allowed passed this point.")
         }
 
         if(xPos < boxFiveLeft + boundaryFactor) { // Place left boundary
@@ -2221,7 +2200,6 @@ function levelTwoBoundingBox() {
         }
         if(zPos > boxFiveBottom) { // Change the level once the player leaves the box            
             currentLevel = 2.5;
-            hideTooltip();
         }
     }
 }
@@ -3180,6 +3158,9 @@ function loadModel(url, key) {
             case "weapon":
                 initWeapon(gltf);
                 break;
+            case "ship":
+                initShipModel(gltf);
+                break;
             case "healthpack":
                 initHealthPacks(gltf);
                 break;
@@ -3188,9 +3169,6 @@ function loadModel(url, key) {
                 break;
             case "broadleaf":
                 initBroadLeaf(gltf);
-                break;
-            case "blocking_tree":
-                initBlockingTree(gltf);
                 break;
             case "rock_one":
                 initRockOne(gltf);
@@ -3756,18 +3734,6 @@ function initLights() {
     /** Lights on the aliens */
     alienLight = new THREE.PointLight("white", 1);
     alienLight.distance = 30;
-    let geometry = new THREE.BoxGeometry( 1, 1, 1 );
-    let material = new THREE.MeshBasicMaterial();
-    // material.transparent = true;
-    // material.opacity = 0;
-    // let alienLightOneTarget = new THREE.Mesh(geometry, material);
-    // alienLightOneTarget.position.set(-160, 5, -940);
-    // scene.add(alienLightOneTarget);
-
-    // let alienLightOne = alienLight.clone();
-    // alienLightOne.position.set(-200, 20, -940);
-    // alienLightOne.target = alienLightOneTarget;
-    // scene.add(alienLightOne);
 }
 
 function initControls() {
@@ -4084,8 +4050,9 @@ function initLoadingManager() {
 function initLoaders() {
     textureLoader = new THREE.TextureLoader(loadingManager);
     gltfLoader = new GLTFLoader(loadingManager);
-    gltfLoader2 = new GLTFLoader();
+    gltfLoader2 = new GLTFLoader(); // Used for changing between models when the player gets a gun
     audioLoader = new THREE.AudioLoader(loadingManager);
+    cubeTextureLoader = new THREE.CubeTextureLoader(loadingManager);
 }
 
 function initPlayer() {
@@ -4115,6 +4082,33 @@ function initAliens() {
 
 function initBoss() {
     loadModel("models/characters/enemy/boss.glb", "boss");
+}
+
+function initShip() {
+    loadModel("models/ship/ship.glb", "ship");
+}
+
+function initShipModel(gltf) {
+    ship = gltf.scene;
+    ship.scale.set(7, 7, 7);
+    ship.position.set(480, 2, -20);
+    ship.children[0].children[2].material = new THREE.MeshBasicMaterial( {envMap: loadReflectiveTexture(skyboxURLs)} ); // Set the texture of the ship's visor to a map of the environment
+    scene.add(ship);
+}
+
+/** Loads reflective texture for use in environment mapping  */
+function loadReflectiveTexture(url) {
+    function callback(material) {
+        if(material) {
+            material.envMap = texture;
+            material.needsUpdate = true;
+        }
+    }
+    let texture = cubeTextureLoader.load(url, callback);
+    texture.anisotropy = renderer.capabilities.getMaxAnisotropy(); // Max reduction in texture blur at glancing angles
+    texture.encoding = THREE.sRGBEncoding;
+    texture.flipY = false;
+    return texture;
 }
 
 function initBountyHunter() {
@@ -4359,6 +4353,7 @@ function init() {
     initPlayer();
     initAliens();
     // initBoss();
+    initShip();
     initBountyHunter();
     initWeaponModel();
     initAudio();
