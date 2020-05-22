@@ -153,7 +153,8 @@ let levelOneCollidableMeshList = [];
 let removedLevelTwoAliens = false
 let inPuzzleTwo = false;
 let finishedPuzzleTwo = false;
-let inPosition = false;
+let inPositionX  = false;
+let inPositionZ = false;
 let droppedGun = false;
 let spotLightColour = 0;
 let chickenDanceCorrect = false;
@@ -215,10 +216,20 @@ function gameLoop() {
             player.velocityZ = player.velocityZ - player.velocityZ * 10 * clock.delta;
 
             if(player.movingLeft) {
-                player.velocityX = player.velocityX - 400 * clock.delta * player.runFactor;
+                if(inPuzzleTwo && !finishedPuzzleTwo) {
+                    player.velocityX = player.velocityX - 50 * clock.delta;
+                }
+                else {
+                    player.velocityX = player.velocityX - 400 * clock.delta * player.runFactor;
+                }
             }
             if(player.movingRight) {
-                player.velocityX = player.velocityX + 400 * clock.delta * player.runFactor;
+                if(inPuzzleTwo && !finishedPuzzleTwo) {
+                    player.velocityX = player.velocityX + 50 * clock.delta;
+                }
+                else {
+                    player.velocityX = player.velocityX + 400 * clock.delta * player.runFactor;
+                }
             }
             if(player.movingForward) {
                 if(inPuzzleTwo && !finishedPuzzleTwo) {
@@ -514,7 +525,7 @@ function showClue(name) {
 
 /********** LEVEL TWO START **********/
 function levelTwoPuzzle() {
-    // TODO: Visual queues for correct and incorrect songs
+    // TODO: Visual queues for correct and incorrect songs + chceck if player enters backwards
     if(!finishedPuzzleTwo) {
         inPuzzleTwo = true;
 
@@ -546,8 +557,28 @@ function levelTwoPuzzle() {
         cameraType = "puzzleTwo";
         audioCollection.wildlife.stop();
 
-        /** Move the player to the center of the box */
-        if(controls.getObject().position.z < -1020) {
+        /** Move the player to the center of the box in the x position after a timeout to account for lag when switching to new camera */
+        setTimeout(() => {
+            if(!inPositionX) {
+                if(xPos < 460) {
+                    player.movingRight = false;
+                    player.movingLeft = true;
+                }
+                else if(xPos > 460) {
+                    player.movingLeft = false;
+                    player.movingRight = true;
+                }
+    
+                if(Math.round(xPos) == 460) {            
+                    player.movingLeft = false;
+                    player.movingRight = false;
+                    inPositionX = true;
+                }
+            }
+        }, 2000);
+
+        /** Move the player to the center of the box in the z position */
+        if(zPos < -1020) {
             player.movingForward = true;
             updatePlayerAnimation(player.walkAnim);
 
@@ -556,15 +587,15 @@ function levelTwoPuzzle() {
                 pointLight.intensity -= 0.01;
             }
         }
-        else if(!inPosition) {
+        else if(!inPositionZ) {
             player.movingForward = false;
             updatePlayerAnimation(player.idleAnim);
-            inPosition = true;
+            inPositionZ = true;
             dancecontrols.style.visibility = "visible";
             pointLight.intensity = 0;
         }
 
-        if(inPosition) {        
+        if(inPositionX && inPositionZ) {        
             setTimeout(() => {            
                 if(!audioCollection.recordScratch.isPlaying && danceIncorrect < 2) { // Start the music after a short delay
                     playMusic(); 
@@ -832,6 +863,10 @@ function initDanceChecks() {
     }
 }
 
+/**
+ * Stops the song which is currently playing and sets the player back to idle animation.
+ * Called when controls are unlocked.
+ */
 function pauseSongs() {
     updatePlayerAnimation(player.idleAnim);
     dancePlaying = false;
@@ -1204,7 +1239,7 @@ function initPineTree(gltf) {
 
     let treeGeometry = pinetree.children[0].geometry;
     let treeMaterial = pinetree.children[0].material;
-    let numInstances = 3514;
+    let numInstances = 4173;
 
     let cluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, numInstances);
     let tempCluster = new THREE.Object3D();
@@ -1612,17 +1647,29 @@ function initPineTree(gltf) {
             }
             clusterZ = Math.random() * 340 - 360; // z positions between -20 and -360
         }
-        else if(i >= 3270 && i < 3510) { // Level four bottom
-            if(i < 3350) { // First row
+        else if(i >= 3270 && i < 3390) { // Level four bottom left
+            if(i < 3310) { // First row
                 clusterZ = Math.random() * 10 - 30; // z positions between -20 and -30
             }
-            else if(i >= 3350 && i < 3430) { // Second row
+            else if(i >= 3310 && i < 3350) { // Second row
                 clusterZ = Math.random() * 10 - 10; // z positions between 0 and -10
             }
             else { // Third row
                 clusterZ = Math.random() * 10 + 10; // z positions between 10 and 20
             }
-            clusterX = Math.random() * 340 + 310; // x positions between 310 and 650
+            clusterX = Math.random() * 140 + 310; // x positions between 310 and 450
+        }
+        else if(i >= 3390 && i < 3510) { // Level four bottom right
+            if(i < 3430) { // First row
+                clusterZ = Math.random() * 10 - 30; // z positions between -20 and -30
+            }
+            else if(i >= 3430 && i < 3470) { // Second row
+                clusterZ = Math.random() * 10 - 10; // z positions between 0 and -10
+            }
+            else { // Third row
+                clusterZ = Math.random() * 10 + 10; // z positions between 10 and 20
+            }
+            clusterX = Math.random() * 140 + 510; // x positions between 510 and 650
         }
         else if(i == 3510) { // Puzzle three entrance top ******* PUZZLE THREE EXTRA TREES START *******
             clusterX = 415;
@@ -1639,6 +1686,42 @@ function initPineTree(gltf) {
         else if(i == 3513) { // Puzzle three entrance bottom ******* PUZZLE THREE EXTRA TREES END *******
             clusterX = 415;
             clusterZ = -375;
+        }
+        else if(i > 3513 && i < 3753) { // Level 4 box two right
+            if(i < 3593) { // First row
+                clusterX = Math.random() * 10 + 530; // x positions between 530 and 540
+            }
+            else if(i >= 3593 && i < 3673) { // Second row
+                clusterX = Math.random() * 10 + 550; // x positions between 550 and 560
+            }
+            else { // Third row
+                clusterX = Math.random() * 10 + 570; // x positions between 570 and 580
+            }
+            clusterZ = Math.random() * 140 + 20; // z positions between 20 and 160
+        }
+        else if(i > 3753 && i < 3993) { // Level 4 box two left
+            if(i < 3883) { // First row
+                clusterX = Math.random() * 10 + 430; // x positions between 430 and 440
+            }
+            else if(i >= 3883 && i < 3913) { // Second row
+                clusterX = Math.random() * 10 + 410; // x positions between 410 and 420
+            }
+            else { // Third row
+                clusterX = Math.random() * 10 + 390; // x positions between 390 and 400
+            }
+            clusterZ = Math.random() * 140 + 20; // z positions between 20 and 160
+        }
+        else if(i >= 3993 && i < 4173) { // Level four box two bottom
+            if(i < 4053) { // First row
+                clusterZ = Math.random() * 10 + 150; // z positions between 150 and 160
+            }
+            else if(i >= 4053 && i < 4113) { // Second row
+                clusterZ = Math.random() * 10 + 170; // z positions between 170 and 180
+            }
+            else { // Third row
+                clusterZ = Math.random() * 10 + 190; // z positions between 190 and 200
+            }
+            clusterX = Math.random() * 80 + 440; // x positions between 440 and 520
         }
 
         scalingFactor = Math.random() * 0.3 + 0.7;
@@ -2934,6 +3017,11 @@ function levelFourBoundingBox() {
     let boxOneRight = 630;
     let boxOneTop = -340;
 
+    let boxTwoBottom = 140;
+    let boxTwoLeft = 440;
+    let boxTwoRight = 520;
+    let boxTwoTop = boxOneBottom;
+
     // Check which box the player is in at any point in time
     if(xPos > boxOneLeft && xPos < boxOneRight && zPos < boxOneBottom && zPos > boxOneTop) {
         setBox(1, 4);
@@ -2951,10 +3039,19 @@ function levelFourBoundingBox() {
             }
         }
     }
+    else if(xPos > boxTwoLeft && xPos < boxTwoRight && zPos < boxTwoBottom && zPos > boxTwoTop) {
+        setBox(2, 4);
+    }
 
     if(boxArr[1]) { // In box one
-        if(zPos > boxOneBottom - boundaryFactor) { // Place bottom boundary
-            controls.getObject().position.z = boxOneBottom - boundaryFactor;
+        if(zPos > boxOneBottom - boundaryFactor) { // Place bottom boundary (except at box two overlap if the boss is defeated)
+            if(bulletCollidableMeshList.length == 0 && defeatedBoss) {
+                if(xPos < (boxTwoLeft + 10) || xPos > (boxTwoRight - 10))
+                    controls.getObject().position.z = boxOneBottom - boundaryFactor;
+            }
+            else {
+                controls.getObject().position.z = boxOneBottom - boundaryFactor;
+            }
         }
         if(zPos < boxOneTop) { // Place top boundary
             controls.getObject().position.z = boxOneTop;
@@ -2964,6 +3061,17 @@ function levelFourBoundingBox() {
         }
         if(xPos > boxOneRight - boundaryFactor) { // Place right boundary
             controls.getObject().position.x = boxOneRight - boundaryFactor;
+        }
+    }
+    else if(boxArr[2]) { // In box two
+        if(zPos > boxTwoBottom - boundaryFactor) { // Place bottom boundary
+            controls.getObject().position.z = boxTwoBottom - boundaryFactor;
+        }
+        if(xPos < boxTwoLeft + boundaryFactor) { // Place left boundary
+            controls.getObject().position.x = boxTwoLeft + boundaryFactor;
+        }
+        if(xPos > boxTwoRight - boundaryFactor) { // Place right boundary
+            controls.getObject().position.x = boxTwoRight - boundaryFactor;
         }
     }
 }
@@ -4485,9 +4593,9 @@ function initControls() {
                 currentLevel = 2;
                 break;
             case 84:  // T
-                controls.getObject().position.set(460, 8, -935);
-                camera.lookAt(460, 8, -925);
-                currentLevel = 3;
+                controls.getObject().position.set(460, 8, -1080);
+                camera.lookAt(460, 8, -1070);
+                currentLevel = 2;
                 break;
             case 89:    // Y
                 currentLevel = 4;
@@ -4694,7 +4802,7 @@ function initShip() {
 function initShipModel(gltf) {
     ship = gltf.scene;
     ship.scale.set(7, 7, 7);
-    ship.position.set(480, 2, 40);
+    ship.position.set(485, 2, 100);
     ship.rotation.set(0, Math.PI/4, 0);
     ship.children[0].children[2].material = new THREE.MeshBasicMaterial( {envMap: loadReflectiveTexture(skyboxURLs)} ); // Set the texture of the ship's visor to a map of the environment
     scene.add(ship);
@@ -4939,15 +5047,15 @@ function render() {
     renderer.setScissor(0, 0, canvas.width, canvas.height);
     renderer.setScissorTest(true);
 
-    renderer.render(scene, camera);
+    // renderer.render(scene, camera);
 
     // let cameraToRender = cameraType == "fp" ? camera : thirdPersonCamera;
-    // switch(cameraType) {
-    //     case "fp": renderer.render(scene, camera); break;
-    //     case "tp": renderer.render(scene, thirdPersonCamera); break;
-    //     case "bev": renderer.render(scene, birdsEyeViewCamera); break;
-    //     case "puzzleTwo": renderer.render(scene, puzzleTwoCamera); break;
-    // }
+    switch(cameraType) {
+        case "fp": renderer.render(scene, camera); break;
+        case "tp": renderer.render(scene, thirdPersonCamera); break;
+        case "bev": renderer.render(scene, birdsEyeViewCamera); break;
+        case "puzzleTwo": renderer.render(scene, puzzleTwoCamera); break;
+    }
     // renderer.render(scene, cameraToRender);
 
     if(minimapToggle) {
