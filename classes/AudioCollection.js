@@ -23,6 +23,7 @@ class AudioCollection {
         this._bossAttack;
         this._bossFootstep;
         this._bossDeath;
+        this._treeFall;
     }
 
     get wildlife() {
@@ -212,4 +213,12 @@ class AudioCollection {
     set bossDeath(audio) {
         this._bossDeath = audio;
     }   
+
+    get treeFall() {
+        return this._treeFall;
+    }
+
+    set treeFall(audio) {
+        this._treeFall = audio;
+    } 
 }

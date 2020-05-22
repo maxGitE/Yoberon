@@ -4109,6 +4109,14 @@ function loadAudio(url, key) {
                 audioCollection.bossDeath.setVolume(0.6);
             });
             break;
+        case "tree_fall":
+            audioCollection.treeFall = new THREE.Audio(listener);
+            audioLoader.load(url, function(buffer) {
+                audioCollection.treeFall.setBuffer(buffer);
+                audioCollection.treeFall.setLoop(false);
+                audioCollection.treeFall.setVolume(0.6);
+            });
+            break;
     }
 }
 
@@ -5105,6 +5113,7 @@ function initAudio() {
     loadAudio("audio/boss/boss_attack.mp3", "boss_attack");
     loadAudio("audio/boss/boss_footstep.wav", "boss_footstep");
     loadAudio("audio/boss/boss_death.wav", "boss_death");
+    loadAudio("audio/environment/tree_fall.wav", "tree_fall");
 }
 
 function initWorld() {
