@@ -3080,7 +3080,7 @@ function levelFourBoundingBox() {
         else {
             if(bulletCollidableMeshList.length == 0) {
                 if(!playedTreeSinkAudio) {
-                    audioCollection.treeFall.play();
+                    setTimeout(() =>  audioCollection.treeFall.play(), 1500);
                     playedTreeSinkAudio = true;
                 }
                 // TODO: SHOW HEART
@@ -3364,7 +3364,7 @@ function damageAlien(alien, intersect) {
  * Plays the hitmarker audio and updates crosshair styling.
  */
 function damageBoss() {
-    boss.currentHealth -= 1000;
+    boss.currentHealth -= 35;
     bossHealthBar.setAttribute("style", "width: " + boss.currentHealth / 33.33 + "%");
 
     crosshair.style.background = "url(hud/crosshairs/crosshair_hitmarker.svg)";
