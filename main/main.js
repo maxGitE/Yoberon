@@ -201,10 +201,9 @@ let healthPackCollidableMeshList = [];
 let selectedHealthPack;
 let pickedUpHealthPacks = [];
 
-let interactableObject;
-
 /** TREES */
 let blockingTrees;
+let playedTreeSinkAudio = false;
 
 function gameLoop() {
 
@@ -1062,7 +1061,7 @@ function initBossModel(gltf) {
 
     boss.model.scale.set(20, 20, 20);
     boss.model.rotation.y = Math.PI;
-    boss.model.position.set(480, 0, -20);
+    boss.model.position.set(480, 0, 20);
     boss.model.add(boss.hitbox.mesh);
     boss.model.add(audioCollection.bossFootstep);
     boss.model.name = "boss";
@@ -3080,7 +3079,14 @@ function levelFourBoundingBox() {
         }
         else {
             if(bulletCollidableMeshList.length == 0) {
+                if(!playedTreeSinkAudio) {
+                    audioCollection.treeFall.play();
+                    playedTreeSinkAudio = true;
+                }
                 // TODO: SHOW HEART
+                if(blockingTrees.position.y > -100) {
+                    blockingTrees.position.y -= 0.1;
+                }
             }
         }
     }
@@ -3211,7 +3217,7 @@ function updateBullets() {
                             }
                             break;
                         case "boss": // Boss
-                            if(!bossFightStarted) return; // Prevent player from shooting boss before combat is enabled
+                            if(!bossFightStarted || intro) return; // Prevent player from shooting boss before combat is enabled
                             audioCollection.hitmarker.play();
                             damageBoss();
                             removeBullet(player, item.bullet, index);
@@ -3284,6 +3290,9 @@ function updateAlienBullet(alien) {
                 player.currentHealth -= 35;
                 
                 if(player.currentHealth <= 0) {
+                    if(audioCollection.bossFightMusic.isPlaying) {
+                        audioCollection.bossFightMusic.stop();
+                    }
                     player.currentHealth = 0;
                     audioCollection.playerDeath.play();
                     playerDeath.classList.add("fadein");
@@ -3355,12 +3364,13 @@ function damageAlien(alien, intersect) {
  * Plays the hitmarker audio and updates crosshair styling.
  */
 function damageBoss() {
-    boss.currentHealth -= 35;
+    boss.currentHealth -= 1000;
     bossHealthBar.setAttribute("style", "width: " + boss.currentHealth / 33.33 + "%");
 
     crosshair.style.background = "url(hud/crosshairs/crosshair_hitmarker.svg)";
 
     if(boss.currentHealth <= 0) {
+        audioCollection.bossFightMusic.stop();
         checkpoint.style.visibility = "visible"; // The player will only have to defeat the boss once
         setTimeout(() => {
             checkpoint.style.visibility = "hidden";
@@ -4128,7 +4138,7 @@ function loadAudio(url, key) {
             audioLoader.load(url, function(buffer) {
                 audioCollection.bossFightMusic.setBuffer(buffer);
                 audioCollection.bossFightMusic.setLoop(true);
-                audioCollection.bossFightMusic.setVolume(0.5);
+                audioCollection.bossFightMusic.setVolume(0.35);
             });
             break;
         case "boss_attack":
@@ -4162,7 +4172,7 @@ function loadAudio(url, key) {
             audioLoader.load(url, function(buffer) {
                 audioCollection.treeFall.setBuffer(buffer);
                 audioCollection.treeFall.setLoop(false);
-                audioCollection.treeFall.setVolume(0.6);
+                audioCollection.treeFall.setVolume(0.3);
             });
             break;
     }
@@ -4435,7 +4445,7 @@ function bossFight() {
         return;
     }
     else {
-        if(boss.movement.distanceMoved <= 70 && intro) {
+        if(boss.movement.distanceMoved <= 100 && intro) {
             boss.model.position.z -= 0.3;
             boss.movement.distanceMoved += 0.3;
         }
