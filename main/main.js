@@ -37,6 +37,7 @@ const dancecontrols = document.getElementById("dancecontrols");
 const playButton = document.getElementById("play");
 const loadingInfo = document.getElementById("loadinginfo");
 const loadingSymbol = document.getElementById("loadingsymbol");
+const endgame = document.getElementById("endgame");
 
 window.onload = menu;
 
@@ -3040,6 +3041,7 @@ function levelFourBoundingBox() {
     }
     else if(xPos > boxTwoLeft && xPos < boxTwoRight && zPos < boxTwoBottom && zPos > boxTwoTop) {
         setBox(2, 4);
+        handleShipInteraction();
     }
 
     if(boxArr[1]) { // In box one
@@ -3682,6 +3684,35 @@ function updateHealthPackAnimation() {
 
         healthPack.rotation.y += 0.01; // Rotate counterclockwise
     });
+}
+
+/**
+ * Called when the player has defeated the boss and walks into the final area.
+ * Handles the raycasting logic to allow them to enter their ship and finish the game.
+ */
+function handleShipInteraction() {
+    let cameraDirection = new THREE.Vector3();
+    cameraDirection.normalize();
+    controls.getDirection(cameraDirection);
+    let playerRaycaster = new THREE.Raycaster(controls.getObject().position, cameraDirection);
+
+    let intersects = playerRaycaster.intersectObjects([ship], true);
+
+    if(intersects.length > 0 && intersects[0].distance < 10) {
+        interact.style.visibility = "visible";
+        interactableObject = "ship";
+    }
+    else {
+        interact.style.visibility = "hidden";
+    }
+}
+
+function endGame() {
+    endgame.classList.add("fadein");
+    endgame.style.visibility = "visible";
+    setTimeout(() => {
+        location.reload();
+    }, 6000)
 }
 
 /**
@@ -4633,8 +4664,8 @@ function initControls() {
                 break;
             case 89:    // Y
                 currentLevel = 4;
-                controls.getObject().position.set(480, 8, -100);
-                camera.lookAt(480, 8, -100);
+                controls.getObject().position.set(480, 8, 40);
+                camera.lookAt(480, 8, 40);
                 break;
             case 69:    // E
                 if(interact.style.visibility == "visible") {
@@ -4676,7 +4707,10 @@ function initControls() {
                             break;   
                         case "healthpack":
                             healthPackPickup();
-                            break;       
+                            break;    
+                        case "ship":
+                            endGame();
+                            break;   
                     }
                 }
                 break;
@@ -5114,7 +5148,7 @@ function render() {
 }
 
 function init() {
-    //menuAudioSource.stop();
+    menuAudioSource.stop();
     title.style.display = "none";
     menuBlock.style.display = "none";
     loadingSymbol.style.display = "block";
@@ -5148,7 +5182,7 @@ function initMenuAudio() {
             menuAudioSource.buffer = audioBuffer;
             menuAudioSource.connect(audioContext.destination);
             menuAudioSource.loop = true;
-           // menuAudioSource.start();
+            menuAudioSource.start();
         };
         audioContext.decodeAudioData(xmlhr.response).then(playsound);
     });
