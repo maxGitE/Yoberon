@@ -1,6 +1,6 @@
 class Boss {
     constructor() {
-        this._currentHealth = 300;
+        this._currentHealth = 1000;
         this._model = undefined;
         this._hitbox = undefined;
         this._currentAnimation = undefined;
