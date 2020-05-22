@@ -168,6 +168,14 @@ button:active {
     visibility: hidden;
 }
 
+#endgame {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    visibility: hidden;
+}
+
 #puzzle-failed {
     position: fixed;
     display: none;
