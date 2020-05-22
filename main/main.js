@@ -279,9 +279,6 @@ function gameLoop() {
             starFieldA.updateColour(0.0035);
             starFieldB.updateColour(0.0075);
 
-            // console.clear();
-            // console.log(camera.position.x, camera.position.y, camera.position.z); // save two previous positions?
-
             updateLevel();
             updateBullets(); // So anyway I started blasting
 
@@ -361,6 +358,7 @@ function gameLoop() {
     render();
 }
 
+/********** PUZZLE ONE START **********/
 function levelOnePuzzle() {
     if(!finishedPuzzleOne) {
         cameraDirectionLevelOne = new THREE.Vector3();
@@ -511,8 +509,9 @@ function showClue(name) {
 
     hideTooltip(); // Hide the tool tip once a clue has been found
 }
+/********** PUZZLE ONE END **********/
 
-/********** LEVEL TWO START **********/
+/********** PUZZLE TWO START **********/
 function levelTwoPuzzle() {
     // TODO: Visual queues for correct and incorrect songs
     if(!finishedPuzzleTwo) {
@@ -851,7 +850,7 @@ function pauseSongs() {
             break;
     }
 }
-/********** LEVEL TWO END **********/
+/********** PUZZLE TWO END **********/
 
 function initPlayerModel(gltf) {
     player.playerModel = gltf.scene;
@@ -2970,7 +2969,7 @@ function levelFourBoundingBox() {
 
 /**
  * Called when a bullet should be removed from the scene.
- * Disposes of the bullet's geometry and material.
+ * Disposes of the bullet's geometry and material and removes it from the entity's bullets array.
  * @param {*} entity Player or alien whose bullet is being removed from the scene.
  * @param {bullet} bullet Bullet to be removed.
  * @param {number} index The index of the bullet in the entity's bullets array.
@@ -2983,12 +2982,11 @@ function removeBullet(entity, bullet, index) {
     entity.weapon.bullets.splice(index, 1); // Remove the bullet from the array
 }
 
+/**
+ * Called every game loop.
+ * Updates the player's bullet positions and detects their intersections with enemies.
+ */
 function updateBullets() {
-    // if(player.weapon.bullets.length > 5) {
-    //     scene.remove(player.weapon.bullets[0].bullet);
-    //     player.weapon.bullets.shift();
-    // }
-    
     player.weapon.bullets.forEach((item, index) => {
 
         if(item.originalPosition.distanceTo(item.bullet.position) > 250) { // Restrict the bullet from travelling past 250 units
@@ -2996,11 +2994,8 @@ function updateBullets() {
             return; // Iterate to the next bullet
         }
 
-        item.bullet.translateZ(-300 * clock.delta);
+        item.bullet.translateZ(-300 * clock.delta); // Move the bullet away from the player
         item.bullet.getWorldPosition(item.raycaster.ray.origin); // Update the ray's new origin as the bullet's current position
-        // console.clear(); // SAME
-        // console.log(item.bullet.position);
-        // console.log(item.raycaster.ray.origin);
         item.raycaster.ray.set(item.raycaster.ray.origin, item.raycaster.ray.direction);
 
         // scene.add(new THREE.ArrowHelper(item.raycaster.ray.direction, item.raycaster.ray.origin, 1));
@@ -3070,7 +3065,7 @@ function updateBullets() {
                 }
             }
         }
-        item.lastPosition.copy(item.bullet.position);
+        item.lastPosition.copy(item.bullet.position); // Set the bullet's last position as the bullet's current position
     });
 
     if(player.weapon.cooldown > 0) {
@@ -3156,9 +3151,9 @@ function updateAlienBullet(alien) {
 }
 
 /**
- * Called when a bullet from the player collides with an alien.
+ * Called when the player's bullet collides with an alien.
  * Checks where the bullet collided with the current alien and reduces the alien's health accordingly.
- * Changes the crosshair to the hitmarker when a collision takes place.
+ * Plays the hitmarker audio and updates crosshair styling.
  * Plays death animation for the current alien when health drops to zero and removes the hitbox from the scene.
  * @param {alien} alien The alien that was shot
  * @param {*} intersect First index of the intersects array
@@ -3199,6 +3194,11 @@ function damageAlien(alien, intersect) {
     }, 300);
 }
 
+/**
+ * Called when the player's bullet collides with the boss.
+ * Plays death animation and audio for the boss when health drops to zero and removes the boss's hitbox from the scene.
+ * Plays the hitmarker audio and updates crosshair styling.
+ */
 function damageBoss() {
     boss.currentHealth -= 35;
     bossHealthBar.setAttribute("style", "width: " + boss.currentHealth / 33.33 + "%");
@@ -3206,7 +3206,7 @@ function damageBoss() {
     crosshair.style.background = "url(hud/crosshairs/crosshair_hitmarker.svg)";
 
     if(boss.currentHealth <= 0) {
-        checkpoint.style.visibility = "visible";
+        checkpoint.style.visibility = "visible"; // The player will only have to defeat the boss once
         setTimeout(() => {
             checkpoint.style.visibility = "hidden";
         }, 2000);
@@ -3264,6 +3264,11 @@ function updatePlayerHealth() {
     healthNumber.innerHTML = player.currentHealth;
 }
 
+/**
+ * Called every game loop when looping through the alien array.
+ * Checks the conditions that need to be true to allow the target alien to shoot at the player.
+ * @param {alien} alien The target alien
+ */
 function alienCanShoot(alien) {
     return alien.currentHealth > 0 && player.currentHealth > 0 && alienInRangeOfPlayer(alien) && 
         alien.canShoot.level == currentLevel && alien.canShoot.box <= currentBox;
@@ -3502,7 +3507,7 @@ function handleHealthPacks() {
 
 /**
  * Called when the player interacts with a health pack.
- * If the player has less than 100HP, they are healed for 25HP and the health pack is removed from the scene.
+ * If the player has less than 100HP, they are healed for 25HP (100HP for a super health pack) and the health pack is removed from the scene.
  */
 function healthPackPickup() {
     if(player.currentHealth == 100) {
@@ -3540,7 +3545,7 @@ function healthPackPickup() {
 function updateHealthPackAnimation() {
     healthPackCollidableMeshList.forEach(healthPack => {
         if(healthPack.material.color.g == 0) { // Regular health pack
-            if(healthPack.position.y <= 1.25 || healthPack.position.y >= 2.75) {
+            if(healthPack.position.y <= 1.25 || healthPack.position.y >= 2.75) { // Reached boundary
                 if(healthPack.direction == "down") {
                     healthPack.direction = "up";
                 }
@@ -3550,7 +3555,7 @@ function updateHealthPackAnimation() {
             }
         }
         else { // Super health pack
-            if(healthPack.position.y <= 2.5 || healthPack.position.y >= 5.5) {
+            if(healthPack.position.y <= 2.5 || healthPack.position.y >= 5.5) { // Reached boundary
                 if(healthPack.direction == "down") {
                     healthPack.direction = "up";
                 }
@@ -3560,17 +3565,22 @@ function updateHealthPackAnimation() {
             }
         }
        
-        if(healthPack.direction == "down") {
+        if(healthPack.direction == "down") { // Decrease y position
             healthPack.position.y -= 0.01;
         }
-        else {
+        else { // Increase y position
             healthPack.position.y += 0.01;
         }
 
-        healthPack.rotation.y += 0.01;
+        healthPack.rotation.y += 0.01; // Rotate counterclockwise
     });
 }
 
+/**
+ * Helper function. 
+ * Called when a texture must be loaded.
+ * @param {string} url Where the texture file is stored
+ */
 function loadTexture(url) {
     function callback(material) {
         if(material) {
@@ -3584,6 +3594,13 @@ function loadTexture(url) {
     return texture;
 }
 
+/**
+ * Helper function.
+ * Called when a model must be loaded.
+ * Contains a callback that executes the appropriate function using the provided identifier key.
+ * @param {string} url Where the model is stored
+ * @param {string} key The unique indentifier key used by the callback function to execute the correct initializer
+ */
 function loadModel(url, key) {
     function callback(gltf) {
         switch(key) {
@@ -3685,6 +3702,13 @@ function loadModel(url, key) {
     gltfLoader.load(url, callback, undefined, (error) => console.log(error));
 }
 
+/**
+ * Helper function.
+ * Called when an audio file must be loaded.
+ * Contains a callback that initializes the appropriate object using the provided indentifier key.
+ * @param {string} url Where the model is stored
+ * @param {string} key The unique indentifier key used by the callback function to initialize the correct AudioCollection object
+ */
 function loadAudio(url, key) {
     switch(key) {
         case "wildlife":
@@ -3949,6 +3973,10 @@ function loadAudio(url, key) {
     }
 }
 
+/**
+ * Called when a player has died in level 2 or level 3 and clicked restart.
+ * Loops through all aliens and resets their health and hitboxes.
+ */
 function respawnAliens() {
     alienArray.forEach(alien => {
         if(alien.currentHealth < 100) {
@@ -4026,6 +4054,7 @@ function restartCheckpoint() {
                 boss.model.position.set(480, 0, -90);
                 boss.currentHealth = 1000;
                 bossHealthBar.setAttribute("style", "width: 30%");
+                audioCollection.bossFightMusic.play();
             }
             spawnedLevelFourAliens = false;
             break;
@@ -4142,6 +4171,10 @@ function spawnLevelFourAliens() {
     }
 }
 
+/**
+ * Called every game loop after the boss fight intro is finished and the boss is alive.
+ * Moves the boss towards the player if the boss is out of range, else handles the boss's attack.
+ */
 function updateBossPosition() {
     boss.model.lookAt(player.playerModel.position.clone());
 
@@ -4154,7 +4187,7 @@ function updateBossPosition() {
             updateBossAnimation(boss.walkAnim);
             bossWalking = true;
         }
-        boss.model.position.add(direction.normalize().multiplyScalar(0.3));
+        boss.model.position.add(direction.normalize().multiplyScalar(0.3)); // Move the boss towards the player
     }
     else if(!bossAttacked) {
         bossWalking = false;
@@ -4168,6 +4201,7 @@ function updateBossPosition() {
             if(bossInRangeOfPlayer()) {
                 player.currentHealth -= 50;
                 if(player.currentHealth <= 0) {
+                    audioCollection.bossFightMusic.stop();
                     player.currentHealth = 0;
                     audioCollection.playerDeath.play();
                     playerDeath.classList.add("fadein");
@@ -4181,6 +4215,10 @@ function updateBossPosition() {
     }
 }
 
+/**
+ * Called when the player first enters level 4 subsequently every game loop if the player has not defeated the boss.
+ * Handles the boss fight intro and thereafter calls updateBossPosition.
+ */
 function bossFight() {
     if(inBossFightStartedTimeout) return;
 
@@ -4197,7 +4235,7 @@ function bossFight() {
             bossFightStarted = true;
             updateBossAnimation(boss.walkAnim);
             bossWalking = true;
-            // audioCollection.bossFightMusic.play();
+            audioCollection.bossFightMusic.play();
         }, 5000)
         return;
     }
