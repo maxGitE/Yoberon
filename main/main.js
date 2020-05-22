@@ -5,11 +5,11 @@ import Stats from 'https://cdn.rawgit.com/mrdoob/stats.js/master/src/Stats.js';
 let stats = new Stats();
 stats.showPanel(0);
 
-// let rendererStats = new THREEx.RendererStats();
-// rendererStats.domElement.style.position	= 'fixed'
-// rendererStats.domElement.style.right = '0px'
-// rendererStats.domElement.style.bottom = '0px'
-// document.body.appendChild(rendererStats.domElement);
+let rendererStats = new THREEx.RendererStats();
+rendererStats.domElement.style.position	= 'fixed'
+rendererStats.domElement.style.right = '0px'
+rendererStats.domElement.style.bottom = '0px'
+document.body.appendChild(rendererStats.domElement);
 
 const title = document.getElementById("title");
 const menuBlock = document.getElementById("menu");
@@ -86,8 +86,6 @@ let alien3;
 let alien4;
 let alien5;
 let alien6;
-let alien7;
-let alien8;
 let boss;
 
 /** BOUNTY HUNTER */
@@ -117,8 +115,10 @@ let skyboxURLs = ["cubemap/space_one/px.png", "cubemap/space_one/nx.png",
                   "cubemap/space_one/pz.png", "cubemap/space_one/nz.png"]
 
 /** OBJECTS */
+let ground;
 let starFieldA;
 let starFieldB;
+let shadowObjects = [];
 
 /** PUZZLE 1 */
 let cameraDirectionLevelOne;
@@ -188,7 +188,9 @@ let completedTooltip = false;
 let healthbarWidth = 10.25;
 let healthbarTrailingWidth = healthbarWidth;
 let checkpointDisplayed = false;
+let interactableObject;
 
+/** GUN */
 let lockingClick = true;
 let bulletCollidableMeshList = [];
 
@@ -196,8 +198,6 @@ let bulletCollidableMeshList = [];
 let healthPackCollidableMeshList = [];
 let selectedHealthPack;
 let pickedUpHealthPacks = [];
-
-let interactableObject;
 
 function gameLoop() {
 
@@ -2045,7 +2045,7 @@ function drawGround() {
     groundTexture.wrapS = THREE.RepeatWrapping;
     groundTexture.wrapT = THREE.RepeatWrapping;
     groundTexture.repeat.set(80, 160);
-    let ground = new THREE.Mesh(groundGeom,
+    ground = new THREE.Mesh(groundGeom,
                                     new THREE.MeshLambertMaterial({
                                         color: "#5e503e",
                                         side: THREE.DoubleSide,
@@ -2091,10 +2091,10 @@ function drawTotems() {
     totemThree = new THREE.Mesh(totemGeometry, totemThreeMaterial);
     totemFour = new THREE.Mesh(totemGeometry, totemFourMaterial);
 
-    // totemOne.castShadow = true;
-    // totemTwo.castShadow = true;
-    // totemThree.castShadow = true;
-    // totemFour.castShadow = true;
+    shadowObjects.push(totemOne);
+    shadowObjects.push(totemTwo);
+    shadowObjects.push(totemThree);
+    shadowObjects.push(totemFour);
 
     totemOne.position.set(-16.5, 6, 0);
     totemOne.rotation.y = Math.random() * 2*Math.PI;
@@ -3397,9 +3397,10 @@ function boundingBoxVis() {
     scene.add(secretPathInner);
 }
 
-/** Standalone function to handle the jump animation.
- *  Starts the jump animation, stores the animation that was playing before and stops it.
- *  Starts the previous animation again after running the jump animation for 600ms, unless idle was called while jumping (keyup). 
+/** 
+ * Standalone function to handle the jump animation.
+ * Starts the jump animation, stores the animation that was playing before and stops it.
+ * Starts the previous animation again after running the jump animation for 600ms, unless idle was called while jumping (keyup). 
  */
 function handleJumpAnimation() { 
     player.jumpAnim.enabled = true;
@@ -3426,9 +3427,10 @@ function handleJumpAnimation() {
     }, 600);
 }
 
-/** Takes in the next animation to play. 
- *  If the player is not jumping, stops the current animation and starts the next animation.
- *  If the player is jumping and the next animation is idle, schedule idle to play at the end of the jump. 
+/** 
+ * Takes in the next animation to play. 
+ * If the player is not jumping, stops the current animation and starts the next animation.
+ * If the player is jumping and the next animation is idle, schedule idle to play at the end of the jump. 
  */
 function updatePlayerAnimation(newAnimation) { 
     if(cameraType == "fp") return;
@@ -3444,10 +3446,12 @@ function updatePlayerAnimation(newAnimation) {
     }
 }
 
-/** Takes in a new alien animation to play.
- *  Disables the current animation and plays the new one.
- *  @param {alien} alien The target alien
- *  @param {animation} newAnimation The new animation to play 
+/** 
+ * Called when an alien's current animation should change.
+ * Takes in the new animation, disables the current animation and plays the new one.
+ * Sets the new animation as the alien's current animation.
+ * @param {alien} alien The target alien
+ * @param {animation} newAnimation The new animation to play 
  */
 function updateAlienAnimation(alien, newAnimation) {
     if(newAnimation == alien.shootAnim && alien.currentAnimation == alien.shootAnim) {
@@ -3461,22 +3465,16 @@ function updateAlienAnimation(alien, newAnimation) {
     }
 }
 
+/**
+ * Called when the boss's current animation should change.
+ * Takes in the new animation, stops the current animation and plays the new one.
+ * Sets the new animation as the boss's current animation.
+ * @param {animation} newAnimation The new animation to play
+ */
 function updateBossAnimation(newAnimation) {
     boss.currentAnimation.stop();
     newAnimation.play();
     boss.currentAnimation = newAnimation;
-    // if(boss.currentAnimation == boss.attackAnim) {
-    //     setTimeout(() => {
-    //         boss.currentAnimation.enabled = false;
-    //         newAnimation.enabled = true;
-    //         boss.currentAnimation = newAnimation;
-    //     }, 500);
-    // }
-    // else {
-    //     boss.currentAnimation.enabled = false;
-    //     newAnimation.enabled = true;
-    //     boss.currentAnimation = newAnimation;
-    // }
 }
 
 /**
@@ -3937,7 +3935,7 @@ function loadAudio(url, key) {
                 audioCollection.bossFootstep.setLoop(false);
                 audioCollection.bossFootstep.setRefDistance(40);
                 audioCollection.bossFootstep.gain.gain.value = 5;
-                audioCollection.bossFootstep.playBackRate = 1.5;
+                audioCollection.bossFootstep.playBackRate = 1.75;
             });
             break;
         case "boss_death":
@@ -4151,8 +4149,6 @@ function updateBossPosition() {
     direction = player.playerModel.position.clone().sub(boss.model.position);
     direction.y = 0;
 
-    console.log(audioCollection.bossFootstep.gain);
-
     if(!bossInRangeOfPlayer()) {
         if(!bossAttacked && !bossWalking) {
             updateBossAnimation(boss.walkAnim);
@@ -4275,7 +4271,7 @@ function initRenderer() {
         canvas: canvas,
         antialias: true
     } );
-    // renderer.shadowMap.enabled = true;
+    renderer.shadowMap.enabled = true;
     renderer.autoClear = false;
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(canvas.width, canvas.height);
@@ -4563,8 +4559,13 @@ function initControls() {
                 updatePlayerAnimation(player.gangnamStyle);
                 checkDance();
                 break;
-            case 77:    // M
+            case 77:    // M (MINIMAP)
                 minimapToggle = !minimapToggle;
+                break;
+            case 78:    // N (SHADOWS)
+                pointLight.castShadow = !pointLight.castShadow;
+                ground.receiveShadow = !ground.receiveShadow;
+                shadowObjects.forEach(object => object.castShadow = !object.castShadow);
                 break;
         }
     }
@@ -4804,6 +4805,14 @@ function initHealthPacks(gltf) {
     healthPackCollidableMeshList.push(healthPackSeven);
     healthPackCollidableMeshList.push(healthPackEight);
     healthPackCollidableMeshList.push(superHealthPack);
+
+    for(let i = 0; i < healthPackCollidableMeshList.length; i++) {
+        healthPackCollidableMeshList[i].traverse(child => {
+            if(child.isMesh) {
+                shadowObjects.push(child);
+            }
+        });
+    }
     
     scene.add(healthPackOne);
     scene.add(healthPackTwo);
@@ -4933,7 +4942,7 @@ function initWorld() {
 
 function render() {
     stats.update();
-    // rendererStats.update(renderer);
+    rendererStats.update(renderer);
 
     renderer.setViewport(0, 0, canvas.width, canvas.height);
     renderer.setScissor(0, 0, canvas.width, canvas.height);
