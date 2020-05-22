@@ -200,6 +200,11 @@ let healthPackCollidableMeshList = [];
 let selectedHealthPack;
 let pickedUpHealthPacks = [];
 
+let interactableObject;
+
+/** TREES */
+let blockingTrees;
+
 function gameLoop() {
 
     requestAnimationFrame(gameLoop);
@@ -1509,7 +1514,7 @@ function initPineTree(gltf) {
             clusterX = Math.random() * 50 + 550; // x positions between 550 and 600
         }
         else if(i == 2164) { // Puzzle two entrance left ******* PUZZLE TWO EXTRA TREES START *******
-            clusterX = 435;
+            clusterX = 425;
             clusterZ = -1085;
         }
         else if(i == 2165) { // Puzzle two entrance left
@@ -1517,7 +1522,7 @@ function initPineTree(gltf) {
             clusterZ = -1085;
         }
         else if(i == 2166) { // Puzzle two entrance right
-            clusterX = 485;
+            clusterX = 495;
             clusterZ = -1085;
         }
         else if(i == 2167) { // Puzzle two entrance right
@@ -1525,7 +1530,7 @@ function initPineTree(gltf) {
             clusterZ = -1085;
         }
         else if(i == 2168) { // Puzzle two exit left
-            clusterX = 435;
+            clusterX = 425;
             clusterZ = -955;
         }
         else if(i == 2169) { // Puzzle two exit left
@@ -1533,7 +1538,7 @@ function initPineTree(gltf) {
             clusterZ = -955;
         }
         else if(i == 2170) { // Puzzle two exit right
-            clusterX = 485;
+            clusterX = 495;
             clusterZ = -955;
         }
         else if(i == 2171) { // Puzzle two exit right ******* PUZZLE TWO EXTRA TREES END *******
@@ -1587,7 +1592,7 @@ function initPineTree(gltf) {
             else { // Second row
                 clusterZ = Math.random() * 10 - 355; // z positions between -345 and -355
             }
-            clusterX = Math.random() * 255 + 200; // x positions between 200 and 455
+            clusterX = Math.random() * 245 + 200; // x positions between 200 and 445
         }
         else if(i >= 2530 && i < 2680) { // Box four top
             if(i < 2580) { // First row
@@ -1599,7 +1604,7 @@ function initPineTree(gltf) {
             else { // Third row
                 clusterZ = Math.random() * 10 - 510; // z positions between -500 and -510
             }
-            clusterX = Math.random() * 260 + 290; // x positions between 290 and 550
+            clusterX = Math.random() * 250 + 300; // x positions between 300 and 550
         }
         else if(i >= 2680 && i < 2710) { // Puzzle three right ******* PUZZLE THREE START *******
             if(i < 2690) { // First row
@@ -1613,7 +1618,7 @@ function initPineTree(gltf) {
             }
             clusterZ = Math.random() * 100 - 460; // z positions between -360 and -460
         }
-        else if(i >= 2710 && i < 2790) { // Level 4 top ******* PUZZLE FOUR START *******
+        else if(i >= 2710 && i < 2790) { // Level 4 top ******* LEVEL FOUR START *******
             if(i < 2750) { // First row
                 clusterZ = Math.random() * 10 - 365; // z positions between -355 and -365
             }
@@ -1676,11 +1681,11 @@ function initPineTree(gltf) {
         }
         else if(i == 3511) { // Puzzle three entrance top
             clusterX = 415;
-            clusterZ = -445;
+            clusterZ = -435;
         }
         else if(i == 3512) { // Puzzle three entrance bottom
             clusterX = 415;
-            clusterZ = -385;
+            clusterZ = -375;
         }
         else if(i == 3513) { // Puzzle three entrance bottom ******* PUZZLE THREE EXTRA TREES END *******
             clusterX = 415;
@@ -1735,6 +1740,45 @@ function initPineTree(gltf) {
         cluster.setMatrixAt(i, tempCluster.matrix);
     }
     scene.add(cluster);
+}
+
+function initBlockingTrees(gltf) {
+    let treeModel = gltf.scene.children[0];
+
+    let treeOne = treeModel.clone();
+    treeOne.position.set(0, -8, 0);
+    treeOne.scale.set(Math.random() * 0.3 + 0.7, Math.random() * 0.3 + 0.7, Math.random() * 0.3 + 0.7);
+    treeOne.rotation.y = Math.random() * 2*Math.PI;
+
+    let treeTwo = treeModel.clone();
+    treeTwo.position.set(15, -8, 0);
+    treeTwo.scale.set(Math.random() * 0.3 + 0.7, Math.random() * 0.3 + 0.7, Math.random() * 0.3 + 0.7);
+    treeTwo.rotation.y = Math.random() * 2*Math.PI;
+
+    let treeThree = treeModel.clone();
+    treeThree.position.set(-15, -8, 0);
+    treeThree.scale.set(Math.random() * 0.3 + 0.7, Math.random() * 0.3 + 0.7, Math.random() * 0.3 + 0.7);
+    treeThree.rotation.y = Math.random() * 2*Math.PI;
+
+    let treeFour = treeModel.clone();
+    treeFour.position.set(7, -8, 10);
+    treeFour.scale.set(Math.random() * 0.3 + 0.7, Math.random() * 0.3 + 0.7, Math.random() * 0.3 + 0.7);
+    treeFour.rotation.y = Math.random() * 2*Math.PI;
+
+    let treeFive = treeModel.clone();
+    treeFive.position.set(-7, -8, 10);
+    treeFive.scale.set(Math.random() * 0.3 + 0.7, Math.random() * 0.3 + 0.7, Math.random() * 0.3 + 0.7);
+    treeFive.rotation.y = Math.random() * 2*Math.PI;
+
+    blockingTrees = new THREE.Object3D();
+    blockingTrees.add(treeOne);
+    blockingTrees.add(treeTwo);
+    blockingTrees.add(treeThree);
+    blockingTrees.add(treeFour)
+    blockingTrees.add(treeFive);
+
+    blockingTrees.position.set(480, 0, -20);
+    scene.add(blockingTrees);
 }
 
 function initBroadLeaf(gltf) {
@@ -2112,6 +2156,7 @@ function initBushThree(gltf) {
 
 function drawTrees() {
     loadModel("models/environment/trees/pinetree.glb", "pinetree");
+    loadModel("models/environment/trees/pinetree.glb", "blocking_tree");
     loadModel("models/environment/trees/broadleaf.glb", "broadleaf");
 }
 
@@ -3735,6 +3780,9 @@ function loadModel(url, key) {
                 break;
             case "pinetree":
                 initPineTree(gltf);
+                break;
+            case "blocking_tree":
+                initBlockingTrees(gltf);
                 break;
             case "broadleaf":
                 initBroadLeaf(gltf);
