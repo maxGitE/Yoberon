@@ -201,8 +201,6 @@ let healthPackCollidableMeshList = [];
 let selectedHealthPack;
 let pickedUpHealthPacks = [];
 
-let interactableObject;
-
 /** TREES */
 let blockingTrees;
 
@@ -993,12 +991,12 @@ function initAlienModels(gltf) {
     alien1.canShoot.box = 2;
     alienArray.push(alien1);
 
-    alien2.setPosition(-170, 0, -960);
+    alien2.setPosition(-170, 0, -950);
     alien2.canShoot.level = 2;
     alien2.canShoot.box = 2;
     alienArray.push(alien2);
 
-    alien3.setPosition(-170, 0, -920);
+    alien3.setPosition(-170, 0, -930);
     alien3.canShoot.level = 2;
     alien3.canShoot.box = 2;
     alienArray.push(alien3);
@@ -1593,7 +1591,7 @@ function initPineTree(gltf) {
             else { // Second row
                 clusterZ = Math.random() * 10 - 355; // z positions between -345 and -355
             }
-            clusterX = Math.random() * 245 + 200; // x positions between 200 and 445
+            clusterX = Math.random() * 250 + 200; // x positions between 200 and 450
         }
         else if(i >= 2530 && i < 2680) { // Box four top
             if(i < 2580) { // First row
@@ -1626,7 +1624,7 @@ function initPineTree(gltf) {
             else { // Second row
                 clusterZ = Math.random() * 10 - 355; // z positions between -345 and -355
             }
-            clusterX = Math.random() * 155 + 495; // x positions between 495 and 650
+            clusterX = Math.random() * 150 + 500; // x positions between 500 and 650
         }
         else if(i >= 2790 && i < 3030) { // Level 4 right
             if(i < 2870) { // First row
@@ -3328,7 +3326,7 @@ function damageAlien(alien, intersect) {
         crosshair.style.filter = "brightness(0) saturate(100%) invert(11%) sepia(96%) saturate(6875%) hue-rotate(0deg) brightness(91%) contrast(126%)";
     }
     else { // Bodyshot
-        alien.currentHealth -= 20;
+        alien.currentHealth -= 35;
         crosshair.style.background = "url(hud/crosshairs/crosshair_hitmarker.svg)";
         if(alien.currentHealth <= 0) {
             crosshair.style.filter = "brightness(0) saturate(100%) invert(11%) sepia(96%) saturate(6875%) hue-rotate(0deg) brightness(91%) contrast(126%)";
@@ -4275,17 +4273,17 @@ function spawnLevelThreeAliens() {
                 alienArray[i].canShoot.box = 2;
                 break;
             case 2:
-                alienArray[i].model.position.set(220, 0, -660); 
+                alienArray[i].model.position.set(240, 0, -650); 
                 alienArray[i].canShoot.level = 3;
                 alienArray[i].canShoot.box = 2;
                 break;
             case 3: 
-                alienArray[i].model.position.set(375, 0, -420);
+                alienArray[i].model.position.set(365, 0, -412);
                 alienArray[i].canShoot.level = 3;
                 alienArray[i].canShoot.box = 4;
                 break;
             case 4:
-                alienArray[i].model.position.set(380, 0, -435); 
+                alienArray[i].model.position.set(380, 0, -425); 
                 alienArray[i].canShoot.level = 3;
                 alienArray[i].canShoot.box = 4;
                 break;
@@ -4327,22 +4325,22 @@ function spawnLevelFourAliens() {
 
                 switch(i) {
                     case 0: 
-                        alienArray[i].model.position.set(340, 0, -330);
+                        alienArray[i].model.position.set(380, 0, -290);
                         alienArray[i].canShoot.level = 4;
                         alienArray[i].canShoot.box = 1;
                         break;
                     case 1: 
-                        alienArray[i].model.position.set(620, 0, -330);
+                        alienArray[i].model.position.set(580, 0, -290);
                         alienArray[i].canShoot.level = 4;
                         alienArray[i].canShoot.box = 1;
                         break;
                     case 2:
-                        alienArray[i].model.position.set(340, 0, -50); 
+                        alienArray[i].model.position.set(380, 0, -90); 
                         alienArray[i].canShoot.level = 4;
                         alienArray[i].canShoot.box = 1;
                         break;
                     case 3: 
-                        alienArray[i].model.position.set(620, 0, -50);
+                        alienArray[i].model.position.set(580, 0, -90);
                         alienArray[i].canShoot.level = 4;
                         alienArray[i].canShoot.box = 1;
                         break;
@@ -4706,9 +4704,9 @@ function initControls() {
                 currentLevel = 2;
                 break;
             case 84:  // T
-                controls.getObject().position.set(460, 8, -1080);
-                camera.lookAt(460, 8, -1070);
-                currentLevel = 2;
+                controls.getObject().position.set(460, 8, -950);
+                camera.lookAt(460, 8, 1);
+                currentLevel = 3;
                 break;
             case 89:    // Y
                 currentLevel = 4;
