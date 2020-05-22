@@ -1059,7 +1059,7 @@ function initBossModel(gltf) {
     // boss.flexAnim.enabled = false;
     // boss.deathAnim.enabled = false;
 
-    boss.currentAnimation = player.idleAnim;
+    boss.currentAnimation = boss.idleAnim;
 }
 
 function initBountyHunterModels(gltf) {
@@ -1199,8 +1199,9 @@ function initPineTree(gltf) {
 
     let treeGeometry = pinetree.children[0].geometry;
     let treeMaterial = pinetree.children[0].material;
+    let numInstances = 3514;
 
-    let cluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, 552);
+    let cluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, numInstances);
     let tempCluster = new THREE.Object3D();
 
     let clusterX;
@@ -1208,7 +1209,8 @@ function initPineTree(gltf) {
     let scalingFactor;
     let rotationFactor;
 
-    for(let i = 0; i < 552; i++) {
+    for(let i = 0; i < numInstances; i++) {
+        /******* LEVEL 1 START *******/
         if(i < 180) { // Left rows
             if(i < 60) { // First row
                 clusterX = Math.random() * 10 - 55; // x positions between -45 and -55
@@ -1236,7 +1238,7 @@ function initPineTree(gltf) {
             }
             clusterX = Math.random() * 130 - 65; // x positions between -65 and 65  
         }
-        else if(i >= 220 && i < 340) { // First right rows
+        else if(i >= 220 && i < 340) { // Right rows
             if(i < 260) { // First row
                 clusterX = Math.random() * 10 + 45; // x positions between 45 and 55
             }
@@ -1285,6 +1287,353 @@ function initPineTree(gltf) {
         else if(i == 551) { // Right side of secret path entrance
             clusterX = 50;
             clusterZ = -470;
+        }
+        else if(i > 551 && i < 590) { // Box one top
+            clusterX = Math.random() * 150 - 85; // x positions between -85 and 65
+            clusterZ = Math.random() * 15 - 575; // z positions between -560 and -575
+        }
+        else if(i >= 590 && i < 710) { // Left side of puzzle one and level 2 box one ******* LEVEL TWO START *******
+            if(i < 630) { // First row
+                clusterX = Math.random() * 10 - 55; // x positions between -45 and -55
+            }
+            else if(i >= 630 && i < 670) { // Second row
+                clusterX = Math.random() * 10 - 75; // x positions between -65 and -75
+            }
+            else { // Third row
+                clusterX = Math.random() * 10 - 95; // x positions between -85 and -95
+            }
+            clusterZ = Math.random() * 315 - 900; // z positions between -585 and -900
+        }
+        else if(i >= 710 && i < 830) { // Right side of level 2 box one
+            if(i < 750) { // First row
+                clusterX = Math.random() * 10 + 45; // x positions between 45 and 55
+            }
+            else if(i >= 750 && i < 790) { // Second row
+                clusterX = Math.random() * 10 + 65; // x positions between 65 and 75
+            }
+            else { // Third row
+                clusterX = Math.random() * 10 + 85; // x positions between 85 and 95
+            }
+            clusterZ = Math.random() * 315 - 1000; // z positions between -685 and -1000
+        }
+        else if(i == 830) { // Left of rock
+            clusterX = -35;
+            clusterZ = -700;
+        }
+        else if(i == 831) { // Left of rock
+            clusterX = -25;
+            clusterZ = -700;
+        }
+        else if(i == 832) { // Right of rock
+            clusterX = 30;
+            clusterZ = -700;
+        }
+        else if(i > 832 && i < 950) { // Box two bottom
+            if(i < 870) { // First row
+                clusterZ = Math.random() * 10 - 890; // z positions between -880 and -890
+            }
+            else if(i >= 870 && i < 910) { // Second row
+                clusterZ = Math.random() * 10 - 870; // z positions between -860 and -870
+            }
+            else { // Third row
+                clusterZ = Math.random() * 10 - 850; // z positions between -840 and -850
+            }
+            clusterX = Math.random() * 260 - 300; // x positions between -40 and -300
+        }
+        else if(i > 950 && i < 1070) { // Box two top
+            if(i < 990) { // First row
+                clusterZ = Math.random() * 10 - 1000; // z positions between -990 and -1000
+            }
+            else if(i >= 990 && i < 1030) { // Second row
+                clusterZ = Math.random() * 10 - 1020; // z positions between -1010 and -1020
+            }
+            else { // Third row
+                clusterZ = Math.random() * 10 - 1040; // z positions between -1030 and -1040
+            }
+            clusterX = Math.random() * 250 - 190; // x positions between 60 and -190
+        }
+        else if(i >= 1070 && i < 1190) { // Box three left
+            if(i < 1110) { // First row
+                clusterX = Math.random() * 10 - 290; // x positions between -280 and -290
+            }
+            else if(i >= 1110 && i < 1150) { // Second row
+                clusterX = Math.random() * 10 - 310; // x positions between -300 and -310
+            }
+            else { // Third row
+                clusterX = Math.random() * 10 - 330; // x positions between -320 and -330
+            }
+            clusterZ = Math.random() * 320 - 1210; // z positions between -890 and -1210
+        }
+        else if(i >= 1190 && i < 1430) { // Box four bottom
+            if(i < 1270) { // First row
+                clusterZ = Math.random() * 10 - 1090; // z positions between -1080 and -1090
+            }
+            else if(i >= 1270 && i < 1350) { // Second row
+                clusterZ = Math.random() * 10 - 1070; // z positions between -1060 and -1070
+            }
+            else { // Third row
+                clusterZ = Math.random() * 10 - 1050; // z positions between -1040 and -1050
+            }
+            clusterX = Math.random() * 615 - 190; // x positions between -190 and 425
+        }
+        else if(i >= 1430 && i < 1700) { // Box four top
+            if(i < 1520) { // First row
+                clusterZ = Math.random() * 10 - 1200; // z positions between -1190 and -1200
+            }
+            else if(i >= 1520 && i < 1610) { // Second row
+                clusterZ = Math.random() * 10 - 1220; // z positions between -1210 and -1220
+            }
+            else { // Third row
+                clusterZ = Math.random() * 10 - 1240; // z positions between -1230 and -1240
+            }
+            clusterX = Math.random() * 800 - 280; // x positions between -280 and 520
+        }
+        else if(i >= 1700 && i < 1820) { // Box four right + second puzzle right + first part of level 3 box one right ******* LEVEL 3 START *******
+            if(i < 1740) { // First row
+                clusterX = Math.random() * 10 + 510; // x positions between 510 and 520
+            }
+            else if(i >= 1740 && i < 1780) { // Second row
+                clusterX = Math.random() * 10 + 530; // x positions between 530 and 540
+            }
+            else { // Third row
+                clusterX = Math.random() * 10 + 550; // x positions between 550 and 560
+            }
+            clusterZ = Math.random() * 340 - 1190; // z positions between -850 and -1190
+        }
+        else if(i >= 1820 && i < 2000) { // Second puzzle left + level 3 box one left
+            if(i < 1880) { // First row
+                clusterX = Math.random() * 10 + 400; // x positions between 400 and 410
+            }
+            else if(i >= 1880 && i < 1940) { // Second row
+                clusterX = Math.random() * 10 + 380; // x positions between 380 and 390
+            }
+            else { // Third row
+                clusterX = Math.random() * 10 + 360; // x positions between 360 and 370
+            }
+            clusterZ = Math.random() * 400 - 1090; // z positions between -690 and -1090
+        }
+        else if(i >= 2000 && i < 2090) { // Rest of level 3 box one right
+            if(i < 2030) { // First row
+                clusterX = Math.random() * 10 + 510; // x positions between 510 and 520
+            }
+            else if(i >= 2030 && i < 2060) { // Second row
+                clusterX = Math.random() * 10 + 530; // x positions between 530 and 540
+            }
+            else { // Third row
+                clusterX = Math.random() * 10 + 550; // x positions between 550 and 560
+            }
+            clusterZ = Math.random() * 160 - 740; // z positions between -580 and -740
+        }
+        else if(i >= 2090 && i < 2098) { // Secret path left
+            if(i < 2094) { // First row
+                clusterX = Math.random() * 10 + 510; // x positions between 510 and 520
+            }
+            else { // Second row
+                clusterX = Math.random() * 10 + 530; // x positions between 530 and 540
+            }
+            clusterZ = Math.random() * 20 - 800; // z positions between -780 and -800
+        }
+        else if(i >= 2098 && i < 2122) { // Secret path top
+            if(i < 2106) { // First row
+                clusterZ = Math.random() * 10 - 860; // z positions between -850 and -860
+            }
+            else if(i >= 2106 && i < 2114) { // Second row
+                clusterZ = Math.random() * 10 - 880; // z positions between -870 and -880
+            }
+            else { // Third row
+                clusterZ = Math.random() * 10 - 900; // z positions between -890 and -900
+            }
+            clusterX = Math.random() * 50 + 570; // x positions between 570 and 620
+        }
+        else if(i >= 2122 && i < 2152) { // Secret path right
+            if(i < 2132) { // First row
+                clusterX = Math.random() * 10 + 610; // x positions between 610 and 620
+            }
+            else if(i >= 2132 && i < 2142) { // Second row
+                clusterX = Math.random() * 10 + 630; // x positions between 630 and 640
+            }
+            else { // Third row
+                clusterX = Math.random() * 10 + 650; // x positions between 650 and 660
+            }
+            clusterZ = Math.random() * 130 - 850; // z positions between -720 and -850
+        }
+        else if(i >= 2152 && i < 2164) { // Secret path bottom
+            if(i < 2156) { // First row
+                clusterZ = Math.random() * 10 - 730; // z positions between -720 and -730
+            }
+            else if(i >= 2156 && i < 2160) { // Second row
+                clusterZ = Math.random() * 10 - 710; // z positions between -700 and -710
+            }
+            else { // Third row
+                clusterZ = Math.random() * 10 - 690; // z positions between -680 and -690
+            }
+            clusterX = Math.random() * 50 + 550; // x positions between 550 and 600
+        }
+        else if(i == 2164) { // Puzzle two entrance left ******* PUZZLE TWO EXTRA TREES START *******
+            clusterX = 435;
+            clusterZ = -1085;
+        }
+        else if(i == 2165) { // Puzzle two entrance left
+            clusterX = 425;
+            clusterZ = -1085;
+        }
+        else if(i == 2166) { // Puzzle two entrance right
+            clusterX = 485;
+            clusterZ = -1085;
+        }
+        else if(i == 2167) { // Puzzle two entrance right
+            clusterX = 495;
+            clusterZ = -1085;
+        }
+        else if(i == 2168) { // Puzzle two exit left
+            clusterX = 435;
+            clusterZ = -955;
+        }
+        else if(i == 2169) { // Puzzle two exit left
+            clusterX = 425;
+            clusterZ = -955;
+        }
+        else if(i == 2170) { // Puzzle two exit right
+            clusterX = 485;
+            clusterZ = -955;
+        }
+        else if(i == 2171) { // Puzzle two exit right ******* PUZZLE TWO EXTRA TREES END *******
+            clusterX = 495;
+            clusterZ = -955;
+        }
+        else if(i > 2171 && i < 2261) { // Box two bottom
+            if(i < 2201) { // First row
+                clusterZ = Math.random() * 10 - 590; // z positions between -580 and -590
+            }
+            else if(i >= 2201 && i < 2231) { // Second row
+                clusterZ = Math.random() * 10 - 570; // z positions between -560 and -570
+            }
+            else { // Third row
+                clusterZ = Math.random() * 10 - 550; // z positions between -540 and -550
+            }
+            clusterX = Math.random() * 210 + 290; // x positions between 290 and 500
+        }
+        else if(i >= 2261 && i < 2351) { // Box two top
+            if(i < 2291) { // First row
+                clusterZ = Math.random() * 10 - 700; // z positions between -690 and -700
+            }
+            else if(i >= 2291 && i < 2321) { // Second row
+                clusterZ = Math.random() * 10 - 720; // z positions between -710 and -720
+            }
+            else { // Third row
+                clusterZ = Math.random() * 10 - 740; // z positions between -730 and -740
+            }
+            clusterX = Math.random() * 230 + 180; // x positions between 180 and 410
+        }
+        else if(i >= 2351 && i < 2390) { // Box three left
+            clusterX = Math.random() * 10 + 180; // x positions between 180 and 190
+            clusterZ = Math.random() * 310 - 680; // z positions between -680 and -370
+        }
+        else if(i >= 2390 && i < 2450) { // Box three right
+            if(i < 2410) { // First row
+                clusterX = Math.random() * 10 + 290; // x positions between 290 and 300
+            }
+            else if(i >= 2410 && i < 2430) { // Second row
+                clusterX = Math.random() * 10 + 310; // x positions between 310 and 320
+            }
+            else { // Third row
+                clusterX = Math.random() * 10 + 330; // x positions between 330 and 340
+            }
+            clusterZ = Math.random() * 130 - 590; // z positions between -460 and -590
+        }
+        else if(i >= 2450 && i < 2530) { // Box four bottom
+            if(i < 2490) { // First row
+                clusterZ = Math.random() * 10 - 365; // z positions between -355 and -365
+            }
+            else { // Second row
+                clusterZ = Math.random() * 10 - 355; // z positions between -345 and -355
+            }
+            clusterX = Math.random() * 255 + 200; // x positions between 200 and 455
+        }
+        else if(i >= 2530 && i < 2680) { // Box four top
+            if(i < 2580) { // First row
+                clusterZ = Math.random() * 10 - 470; // z positions between -460 and -470
+            }
+            else if(i >= 2580 && i < 2630) { // Second row
+                clusterZ = Math.random() * 10 - 490; // z positions between -480 and -490
+            }
+            else { // Third row
+                clusterZ = Math.random() * 10 - 510; // z positions between -500 and -510
+            }
+            clusterX = Math.random() * 260 + 290; // x positions between 290 and 550
+        }
+        else if(i >= 2680 && i < 2710) { // Puzzle three right ******* PUZZLE THREE START *******
+            if(i < 2690) { // First row
+                clusterX = Math.random() * 10 + 540; // x positions between 540 and 550
+            }
+            else if(i >= 2690 && i < 2700) { // Second row
+                clusterX = Math.random() * 10 + 560; // x positions between 560 and 570
+            }
+            else { // Third row
+                clusterX = Math.random() * 10 + 580; // x positions between 580 and 590
+            }
+            clusterZ = Math.random() * 100 - 460; // z positions between -360 and -460
+        }
+        else if(i >= 2710 && i < 2790) { // Level 4 top ******* PUZZLE FOUR START *******
+            if(i < 2750) { // First row
+                clusterZ = Math.random() * 10 - 365; // z positions between -355 and -365
+            }
+            else { // Second row
+                clusterZ = Math.random() * 10 - 355; // z positions between -345 and -355
+            }
+            clusterX = Math.random() * 155 + 495; // x positions between 495 and 650
+        }
+        else if(i >= 2790 && i < 3030) { // Level 4 right
+            if(i < 2870) { // First row
+                clusterX = Math.random() * 10 + 640; // x positions between 640 and 650
+            }
+            else if(i >= 2870 && i < 2950) { // Second row
+                clusterX = Math.random() * 10 + 660; // x positions between 660 and 670
+            }
+            else { // Third row
+                clusterX = Math.random() * 10 + 680; // x positions between 680 and 690
+            }
+            clusterZ = Math.random() * 340 - 360; // z positions between -20 and -360
+        }
+        else if(i >= 3030 && i < 3270) { // Level 4 left
+            if(i < 3110) { // First row
+                clusterX = Math.random() * 10 + 310; // x positions between 310 and 320
+            }
+            else if(i >= 3110 && i < 3190) { // Second row
+                clusterX = Math.random() * 10 + 290; // x positions between 290 and 300
+            }
+            else { // Third row
+                clusterX = Math.random() * 10 + 270; // x positions between 270 and 280
+            }
+            clusterZ = Math.random() * 340 - 360; // z positions between -20 and -360
+        }
+        else if(i >= 3270 && i < 3510) { // Level four bottom
+            if(i < 3350) { // First row
+                clusterZ = Math.random() * 10 - 30; // z positions between -20 and -30
+            }
+            else if(i >= 3350 && i < 3430) { // Second row
+                clusterZ = Math.random() * 10 - 10; // z positions between 0 and -10
+            }
+            else { // Third row
+                clusterZ = Math.random() * 10 + 10; // z positions between 10 and 20
+            }
+            clusterX = Math.random() * 340 + 310; // x positions between 310 and 650
+        }
+        else if(i == 3510) { // Puzzle three entrance top ******* PUZZLE THREE EXTRA TREES START *******
+            clusterX = 415;
+            clusterZ = -435;
+        }
+        else if(i == 3511) { // Puzzle three entrance top
+            clusterX = 415;
+            clusterZ = -445;
+        }
+        else if(i == 3512) { // Puzzle three entrance bottom
+            clusterX = 415;
+            clusterZ = -385;
+        }
+        else if(i == 3513) { // Puzzle three entrance bottom ******* PUZZLE THREE EXTRA TREES END *******
+            clusterX = 415;
+            clusterZ = -375;
         }
 
         scalingFactor = Math.random() * 0.3 + 0.7;
@@ -2574,7 +2923,6 @@ function puzzleThreeBoundingBox() {
  *  Called by updateLevel() if currentLevel = 4.
  */
 function levelFourBoundingBox() {
-
     // Boundary values for the respective box divisions
     let boxOneBottom = -40;
     let boxOneLeft = 330;
@@ -4108,7 +4456,8 @@ function initControls() {
                 currentLevel = 2;
                 break;
             case 84:  // T
-                controls.getObject().position.set(460, 8, -945);
+                controls.getObject().position.set(460, 8, -935);
+                camera.lookAt(460, 8, -925);
                 currentLevel = 3;
                 break;
             case 89:    // Y
@@ -4313,7 +4662,8 @@ function initShip() {
 function initShipModel(gltf) {
     ship = gltf.scene;
     ship.scale.set(7, 7, 7);
-    ship.position.set(480, 2, -20);
+    ship.position.set(480, 2, 40);
+    ship.rotation.set(0, Math.PI/4, 0);
     ship.children[0].children[2].material = new THREE.MeshBasicMaterial( {envMap: loadReflectiveTexture(skyboxURLs)} ); // Set the texture of the ship's visor to a map of the environment
     scene.add(ship);
 }
@@ -4546,7 +4896,7 @@ function initWorld() {
     drawPaper();
     drawHealthPacks();
 
-    boundingBoxVis();
+    // boundingBoxVis();
 }
 
 function render() {
@@ -4579,7 +4929,6 @@ function init() {
     initSkybox();
     initPlayer();
     initAliens();
-    // initBoss();
     initShip();
     initBountyHunter();
     initWeaponModel();
