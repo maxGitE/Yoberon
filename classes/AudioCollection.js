@@ -24,6 +24,10 @@ class AudioCollection {
         this._bossFootstep;
         this._bossDeath;
         this._treeFall;
+        this._shieldActive;
+        this._shieldHit;
+        this._shieldBreak;
+        this._shieldReady;
     }
 
     get wildlife() {
@@ -220,5 +224,37 @@ class AudioCollection {
 
     set treeFall(audio) {
         this._treeFall = audio;
+    } 
+
+    get shieldActive() {
+        return this._shieldActive;
+    }
+
+    set shieldActive(audio) {
+        this._shieldActive = audio;
+    } 
+
+    get shieldHit() {
+        return this._shieldHit;
+    }
+
+    set shieldHit(audio) {
+        this._shieldHit = audio;
+    } 
+
+    get shieldBreak() {
+        return this._shieldBreak;
+    }
+
+    set shieldBreak(audio) {
+        this._shieldBreak = audio;
+    } 
+
+    get shieldReady() {
+        return this._shieldReady;
+    }
+
+    set shieldReady(audio) {
+        this._shieldReady = audio;
     } 
 }

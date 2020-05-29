@@ -1,5 +1,5 @@
 class Player {
-    constructor(name) {
+    constructor() {
         this._currentHealth = 100;
         this._maxHealth = 100;
         this._currentStamina = 100;
@@ -19,6 +19,7 @@ class Player {
         this._running = false;
         this._runFactor = 1;
         this._hasGun = false;
+        this._shield = {model: undefined, hasShield: false, shieldValue: 100, shieldEnabled: false, rechargingShield: false}
         this._playerModel = undefined;
         this._animations = {currentAnimation: undefined, idleAnim: undefined, walkAnim: undefined, backwardsAnim: undefined, jumpAnim: undefined, runAnim: undefined,
                             shootAnim: undefined, strafeLAnim: undefined, strafeRAnim: undefined, chickenDance: undefined, gangnamStyle: undefined, macarenaDance: undefined,
@@ -104,6 +105,10 @@ class Player {
 
     get hasGun() {
         return this._hasGun;
+    }
+
+    get shield() {
+        return this._shield;
     }
 
     get playerModel() {

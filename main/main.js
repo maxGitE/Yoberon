@@ -23,6 +23,10 @@ const health = document.getElementById("health");
 const healthbar = document.getElementById("healthbar");
 const healthbarTrailing = document.getElementById("healthbar-trailing");
 const healthNumber = document.getElementById("health-number");
+const shield = document.getElementById("shield");
+const shieldbar = document.getElementById("shieldbar");
+const shieldDisplay = document.getElementById("shield-display");
+const shieldNumber = document.getElementById("shield-number");
 const bossHealth = document.getElementById("boss-health");
 const bossHealthBar = document.getElementById("boss-healthbar");
 const puzzleBlock = document.getElementById("puzzle-failed");
@@ -78,6 +82,7 @@ let player;
 let currentLevel = 1;
 let xPos;
 let zPos;
+let shieldWidth;
 
 /** ENEMIES */
 let alienArray = [];
@@ -87,6 +92,7 @@ let alien3;
 let alien4;
 let alien5;
 let alien6;
+let disposedLevelThreeAliens = false;
 let boss;
 
 /** BOUNTY HUNTER */
@@ -149,6 +155,7 @@ let paper_clueThree;
 let paper_clueFour;
 let clueWords = ["AIR", "WATER", "FIRE", "EARTH"];
 let levelOneCollidableMeshList = [];
+let disposedTotems = false;
 
 /** LEVEL 2 */
 let rightOfTree = false;
@@ -319,73 +326,36 @@ function gameLoop() {
             updateLevel();
             updateBullets(); // So anyway I started blasting
 
-            alienArray.forEach(alien => { // So anyway they started blasting
-                if(alienCanShoot(alien)) {
-                    alien.model.lookAt(player.playerModel.position.clone());
-                    createAlienBullet(alien);
-                    updateAlienBullet(alien);
-        
-                    if(alien.movement.distanceMoved >= alien.movement.boundary) { // Reached movement boundary
-                        alien.movement.moveOrRemain = Math.floor(Math.random() * 2) == 0 ? "move" : "remain"; // Choose a random option to move again or stand still
-
-                        if(alien.movement.moveOrRemain == "move") {
-                            if(alien.movement.leftOrRight == "left") {
-                                alien.movement.leftOrRight = "right"; // If the alien was moving left before reaching the boundary, move right
-                            }
-                            else {
-                                alien.movement.leftOrRight = "left"; // If the alien was moving right before reaching the boundary, move left
-                            }
-                        }   
-                        else { // The alien should remain in place for a brief period until being assigned a new direction to move
-                            updateAlienAnimation(alien, alien.shootAnim);
-                            let directionTemp;
-                            if(alien.movement.leftOrRight == "left") {
-                                directionTemp = "right";
-                            }
-                            else {
-                                directionTemp = "left";
-                            }
-                            alien.movement.leftOrRight = null;
-                            setTimeout(() => {
-                                alien.movement.leftOrRight = directionTemp;
-                            }, 1000); 
-                        }
-
-                        alien.movement.distanceMoved = 0;
-                    }
-                    
-                    if(alien.movement.leftOrRight == "left") { // Moving left
-                        updateAlienAnimation(alien, alien.strafeLAnim);
-                        alien.model.position.x -= 0.05;
-                        alien.movement.distanceMoved += 0.05;
-                    }
-                    else if(alien.movement.leftOrRight == "right") { // Moving right
-                        updateAlienAnimation(alien, alien.strafeRAnim);
-                        alien.model.position.x += 0.05;
-                        alien.movement.distanceMoved += 0.05;
-                    }
-            
-                }
-                else { // Either the alien is dead, the player is dead or the alien is out of range of the player. In all cases remove the alien's bullets from the scene
-                    alien.weapon.bullets.forEach((item, index) => {
-                        scene.remove(item.bullet); // Remove the bullet from the scene
-                        alien.weapon.bullets.splice(index, 1); // Remove the bullet from the alien's bullets array
-                    });
-
-                    if(alien.currentHealth > 0) { // If the alien is alive, the player is dead or the player is out of range so set the alien's animation to idle
-                        updateAlienAnimation(alien, alien.idleAnim);
-                    }
-                }
-                
-                if(alien.currentHealth > 0 && player.currentHealth < 0) { // Player is dead but alien is alive TODO: remove bullets ?
-                    updateAlienAnimation(alien, alien.idleAnim);
-                }
-            });
+            updateAlienCombat(); // So anyway they started blasting
 
             // Updates the animations on the healthbar if the player has been damaged
             updateHealthBar();
 
+            // Updates the animations on the health packs
             updateHealthPackAnimation();
+
+            // Updates the animation of the player's gun on the ground (before it is picked up)
+            if(!player.hasGun && !finishedPuzzleTwo) {
+                updateGunOnGroundAnimation();
+            }
+
+            // Updates the animation of the player's shield on the ground (before it is picked up)
+            if(!player.shield.hasShield) {
+                updateShieldOnGroundAnimation();
+            }
+
+            if(!player.shield.shieldEnabled && player.shield.shieldValue < 100 && player.shield.shieldRecharging) { // Shield has been broken
+                player.shield.shieldValue += 0.2;
+                shieldNumber.innerHTML = Math.floor(player.shield.shieldValue);
+                shieldbar.style.width = player.shield.shieldValue / 10 + "%";
+
+                if(player.shield.shieldValue >= 100) {
+                    player.shield.shieldValue = 100;
+                    player.shield.shieldRecharging = false;
+                    shieldbar.style.width = "10.25%";
+                    audioCollection.shieldReady.play();
+                }
+            }
 
             // Update clock time
             clock.timeBefore = clock.timeNow;
@@ -579,6 +549,7 @@ function levelTwoPuzzle() {
         /** Set up the hud and player model for the puzzle */
         crosshair.style.visibility = "hidden";        
         health.style.visibility = "hidden";
+        shield.style.visibility = "hidden";
         player.playerModel.visible = true;
         controls.getObject().rotation.set(0, Math.PI, 0);
         player.playerModel.rotation.set(0, Math.PI, 0);
@@ -667,6 +638,7 @@ function levelTwoPuzzle() {
         dancecontrols.style.visibility = "hidden";
         crosshair.style.visibility = "visible";        
         health.style.visibility = "visible";
+        shield.style.visibility = "visible";
         pointLight.intensity = 1.5;
         scene.remove(puzzleSpotLight);
         cameraType = "fp";
@@ -678,6 +650,8 @@ function levelTwoPuzzle() {
             audioCollection.gunCock.play();
             scene.remove(player.playerModel);
             gltfLoader2.load("models/characters/player/player_gun.glb", initPlayerGunModel, undefined, (error) => console.log(error)); // Load player model with gun
+            player.weapon.model.position.set(0, -3, -4);
+            player.weapon.model.rotation.set(0, 0, 0);
         }
     }
 }
@@ -2668,6 +2642,18 @@ function levelTwoBoundingBox() {
         boulder_one.position.y += 0.02;
     }
 
+    if(!disposedTotems) {
+        totemCollection.traverse(child => {
+            if(child.isMesh) {
+                child.geometry.dispose();
+                child.material.dispose();
+                scene.remove(child);
+            }
+        });
+        scene.remove(totemCollection);
+        disposedTotems = true;
+    }
+
     // Boundary values for the respective box divisions
     let boxOneBottom = -715;
     let boxOneLeft = -40;
@@ -2714,10 +2700,10 @@ function levelTwoBoundingBox() {
     }
 
     if(boxArr[1]) { // In box one
-        if(zPos > -730) {
+        if(zPos > -745) {
             cameraType = "fp"; // Lock the player into first person to avoid visual glitches when loading the new model
         }
-        if(zPos <= -730 && !player.hasGun) {            
+        if(zPos <= -745 && !player.hasGun) {            
             player.hasGun = true;
             audioCollection.gunCock.play();
             scene.remove(player.weapon.model);
@@ -2768,6 +2754,15 @@ function levelTwoBoundingBox() {
         }
     }
     else if(boxArr[4]) { // In box four
+        if(xPos >= 50 && !player.shield.hasShield) {  
+            completedTooltip = false; // Reset tooltip so that it can reappear          
+            player.shield.hasShield = true;
+            audioCollection.shieldReady.play();
+            scene.remove(player.shield.model);
+            shield.style.visibility = "visible";
+            displayTooltip("Press F to protect yourself in combat. Be mindful of recharge time!");
+        }
+
         if(zPos > boxFourBottom - boundaryFactor) { // Place bottom boundary except at box four overlap and box five entrance
             if(xPos > boxThreeRight && (xPos < boxFiveLeft || xPos > boxFiveRight))
                 controls.getObject().position.z = boxFourBottom - boundaryFactor;
@@ -2814,6 +2809,8 @@ function levelTwoBoundingBox() {
         }
     }
     else if(boxArr[5]) { // In box five
+        hideTooltip();
+
         cameraType = "fp"; // Lock the player into first person to avoid visual glitches when loading the new model
 
         if(player.hasGun) {
@@ -2841,6 +2838,9 @@ function levelTwoBoundingBox() {
  *  Called by updateLevel() if currentLevel = 2.5.
  */
 function puzzleTwoBoundingBox() {
+    completedTooltip = false; // Reset the tooltip from the previous box
+    checkpointDisplayed = false;
+
     if(!removedLevelTwoAliens){
         removedLevelTwoAliens = true;
         for(let i = 5; i < alienArray.length; i++) {
@@ -2848,8 +2848,6 @@ function puzzleTwoBoundingBox() {
         }
         alienArray.splice(5, 3);
     }
-
-    checkpointDisplayed = false;
 
     // Boundary values for the respective box divisions
     let boxOneBottom = -970;
@@ -3175,6 +3173,27 @@ function levelFourBoundingBox() {
     if(xPos > boxOneLeft && xPos < boxOneRight && zPos < boxOneBottom && zPos > boxOneTop) {
         setBox(1, 4);
 
+        // if(!disposedLevelThreeAliens) {
+        //     alienArray[4].model.traverse(child => {
+        //         if(child.isMesh) {
+        //             child.geometry.dispose();
+        //             child.material.dispose();
+        //         }
+        //     });
+
+        //     alienArray[5].model.traverse(child => {
+        //         if(child.isMesh) {
+        //             child.geometry.dispose();
+        //             child.material.dispose();
+        //         }
+        //     });
+
+        //     scene.remove(alienArray[4].model);
+        //     scene.remove(alienArray[5].model);
+    
+        //     disposedLevelThreeAliens = true;
+        // }
+
         setCheckPoint();
         handleHealthPacks();
 
@@ -3243,7 +3262,6 @@ function levelFourBoundingBox() {
 function removeBullet(entity, bullet, index) {
     bullet.geometry.dispose();
     bullet.material.dispose();
-    renderer.renderLists.dispose();
     scene.remove(bullet); // Remove the bullet from the scene
     entity.weapon.bullets.splice(index, 1); // Remove the bullet from the array
 }
@@ -3361,6 +3379,71 @@ function updateBullets() {
     }
 }
 
+function updateAlienCombat() {
+    alienArray.forEach(alien => { 
+        if(alienCanShoot(alien)) {
+            alien.model.lookAt(player.playerModel.position.clone());
+            createAlienBullet(alien);
+            updateAlienBullet(alien);
+
+            if(alien.movement.distanceMoved >= alien.movement.boundary) { // Reached movement boundary
+                alien.movement.moveOrRemain = Math.floor(Math.random() * 2) == 0 ? "move" : "remain"; // Choose a random option to move again or stand still
+
+                if(alien.movement.moveOrRemain == "move") {
+                    if(alien.movement.leftOrRight == "left") {
+                        alien.movement.leftOrRight = "right"; // If the alien was moving left before reaching the boundary, move right
+                    }
+                    else {
+                        alien.movement.leftOrRight = "left"; // If the alien was moving right before reaching the boundary, move left
+                    }
+                }   
+                else { // The alien should remain in place for a brief period until being assigned a new direction to move
+                    updateAlienAnimation(alien, alien.shootAnim);
+                    let directionTemp;
+                    if(alien.movement.leftOrRight == "left") {
+                        directionTemp = "right";
+                    }
+                    else {
+                        directionTemp = "left";
+                    }
+                    alien.movement.leftOrRight = null;
+                    setTimeout(() => {
+                        alien.movement.leftOrRight = directionTemp;
+                    }, 1000); 
+                }
+
+                alien.movement.distanceMoved = 0;
+            }
+            
+            if(alien.movement.leftOrRight == "left") { // Moving left
+                updateAlienAnimation(alien, alien.strafeLAnim);
+                alien.model.position.x -= 0.05;
+                alien.movement.distanceMoved += 0.05;
+            }
+            else if(alien.movement.leftOrRight == "right") { // Moving right
+                updateAlienAnimation(alien, alien.strafeRAnim);
+                alien.model.position.x += 0.05;
+                alien.movement.distanceMoved += 0.05;
+            }
+    
+        }
+        else { // Either the alien is dead, the player is dead or the alien is out of range of the player. In all cases remove the alien's bullets from the scene
+            alien.weapon.bullets.forEach((item, index) => {
+                scene.remove(item.bullet); // Remove the bullet from the scene
+                alien.weapon.bullets.splice(index, 1); // Remove the bullet from the alien's bullets array
+            });
+
+            if(alien.currentHealth > 0) { // If the alien is alive, the player is dead or the player is out of range so set the alien's animation to idle
+                updateAlienAnimation(alien, alien.idleAnim);
+            }
+        }
+        
+        if(alien.currentHealth > 0 && player.currentHealth < 0) { // Player is dead but alien is alive TODO: remove bullets ?
+            updateAlienAnimation(alien, alien.idleAnim);
+        }
+    });
+}
+
 function updateAlienBullet(alien) {
 
     alien.weapon.bullets.forEach((item, index) => {
@@ -3388,12 +3471,41 @@ function updateAlienBullet(alien) {
 
             if(distance_one <= distance_two) { // Alien bullet hit player
 
-                if(audioCollection.playerInjured.isPlaying) {
-                    audioCollection.playerInjured.stop();
+                if(player.shield.shieldEnabled) { // Shield is active
+                    player.shield.shieldValue -= 50;
+
+                    if(audioCollection.shieldHit.isPlaying) {
+                        audioCollection.shieldHit.stop();
+                    }
+                    audioCollection.shieldHit.play();
+
+                    if(player.shield.shieldValue <= 0) {
+                        player.shield.shieldValue = 0;
+
+                        if(audioCollection.shieldBreak.isPlaying) {
+                            audioCollection.shieldBreak.stop();
+                        }
+                        audioCollection.shieldBreak.play();
+                        
+                        shieldDisplay.style.visibility = "hidden";
+                        player.shield.shieldEnabled = false;
+
+                        setTimeout(() => {
+                            player.shield.shieldRecharging = true;
+                        }, 4000)
+                    }
+
+                    shieldNumber.innerHTML = player.shield.shieldValue;
+                    shieldbar.setAttribute("style", "width: " + player.shield.shieldValue / 10.25 + "%");
                 }
-                audioCollection.playerInjured.play();
-                player.currentHealth -= 35;
-                
+                else {
+                    if(audioCollection.playerInjured.isPlaying) {
+                        audioCollection.playerInjured.stop();
+                    }
+                    audioCollection.playerInjured.play();
+                    player.currentHealth -= 35;
+                }
+
                 if(player.currentHealth <= 0) {
                     if(audioCollection.bossFightMusic.isPlaying) {
                         audioCollection.bossFightMusic.stop();
@@ -3847,6 +3959,50 @@ function updateHealthPackAnimation() {
 }
 
 /**
+ * Called every game loop until the player picks up the gun.
+ * Handles the animation of the gun on the ground.
+ */
+function updateGunOnGroundAnimation() {
+    if(player.weapon.model.position.y <= 1 || player.weapon.model.position.y >= 2) { // Reached boundary
+        if(player.weapon.model.direction == "down") {
+            player.weapon.model.direction = "up";
+        }
+        else {
+            player.weapon.model.direction = "down";
+        }
+    }
+
+    if(player.weapon.model.direction == "down") { // Decrease y position
+        player.weapon.model.position.y -= 0.01;
+    }
+    else { // Increase y position
+        player.weapon.model.position.y += 0.01;
+    }
+
+    player.weapon.model.rotation.y += 0.01; // Rotate counterclockwise
+}
+
+function updateShieldOnGroundAnimation() {
+    if(player.shield.model.position.y <= 2 || player.shield.model.position.y >= 3) { // Reached boundary
+        if(player.shield.model.direction == "down") {
+            player.shield.model.direction = "up";
+        }
+        else {
+            player.shield.model.direction = "down";
+        }
+    }
+
+    if(player.shield.model.direction == "down") { // Decrease y position
+        player.shield.model.position.y -= 0.01;
+    }
+    else { // Increase y position
+        player.shield.model.position.y += 0.01;
+    }
+
+    player.shield.model.rotation.y += 0.01; // Rotate counterclockwise
+}
+
+/**
  * Called when the player has defeated the boss and walks into the final area.
  * Handles the raycasting logic to allow them to enter their ship and finish the game.
  */
@@ -3916,7 +4072,10 @@ function loadModel(url, key) {
                 initBountyHunterModels(gltf);
                 break;
             case "weapon":
-                initWeapon(gltf);
+                initWeaponModel(gltf);
+                break;
+            case "shield":
+                initShieldModel(gltf);
                 break;
             case "ship":
                 initShipModel(gltf);
@@ -4004,6 +4163,17 @@ function loadModel(url, key) {
     gltfLoader.load(url, callback, undefined, (error) => console.log(error));
 }
 
+function configureAudio(url, audio, loop, volume, play) {
+    audioLoader.load(url, function(buffer) {
+        audio.setBuffer(buffer);
+        audio.setLoop(loop);
+        audio.setVolume(volume);
+        if(play) {
+            audio.play();
+        }
+    });
+}
+
 /**
  * Helper function.
  * Called when an audio file must be loaded.
@@ -4015,244 +4185,123 @@ function loadAudio(url, key) {
     switch(key) {
         case "wildlife":
             audioCollection.wildlife = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.wildlife.setBuffer(buffer);
-	            audioCollection.wildlife.setLoop(true);
-	            audioCollection.wildlife.setVolume(0.1);
-	            audioCollection.wildlife.play();
-            });
+            configureAudio(url, audioCollection.wildlife, true, 0.1, true); // url, audio, looping, volume, play
             break;
         case "weapon":
             audioCollection.weapon = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.weapon.setBuffer(buffer);
-                audioCollection.weapon.setLoop(false);
-                audioCollection.weapon.setVolume(0.3);
-            });
+            configureAudio(url, audioCollection.weapon, false, 0.3, false);
             break;
         case "headshot_announcer":
             audioCollection.headshotAnnouncer = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.headshotAnnouncer.setBuffer(buffer);
-                audioCollection.headshotAnnouncer.setLoop(false);
-                audioCollection.headshotAnnouncer.setVolume(0.3);
-            });
+            configureAudio(url, audioCollection.headshotAnnouncer, false, 0.3, false);
             break;
         case "headshot":
             audioCollection.headshot = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.headshot.setBuffer(buffer);
-                audioCollection.headshot.setLoop(false);
-                audioCollection.headshot.setVolume(0.2);
-            });
+            configureAudio(url, audioCollection.headshot, false, 0.2, false);
             break;
         case "hitmarker":
             audioCollection.hitmarker = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.hitmarker.setBuffer(buffer);
-                audioCollection.hitmarker.setLoop(false);
-                audioCollection.hitmarker.setVolume(0.5);
-            });
+            configureAudio(url, audioCollection.hitmarker, false, 0.5, false);
             break;
         case "jump_boost":
             audioCollection.jumpBoost = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.jumpBoost.setBuffer(buffer);
-                audioCollection.jumpBoost.setLoop(false);
-                audioCollection.jumpBoost.setVolume(0.3);
-            });
+            configureAudio(url, audioCollection.jumpBoost, false, 0.3, false);
             break;
         case "paper":
             audioCollection.paper = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.paper.setBuffer(buffer);
-                audioCollection.paper.setLoop(false);
-                audioCollection.paper.setVolume(0.3);
-            });
+            configureAudio(url, audioCollection.paper, false, 0.3, false);
             break;
         case "totem_select":
             audioCollection.totemSelect = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.totemSelect.setBuffer(buffer);
-                audioCollection.totemSelect.setLoop(false);
-                audioCollection.totemSelect.setVolume(0.35);
-            });
+            configureAudio(url, audioCollection.totemSelect, false, 0.35, false);
             break;
         case "wrong_move":
             audioCollection.wrongMove = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.wrongMove.setBuffer(buffer);
-                audioCollection.wrongMove.setLoop(false);
-                audioCollection.wrongMove.setVolume(0.5);
-            });
+            configureAudio(url, audioCollection.wrongMove, false, 0.5, false);
             break;
         case "correct_totem_order":
             audioCollection.correctTotemOrder = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.correctTotemOrder.setBuffer(buffer);
-                audioCollection.correctTotemOrder.setLoop(false);
-                audioCollection.correctTotemOrder.setVolume(0.4);
-            });
+            configureAudio(url, audioCollection.correctTotemOrder, false, 0.4, false);
             break;
         case "rock_sink":
             audioCollection.rockSink = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.rockSink.setBuffer(buffer);
-                audioCollection.rockSink.setLoop(false);
-                audioCollection.rockSink.setVolume(0.75);
-            });
+            configureAudio(url, audioCollection.rockSink, false, 0.75, false);
             break;
         case "rock_slide":
             audioCollection.rockSlide = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.rockSlide.setBuffer(buffer);
-                audioCollection.rockSlide.setLoop(false);
-                audioCollection.rockSlide.setVolume(0.5);
-            });
+            configureAudio(url, audioCollection.rockSlide, false, 0.5, false);
             break;
         case "tooltip_completed":
             audioCollection.tooltipCompleted = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.tooltipCompleted.setBuffer(buffer);
-                audioCollection.tooltipCompleted.setLoop(false);
-                audioCollection.tooltipCompleted.setVolume(0.8);
-            });
+            configureAudio(url, audioCollection.tooltipCompleted, false, 0.8, false);
             break;
         case "alien_weapon_shot":
             audioCollection.alienWeapon = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.alienWeapon.setBuffer(buffer);
-                audioCollection.alienWeapon.setLoop(false);
-                audioCollection.alienWeapon.setVolume(0.3);
-            });
+            configureAudio(url, audioCollection.alienWeapon, false, 0.3, false);
             break;
         case "player_injured":
             audioCollection.playerInjured = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.playerInjured.setBuffer(buffer);
-                audioCollection.playerInjured.setLoop(false);
-                audioCollection.playerInjured.setVolume(0.3);
-            });
+            configureAudio(url, audioCollection.playerInjured, false, 0.3, false);
             break;
         case "player_death":
             audioCollection.playerDeath = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.playerDeath.setBuffer(buffer);
-                audioCollection.playerDeath.setLoop(false);
-                audioCollection.playerDeath.setVolume(0.3);
-            });
+            configureAudio(url, audioCollection.playerDeath, false, 0.3, false);
             break;
         case "death_audio":
             audioCollection.deathAudio = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.deathAudio.setBuffer(buffer);
-                audioCollection.deathAudio.setLoop(false);
-                audioCollection.deathAudio.setVolume(0.5);
-            });
+            configureAudio(url, audioCollection.deathAudio, false, 0.5, false);
             break;
          case "chicken_dance":
             audioCollection.chickenDance = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.chickenDance.setBuffer(buffer);
-                audioCollection.chickenDance.setLoop(false);
-                audioCollection.chickenDance.setVolume(0.25);
-            });
+            configureAudio(url, audioCollection.chickenDance, false, 0.25, false);
             break;
         case "gangnam_style":
             audioCollection.gangnamStyle = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.gangnamStyle.setBuffer(buffer);
-                audioCollection.gangnamStyle.setLoop(false);
-                audioCollection.gangnamStyle.setVolume(0.25);
-            });
+            configureAudio(url, audioCollection.gangnamStyle, false, 0.25, false);
             break;
         case "macarena_dance":
             audioCollection.macarenaDance = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.macarenaDance.setBuffer(buffer);
-                audioCollection.macarenaDance.setLoop(false);
-                audioCollection.macarenaDance.setVolume(0.25);
-            });
+            configureAudio(url, audioCollection.macarenaDance, false, 0.25, false);
             break;
         case "ymca_dance":
             audioCollection.ymcaDance = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.ymcaDance.setBuffer(buffer);
-                audioCollection.ymcaDance.setLoop(false);
-                audioCollection.ymcaDance.setVolume(0.25);
-            });
+            configureAudio(url, audioCollection.ymcaDance, false, 0.25, false);
             break;
         case "lose_puzzle":
             audioCollection.losePuzzle = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.losePuzzle.setBuffer(buffer);
-                audioCollection.losePuzzle.setLoop(false);
-                audioCollection.losePuzzle.setVolume(0.5);
-            });
+            configureAudio(url, audioCollection.losePuzzle, false, 0.5, false);
             break;
         case "correct":
             audioCollection.correct = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.correct.setBuffer(buffer);
-                audioCollection.correct.setLoop(false);
-                audioCollection.correct.setVolume(0.75);
-            });
+            configureAudio(url, audioCollection.correct, false, 0.75, false);
             break;
         case "win_puzzle":
             audioCollection.winPuzzle = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.winPuzzle.setBuffer(buffer);
-                audioCollection.winPuzzle.setLoop(false);
-                audioCollection.winPuzzle.setVolume(0.75);
-            });
+            configureAudio(url, audioCollection.winPuzzle, false, 0.75, false);
             break;
         case "record_scratch":
             audioCollection.recordScratch = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.recordScratch.setBuffer(buffer);
-                audioCollection.recordScratch.setLoop(false);
-                audioCollection.recordScratch.setVolume(0.5);
-            });
+            configureAudio(url, audioCollection.recordScratch, false, 0.5, false);
             break;
         case "health_refill":
             audioCollection.healthRefill = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.healthRefill.setBuffer(buffer);
-                audioCollection.healthRefill.setLoop(false);
-                audioCollection.healthRefill.setVolume(0.5);
-            });
+            configureAudio(url, audioCollection.healthRefill, false, 0.5, false);
             break;
         case "gun_cock":
             audioCollection.gunCock = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.gunCock.setBuffer(buffer);
-                audioCollection.gunCock.setLoop(false);
-                audioCollection.gunCock.setVolume(0.5);
-            });
+            configureAudio(url, audioCollection.gunCock, false, 0.5, false);
             break;
         case "boss_roar":
             audioCollection.bossRoar = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.bossRoar.setBuffer(buffer);
-                audioCollection.bossRoar.setLoop(false);
-                audioCollection.bossRoar.setVolume(0.6);
-            });
+            configureAudio(url, audioCollection.bossRoar, false, 0.6, false);
             break;
         case "boss_fight_music":
             audioCollection.bossFightMusic = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.bossFightMusic.setBuffer(buffer);
-                audioCollection.bossFightMusic.setLoop(true);
-                audioCollection.bossFightMusic.setVolume(0.35);
-            });
+            configureAudio(url, audioCollection.bossFightMusic, true, 0.35, false);
             break;
         case "boss_attack":
             audioCollection.bossAttack = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.bossAttack.setBuffer(buffer);
-                audioCollection.bossAttack.setLoop(false);
-                audioCollection.bossAttack.setVolume(0.5);
-            });
+            configureAudio(url, audioCollection.bossAttack, false, 0.5, false);
             break;
         case "boss_footstep":
             audioCollection.bossFootstep = new THREE.PositionalAudio(listener);
@@ -4266,19 +4315,27 @@ function loadAudio(url, key) {
             break;
         case "boss_death":
             audioCollection.bossDeath = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.bossDeath.setBuffer(buffer);
-                audioCollection.bossDeath.setLoop(false);
-                audioCollection.bossDeath.setVolume(0.6);
-            });
+            configureAudio(url, audioCollection.bossDeath, false, 0.6, false);
             break;
         case "tree_fall":
             audioCollection.treeFall = new THREE.Audio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.treeFall.setBuffer(buffer);
-                audioCollection.treeFall.setLoop(false);
-                audioCollection.treeFall.setVolume(0.3);
-            });
+            configureAudio(url, audioCollection.treeFall, false, 0.3, false);
+            break;
+        case "shield_active":
+            audioCollection.shieldActive = new THREE.Audio(listener);
+            configureAudio(url, audioCollection.shieldActive, false, 0.4, false);
+            break;
+        case "shield_hit":
+            audioCollection.shieldHit = new THREE.Audio(listener);
+            configureAudio(url, audioCollection.shieldHit, false, 0.4, false);
+            break;
+        case "shield_break":
+            audioCollection.shieldBreak = new THREE.Audio(listener);
+            configureAudio(url, audioCollection.shieldBreak, false, 0.4, false);
+            break;
+        case "shield_ready":
+            audioCollection.shieldReady = new THREE.Audio(listener);
+            configureAudio(url, audioCollection.shieldReady, false, 0.4, false);
             break;
     }
 }
@@ -4303,6 +4360,17 @@ function setCheckPoint() {
             player.currentHealth = 100;
             updatePlayerHealth();
             audioCollection.healthRefill.play();
+        }
+
+        if(player.shield.hasShield) {
+            if(player.shield.shieldValue < 100) {
+                player.shield.shieldValue = 100;
+                player.shield.shieldRecharging = false;
+                audioCollection.shieldReady.play();
+
+                shieldNumber.innerHTML = player.shield.shieldValue;
+                shieldbar.setAttribute("style", "width: 10.25%");
+            }
         }
 
         checkpoint.style.visibility = "visible";
@@ -4338,6 +4406,12 @@ function restartCheckpoint() {
     healthNumber.innerHTML = player.currentHealth;
     healthbarWidth = 10.25;
     healthbarTrailingWidth = healthbarWidth;
+
+    player.shield.shieldValue = 100;
+    player.shield.shieldEnabled = false;
+    player.shield.shieldRecharging = false;
+    shieldbar.setAttribute("style", "width: 10.25%");
+    shieldNumber.innerHTML = player.shield.shieldValue;
 
     controls.lock();
 
@@ -4509,7 +4583,38 @@ function updateBossPosition() {
         setTimeout(() => { // Give player time to dodge
             audioCollection.bossAttack.play();
             if(bossInRangeOfPlayer()) {
-                player.currentHealth -= 50;
+
+                if(player.shield.shieldEnabled) { // Shield is active
+                    player.shield.shieldValue -= 50;
+
+                    if(audioCollection.shieldHit.isPlaying) {
+                        audioCollection.shieldHit.stop();
+                    }
+                    audioCollection.shieldHit.play();
+
+                    if(player.shield.shieldValue <= 0) {
+                        player.shield.shieldValue = 0;
+
+                        if(audioCollection.shieldBreak.isPlaying) {
+                            audioCollection.shieldBreak.stop();
+                        }
+                        audioCollection.shieldBreak.play();
+                        
+                        shieldDisplay.style.visibility = "hidden";
+                        player.shield.shieldEnabled = false;
+
+                        setTimeout(() => {
+                            player.shield.shieldRecharging = true;
+                        }, 4000)
+                    }
+
+                    shieldNumber.innerHTML = player.shield.shieldValue;
+                    shieldbar.setAttribute("style", "width: " + player.shield.shieldValue / 10.25 + "%");
+                }
+                else {
+                    player.currentHealth -= 50;
+                }
+
                 if(player.currentHealth <= 0) {
                     audioCollection.bossFightMusic.stop();
                     player.currentHealth = 0;
@@ -4703,8 +4808,20 @@ function initControls() {
             audioCollection.wildlife.play();
         health.style.visibility = "visible";
         crosshair.style.visibility = "visible";
+
+        if(player.shield.hasShield) {
+            shield.style.visibility = "visible";
+        }
+
         if(tooltipVisible) {
             tooltip.style.visibility = "visible";
+        }
+        if(player.shield.shieldEnabled) {
+            shieldDisplay.style.visibility = "visible";
+        }
+
+        if(currentLevel == 4 && !defeatedBoss) {
+            audioCollection.bossFightMusic.play();
         }
 
         pauseBlock.style.display = "none";
@@ -4718,10 +4835,21 @@ function initControls() {
         health.style.visibility = "hidden";
         crosshair.style.visibility = "hidden";
 
+        if(player.shield.hasShield) {
+            shield.style.visibility = "hidden";
+        }
+
         if(tooltipVisible) {
             tooltip.style.visibility = "hidden";
         }
+        if(player.shield.shieldEnabled) {
+            shieldDisplay.style.visibility = "hidden";
+        }
         pauseSongs();
+
+        if(currentLevel == 4 && !defeatedBoss) {
+            audioCollection.bossFightMusic.pause();
+        }
 
         if(player.currentHealth > 0 && danceIncorrect < 2) {
             pauseBlock.style.display = "block";
@@ -4836,8 +4964,8 @@ function initControls() {
                 currentLevel = 3;
                 break;
             case 89:    // Y
-                currentLevel = 4;
-                controls.getObject().position.set(480, 8, 40);
+                currentLevel = 2;
+                controls.getObject().position.set(20, 8, -1140);
                 camera.lookAt(480, 8, 40);
                 break;
             case 69:    // E
@@ -4885,6 +5013,41 @@ function initControls() {
                             endGame();
                             break;   
                     }
+                }
+                break;
+            case 70:    // F
+                if(player.shield.hasShield && !player.shield.shieldEnabled && player.shield.shieldValue == 100) {
+                    player.shield.shieldEnabled = true;
+                    audioCollection.shieldActive.play();
+                    shieldDisplay.style.visibility = "visible";
+
+                    setTimeout(() => { // Timer is started for the shield to break after 5 seconds
+
+                        if(player.shield.shieldEnabled) { // If the shield hasn't been broken by a bullet
+                            player.shield.shieldValue = 0;
+
+                            if(audioCollection.shieldBreak.isPlaying) {
+                                audioCollection.shieldBreak.stop();
+                            }
+                            audioCollection.shieldBreak.play();
+                            
+                            shieldDisplay.style.visibility = "hidden";
+                            player.shield.shieldEnabled = false;
+
+                            shieldNumber.innerHTML = player.shield.shieldValue;
+                            shieldbar.setAttribute("style", "width: " + player.shield.shieldValue / 10.25 + "%");
+
+                            setTimeout(() => {
+                                player.shield.shieldRecharging = true;
+                            }, 4000)
+                        }
+                    }, 5000);
+                }
+                else { // Cannot use shield
+                    if(audioCollection.wrongMove.isPlaying) {
+                        audioCollection.wrongMove.stop();
+                    }
+                    audioCollection.wrongMove.play();
                 }
                 break;
             case 49:    // 1
@@ -4992,6 +5155,7 @@ function initLoadingManager() {
         loadingInfo.style.display = "none";
         loadingSymbol.style.display = "none";
         wakeUp.style.visibility = "visible";
+        renderer.compile(scene, camera);
         initControls();
         gameLoop();
     }
@@ -5076,15 +5240,18 @@ function initBountyHunter() {
     loadModel("models/characters/bountyhunter/bounty_hunter.glb", "bounty_hunter");
 }
 
-function initWeaponModel() {
+function initWeapon() {
     loadModel("models/gun/pistol.glb", "weapon");
 }
 
-function initWeapon(gltf) {
+function initWeaponModel(gltf) {
     player.weapon.model = gltf.scene;
+
     player.weapon.model.scale.set(0.75, 0.75, -0.75);
-    player.weapon.model.position.set(0, 0.5, -730);
-    player.weapon.model.rotation.set(0, Math.PI/4, -Math.PI/2);
+    player.weapon.model.rotation.y = Math.random() * 2*Math.PI;
+    player.weapon.model.position.set(0, Math.random() + 1, -745); // Random height between 1 and 2
+    player.weapon.model.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
+
     scene.add(player.weapon.model);    
 
     player.weapon.bulletStart = new THREE.Object3D();
@@ -5094,6 +5261,21 @@ function initWeapon(gltf) {
     player.weapon.bullets = [];
 
     document.addEventListener("mousedown", createPlayerBullet);
+}
+
+function initShield() {
+    loadModel("models/shield/shield.glb", "shield");
+}
+
+function initShieldModel(gltf) {
+    player.shield.model = gltf.scene;
+
+    player.shield.model.scale.set(2.5, 2.5, 2.5);
+    player.shield.model.rotation.y = Math.random() * 2*Math.PI;
+    player.shield.model.position.set(50, Math.random() + 2, -1140); // Random height between 2 and 3
+    player.shield.model.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
+
+    scene.add(player.shield.model);
 }
 
 function initHealthPacks(gltf) {
@@ -5279,6 +5461,12 @@ function initAudio() {
     loadAudio("audio/boss/boss_footstep.wav", "boss_footstep");
     loadAudio("audio/boss/boss_death.wav", "boss_death");
     loadAudio("audio/environment/tree_fall.wav", "tree_fall");
+
+    /** SHIELD */
+    loadAudio("audio/character/shield_active.ogg", "shield_active");
+    loadAudio("audio/character/shield_hit.wav", "shield_hit");
+    loadAudio("audio/character/shield_break.wav", "shield_break");
+    loadAudio("audio/character/shield_ready.wav", "shield_ready");
 }
 
 function initWorld() {
@@ -5340,7 +5528,8 @@ function init() {
     initAliens();
     initShip();
     initBountyHunter();
-    initWeaponModel();
+    initWeapon();
+    initShield();
     initAudio();
     initBoss();
     initWorld();
