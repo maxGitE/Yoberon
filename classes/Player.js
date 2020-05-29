@@ -1,6 +1,6 @@
 class Player {
     constructor(name) {
-        this._currentHealth = 10000;
+        this._currentHealth = 100;
         this._maxHealth = 100;
         this._currentStamina = 100;
         this._maxStamina = 100;
@@ -20,20 +20,9 @@ class Player {
         this._runFactor = 1;
         this._hasGun = false;
         this._playerModel = undefined;
-        this._currentAnimation = undefined;
-        this._idleAnim = undefined;
-        this._walkAnim = undefined;
-        this._backwardsAnim = undefined;
-        this._jumpAnim = undefined;
-        this._runAnim = undefined;
-        this._shootAnim = undefined;
-        this._strafeLAnim = undefined;
-        this._strafeRAnim = undefined;
-        this._chickenDance = undefined;
-        this._gangnamStyle = undefined;
-        this._macarenaDance = undefined;
-        this._ymcaDance = undefined;
-        this._breakdance = undefined;
+        this._animations = {currentAnimation: undefined, idleAnim: undefined, walkAnim: undefined, backwardsAnim: undefined, jumpAnim: undefined, runAnim: undefined,
+                            shootAnim: undefined, strafeLAnim: undefined, strafeRAnim: undefined, chickenDance: undefined, gangnamStyle: undefined, macarenaDance: undefined,
+                            ymcaDance: undefined, breakdance: undefined, deathAnim: undefined, fallAnim: undefined};
     }
 
     /** GETTERS */
@@ -121,60 +110,8 @@ class Player {
         return this._playerModel;
     }
 
-    get currentAnimation() {
-        return this._currentAnimation;
-    }
-
-    get idleAnim() {
-        return this._idleAnim;
-    }
-    
-    get walkAnim() {
-        return this._walkAnim;
-    }
-
-    get backwardsAnim() {
-        return this._backwardsAnim;
-    }
-
-    get jumpAnim() {
-        return this._jumpAnim;
-    }
-
-    get runAnim() {
-        return this._runAnim;
-    }
-
-    get shootAnim() {
-        return this._shootAnim;
-    }
-
-    get strafeLAnim() {
-        return this._strafeLAnim;
-    }
-
-    get strafeRAnim() {
-        return this._strafeRAnim;
-    }
-
-    get chickenDance() {
-        return this._chickenDance;
-    }
-
-    get gangnamStyle() {
-        return this._gangnamStyle;
-    }
-
-    get macarenaDance() {
-        return this._macarenaDance;
-    }
-
-    get ymcaDance() {
-        return this._ymcaDance;
-    }
-
-    get breakdance() {
-        return this._breakdance;
+    get animations() {
+        return this._animations;
     }
 
     /** SETTERS */
@@ -240,62 +177,6 @@ class Player {
 
     set playerModel(model) {
         this._playerModel = model;
-    }
-
-    set currentAnimation(animation) {
-        this._currentAnimation = animation;
-    }
-
-    set idleAnim(animation) {
-        this._idleAnim = animation;
-    }
-    
-    set walkAnim(animation) {
-        this._walkAnim = animation;
-    }
-
-    set backwardsAnim(animation) {
-        this._backwardsAnim = animation;
-    }
-
-    set jumpAnim(animation) {
-        this._jumpAnim = animation;
-    }
-
-    set runAnim(animation) {
-        this._runAnim = animation;
-    }
-
-    set shootAnim(animation) {
-        this._shootAnim = animation;
-    }
-
-    set strafeLAnim(animation) {
-        this._strafeLAnim = animation;
-    }
-
-    set strafeRAnim(animation) {
-        this._strafeRAnim = animation;
-    }
-
-    set chickenDance(animation) {
-        this._chickenDance = animation;
-    }
-
-    set gangnamStyle(animation) {
-        this._gangnamStyle = animation;
-    }
-
-    set macarenaDance(animation) {
-        this._macarenaDance = animation;
-    }
-
-    set ymcaDance(animation) {
-        this._ymcaDance = animation;
-    }
-
-    set breakdance(animation) {
-        this._breakdance = animation;
     }
 
     addItem(item) {
