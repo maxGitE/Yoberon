@@ -157,6 +157,10 @@ let clueWords = ["AIR", "WATER", "FIRE", "EARTH"];
 let levelOneCollidableMeshList = [];
 let disposedTotems = false;
 
+/** LEVEL 2 */
+let rightOfTree = false;
+let onTree = false;
+
 /** PUZZLE 2 */
 let removedLevelTwoAliens = false
 let inPuzzleTwo = false;
@@ -261,9 +265,18 @@ function gameLoop() {
             controls.moveForward(-player.velocityZ * clock.delta); // Negate the value as moveForward() uses left-handed coordinates
             controls.getObject().position.y += player.velocityY * clock.delta;
 
-            if(controls.getObject().position.y < 8) {
-                controls.getObject().position.y = 8;
-                player.velocityY = 0;
+            /** Allow the player to land on the fallen tree */
+            if(!onTree) {
+                if(controls.getObject().position.y < 8) {
+                    controls.getObject().position.y = 8;
+                    player.velocityY = 0;
+                }
+            }
+            else {
+                if(controls.getObject().position.y < 18) {
+                    controls.getObject().position.y = 18;
+                    player.velocityY = 0;
+                }
             }
 
             player.playerModel.position.x = controls.getObject().position.x;
@@ -1799,21 +1812,27 @@ function initBroadLeaf(gltf) {
     let broadleaf_two = broadleaf_one.clone();
     let broadleaf_three = broadleaf_one.clone();
     let broadleaf_four = broadleaf_one.clone();
+    let broadleaf_five = broadleaf_one.clone();
 
     broadleaf_one.scale.set(50, 50, 50);
     broadleaf_two.scale.set(50, 50, 50);
     broadleaf_three.scale.set(80, 80, 80);
     broadleaf_four.scale.set(60, 60, 60);
+    broadleaf_five.scale.set(40, 40, 40);
 
     broadleaf_one.position.set(-100, 0, -50);
     broadleaf_two.position.set(100, 0, -300);
     broadleaf_three.position.set(120, 0, 100);
     broadleaf_four.position.set(-120, 0, -600);
+    broadleaf_five.position.set(0, -20, -1200);
+
+    broadleaf_five.rotation.set(Math.PI/2, 0, 0);
     
     broadLeafGroup.add(broadleaf_one);
     broadLeafGroup.add(broadleaf_two);
     broadLeafGroup.add(broadleaf_three);
     broadLeafGroup.add(broadleaf_four);
+    broadLeafGroup.add(broadleaf_five);
 
     scene.add(broadLeafGroup);
 }
@@ -2709,11 +2728,42 @@ function levelTwoBoundingBox() {
         if(zPos < boxFourTop + boundaryFactor) { // Place top boundary
             controls.getObject().position.z = boxFourTop + boundaryFactor;
         }
-        if(xPos < boxFourLeft + boundaryFactor) { // Place left boundary
-            controls.getObject().position.x = boxFourLeft + boundaryFactor;
+        /** Fallen tree logic */
+        if(!onTree) {
+            if(!rightOfTree) {
+                if(xPos < boxFourLeft + boundaryFactor) { // Place left boundary
+                    controls.getObject().position.x = boxFourLeft + boundaryFactor;
+                }
+                if(xPos > -20) { // Place right boundary before the tree
+                    if(controls.getObject().position.y < 16) { // Only allow player over if they jump to the correct height
+                        controls.getObject().position.x = -20;
+                    }
+                }
+            }
+            else {
+                if(xPos < 10) { // Place left boundary after the tree
+                    if(controls.getObject().position.y < 16) { // Only allow player over if they jump to the correct height
+                        controls.getObject().position.x = 10;
+                    }
+                }
+                if(xPos > boxFourRight - boundaryFactor) { // Place right boundary
+                    controls.getObject().position.x = boxFourRight - boundaryFactor;
+                }
+            }
         }
-        if(xPos > boxFourRight - boundaryFactor) { // Place right boundary
-            controls.getObject().position.x = boxFourRight - boundaryFactor;
+
+        if(xPos > -15 && xPos < 5) { // On top of tree
+            onTree = true;
+        }
+        else {
+            onTree = false;
+            /** Check which side of the tree the player is on after getting off the tree */
+            if(xPos < -15) {
+                rightOfTree = false;
+            }
+            else if(xPos > 5) {
+                rightOfTree = true;
+            }
         }
     }
     else if(boxArr[5]) { // In box five
@@ -4852,9 +4902,9 @@ function initControls() {
                 currentLevel = 2;
                 break;
             case 84:  // T
-                controls.getObject().position.set(460, 8, -950);
-                camera.lookAt(460, 8, 1);
-                currentLevel = 3;
+                controls.getObject().position.set(-100, 0, -1130);
+                camera.lookAt(1, 0, -1130);
+                currentLevel = 2;
                 break;
             case 89:    // Y
                 currentLevel = 2;
@@ -5403,7 +5453,7 @@ function render() {
 }
 
 function init() {
-    menuAudioSource.stop();
+    // menuAudioSource.stop();
     title.style.display = "none";
     menuBlock.style.display = "none";
     loadingSymbol.style.display = "block";
@@ -5446,6 +5496,6 @@ function initMenuAudio() {
 }
 
 function menu() {
-    initMenuAudio();
+    // initMenuAudio();
     playButton.addEventListener("click", () => init());
 }
