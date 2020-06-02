@@ -189,6 +189,8 @@ let dancePlaying = false;
 
 /** LEVEL 3 */
 let spawnedLevelThreeAliens = false;
+let hole;
+let inHole = false;
 
 /** LEVEL 4 */
 let bossFightStarted = false;
@@ -284,18 +286,22 @@ function gameLoop() {
             controls.moveForward(-player.velocityZ * clock.delta); // Negate the value as moveForward() uses left-handed coordinates
             controls.getObject().position.y += player.velocityY * clock.delta;
 
-            /** Allow the player to land on the fallen tree */
-            if(!onTree) {
-                if(controls.getObject().position.y < 8) {
-                    controls.getObject().position.y = 8;
-                    player.velocityY = 0;
+            if(!inHole) { // Remove gravity when the player is in the hole
+                if(!onTree) { // Allow the player to land on the fallen tree
+                    if(controls.getObject().position.y < 8) {
+                        controls.getObject().position.y = 8;
+                        player.velocityY = 0;
+                    }
+                }
+                else {
+                    if(controls.getObject().position.y < 18) {
+                        controls.getObject().position.y = 18;
+                        player.velocityY = 0;
+                    }
                 }
             }
-            else {
-                if(controls.getObject().position.y < 18) {
-                    controls.getObject().position.y = 18;
-                    player.velocityY = 0;
-                }
+            else {                
+                updatePlayerAnimation(player.animations.fallAnim);
             }
 
             player.playerModel.position.x = controls.getObject().position.x;
@@ -333,6 +339,8 @@ function gameLoop() {
             // Update star field colours 
             starFieldA.updateColour(0.0035);
             starFieldB.updateColour(0.0075);
+
+            hole.rotation.z -= 0.001;
 
             updateLevel();
             updateBullets(); // So anyway I started blasting
@@ -377,6 +385,9 @@ function gameLoop() {
             // Update clock time
             clock.timeBefore = clock.timeNow;
         }
+    }
+    if(player.currentHealth <= 0) {
+        updatePlayerAnimation(player.animations.deathAnim);
     }
 
     render();
@@ -593,7 +604,7 @@ function levelTwoPuzzle() {
         /** Move the player to the center of the box in the z position */
         if(zPos < -1020) {
             player.movingForward = true;
-            updatePlayerAnimation(player.walkAnim);
+            updatePlayerAnimation(player.animations.walkAnim);
 
             /** Slowly dim the point light */
             if(pointLight.intensity > 0) {
@@ -602,7 +613,7 @@ function levelTwoPuzzle() {
         }
         else if(!inPositionZ) {
             player.movingForward = false;
-            updatePlayerAnimation(player.idleAnim);
+            updatePlayerAnimation(player.animations.idleAnim);
             inPositionZ = true;
             dancecontrols.style.visibility = "visible";
             pointLight.intensity = 0;
@@ -722,7 +733,7 @@ function checkDance() {
                 chickenDanceCorrect = true;
                 countCorrect++;   
                     
-                updatePlayerAnimation(player.idleAnim);
+                updatePlayerAnimation(player.animations.idleAnim);
                 dancePlaying = false;
                 audioCollection.chickenDance.isPlaying = false;
             };
@@ -734,7 +745,7 @@ function checkDance() {
             audioCollection.recordScratch.play();
             audioCollection.recordScratch.source.onended = function() {              
                 danceIncorrect++;  
-                updatePlayerAnimation(player.idleAnim);
+                updatePlayerAnimation(player.animations.idleAnim);
                 dancePlaying = false;
                 audioCollection.recordScratch.isPlaying = false;
             };
@@ -749,7 +760,7 @@ function checkDance() {
                 gangnamStyleCorrect = true;
                 countCorrect++;  
 
-                updatePlayerAnimation(player.idleAnim);
+                updatePlayerAnimation(player.animations.idleAnim);
                 dancePlaying = false;
                 audioCollection.gangnamStyle.isPlaying = false;
             };
@@ -760,7 +771,7 @@ function checkDance() {
             audioCollection.recordScratch.play();
             audioCollection.recordScratch.source.onended = function() {              
                 danceIncorrect++;  
-                updatePlayerAnimation(player.idleAnim);
+                updatePlayerAnimation(player.animations.idleAnim);
                 dancePlaying = false;
                 audioCollection.recordScratch.isPlaying = false;
             };
@@ -775,7 +786,7 @@ function checkDance() {
                 macarenaDanceCorrect = true;
                 countCorrect++; 
 
-                updatePlayerAnimation(player.idleAnim);
+                updatePlayerAnimation(player.animations.idleAnim);
                 dancePlaying = false;
                 audioCollection.macarenaDance.isPlaying = false;
             };
@@ -786,7 +797,7 @@ function checkDance() {
             audioCollection.recordScratch.play();
             audioCollection.recordScratch.source.onended = function() {              
                 danceIncorrect++;  
-                updatePlayerAnimation(player.idleAnim);
+                updatePlayerAnimation(player.animations.idleAnim);
                 dancePlaying = false;
                 audioCollection.recordScratch.isPlaying = false;
             };
@@ -801,7 +812,7 @@ function checkDance() {
                 ymcaDanceCorrect = true;
                 countCorrect++; 
                     
-                updatePlayerAnimation(player.idleAnim);
+                updatePlayerAnimation(player.animations.idleAnim);
                 dancePlaying = false;
                 audioCollection.ymcaDance.isPlaying = false;
             };
@@ -812,7 +823,7 @@ function checkDance() {
             audioCollection.recordScratch.play();
             audioCollection.recordScratch.source.onended = function() {              
                 danceIncorrect++;  
-                updatePlayerAnimation(player.idleAnim);
+                updatePlayerAnimation(player.animations.idleAnim);
                 dancePlaying = false;
                 audioCollection.recordScratch.isPlaying = false;
             };
@@ -884,7 +895,7 @@ function initDanceChecks() {
  * Called when controls are unlocked.
  */
 function pauseSongs() {
-    updatePlayerAnimation(player.idleAnim);
+    updatePlayerAnimation(player.animations.idleAnim);
     dancePlaying = false;
 
     switch (lastPlayed) {
@@ -915,46 +926,46 @@ function initPlayerModel(gltf) {
     let mixer = new THREE.AnimationMixer(player.playerModel);
     mixers.push(mixer);
 
-    player.walkAnim = mixer.clipAction(animations[0]);
-    player.idleAnim = mixer.clipAction(animations[1]);
-    player.backwardsAnim = mixer.clipAction(animations[2]);
-    player.runAnim = mixer.clipAction(animations[3]);
-    player.jumpAnim = mixer.clipAction(animations[4]);
-    player.strafeLAnim = mixer.clipAction(animations[5]);
-    player.strafeRAnim = mixer.clipAction(animations[6]);
-    player.chickenDance = mixer.clipAction(animations[7]);
-    player.gangnamStyle = mixer.clipAction(animations[8]);
-    player.macarenaDance = mixer.clipAction(animations[9]);
-    player.ymcaDance = mixer.clipAction(animations[10]);
-    player.breakdance = mixer.clipAction(animations[11]);
+    player.animations.walkAnim = mixer.clipAction(animations[0]);
+    player.animations.idleAnim = mixer.clipAction(animations[1]);
+    player.animations.backwardsAnim = mixer.clipAction(animations[2]);
+    player.animations.runAnim = mixer.clipAction(animations[3]);
+    player.animations.jumpAnim = mixer.clipAction(animations[4]);
+    player.animations.strafeLAnim = mixer.clipAction(animations[5]);
+    player.animations.strafeRAnim = mixer.clipAction(animations[6]);
+    player.animations.chickenDance = mixer.clipAction(animations[7]);
+    player.animations.gangnamStyle = mixer.clipAction(animations[8]);
+    player.animations.macarenaDance = mixer.clipAction(animations[9]);
+    player.animations.ymcaDance = mixer.clipAction(animations[10]);
+    player.animations.breakdance = mixer.clipAction(animations[11]);
 
-    player.walkAnim.play();
-    player.idleAnim.play();
-    player.backwardsAnim.play();
-    player.jumpAnim.play();
-    player.runAnim.play();
-    player.strafeLAnim.play();
-    player.strafeRAnim.play();
-    player.chickenDance.play();
-    player.gangnamStyle.play();
-    player.macarenaDance.play();
-    player.ymcaDance.play();
-    player.breakdance.play();
+    player.animations.walkAnim.play();
+    player.animations.idleAnim.play();
+    player.animations.backwardsAnim.play();
+    player.animations.jumpAnim.play();
+    player.animations.runAnim.play();
+    player.animations.strafeLAnim.play();
+    player.animations.strafeRAnim.play();
+    player.animations.chickenDance.play();
+    player.animations.gangnamStyle.play();
+    player.animations.macarenaDance.play();
+    player.animations.ymcaDance.play();
+    player.animations.breakdance.play();
 
-    player.walkAnim.enabled = false;
-    player.idleAnim.enabled = true;
-    player.backwardsAnim.enabled = false;
-    player.jumpAnim.enabled = false;
-    player.runAnim.enabled = false;
-    player.strafeLAnim.enabled = false;
-    player.strafeRAnim.enabled = false;
-    player.chickenDance.enabled = false;
-    player.gangnamStyle.enabled = false;
-    player.macarenaDance.enabled = false;
-    player.ymcaDance.enabled = false;
-    player.breakdance.enabled = false;
+    player.animations.walkAnim.enabled = false;
+    player.animations.idleAnim.enabled = true;
+    player.animations.backwardsAnim.enabled = false;
+    player.animations.jumpAnim.enabled = false;
+    player.animations.runAnim.enabled = false;
+    player.animations.strafeLAnim.enabled = false;
+    player.animations.strafeRAnim.enabled = false;
+    player.animations.chickenDance.enabled = false;
+    player.animations.gangnamStyle.enabled = false;
+    player.animations.macarenaDance.enabled = false;
+    player.animations.ymcaDance.enabled = false;
+    player.animations.breakdance.enabled = false;
     
-    player.currentAnimation = player.idleAnim;
+    player.animations.currentAnimation = player.animations.idleAnim;
 }
 
 function initPlayerGunModel(gltf) {
@@ -968,34 +979,43 @@ function initPlayerGunModel(gltf) {
     let mixer = new THREE.AnimationMixer(player.playerModel);
     mixers.push(mixer);
 
-    player.shootAnim = mixer.clipAction(animations[0]);    
-    player.walkAnim = mixer.clipAction(animations[1]);
-    player.runAnim = mixer.clipAction(animations[2]);
-    player.backwardsAnim = mixer.clipAction(animations[3]);
-    player.strafeLAnim = mixer.clipAction(animations[4]);
-    player.strafeRAnim = mixer.clipAction(animations[5]);
-    player.idleAnim = mixer.clipAction(animations[6]);
-    player.jumpAnim = mixer.clipAction(animations[7]);
+    player.animations.shootAnim = mixer.clipAction(animations[0]);    
+    player.animations.walkAnim = mixer.clipAction(animations[1]);
+    player.animations.runAnim = mixer.clipAction(animations[2]);
+    player.animations.backwardsAnim = mixer.clipAction(animations[3]);
+    player.animations.strafeLAnim = mixer.clipAction(animations[4]);
+    player.animations.strafeRAnim = mixer.clipAction(animations[5]);
+    player.animations.idleAnim = mixer.clipAction(animations[6]);
+    player.animations.jumpAnim = mixer.clipAction(animations[7]);
+    player.animations.deathAnim = mixer.clipAction(animations[8]);
+    player.animations.fallAnim = mixer.clipAction(animations[9]);
 
-    player.walkAnim.play();
-    player.idleAnim.play();
-    player.backwardsAnim.play();
-    player.jumpAnim.play();
-    player.runAnim.play();
-    player.shootAnim.play();
-    player.strafeLAnim.play();
-    player.strafeRAnim.play();
+    player.animations.deathAnim.setLoop(THREE.LoopOnce);
+    player.animations.deathAnim.clampWhenFinished = true;
 
-    player.walkAnim.enabled = false;
-    player.idleAnim.enabled = true;
-    player.backwardsAnim.enabled = false;
-    player.jumpAnim.enabled = false;
-    player.runAnim.enabled = false;
-    player.shootAnim.enabled = false;
-    player.strafeLAnim.enabled = false;
-    player.strafeRAnim.enabled = false;
+    player.animations.walkAnim.play();
+    player.animations.idleAnim.play();
+    player.animations.backwardsAnim.play();
+    player.animations.jumpAnim.play();
+    player.animations.runAnim.play();
+    player.animations.shootAnim.play();
+    player.animations.strafeLAnim.play();
+    player.animations.strafeRAnim.play();
+    player.animations.deathAnim.play();
+    player.animations.fallAnim.play();
 
-    player.currentAnimation = player.idleAnim;
+    player.animations.walkAnim.enabled = false;
+    player.animations.idleAnim.enabled = true;
+    player.animations.backwardsAnim.enabled = false;
+    player.animations.jumpAnim.enabled = false;
+    player.animations.runAnim.enabled = false;
+    player.animations.shootAnim.enabled = false;
+    player.animations.strafeLAnim.enabled = false;
+    player.animations.strafeRAnim.enabled = false;
+    player.animations.deathAnim.enabled = false;
+    player.animations.fallAnim.enabled = false;
+
+    player.animations.currentAnimation = player.animations.idleAnim;
 }
 
 function initAlienModels(gltf) {
@@ -2401,6 +2421,28 @@ function drawHealthPacks() {
     // scene.add(healthPackThree);
 }
 
+function drawHole() {
+    let holeGeometry = new THREE.PlaneBufferGeometry(50, 50);
+    let holeTexture = loadTexture("textures/hole.png");
+    let holeMaterial = new THREE.MeshBasicMaterial( {map: holeTexture, transparent: true} );
+
+    hole = new THREE.Mesh(holeGeometry, holeMaterial); 
+
+    hole.rotation.set(-Math.PI/2, 0, 0);
+    hole.position.set(460, 0.1, -860);
+
+    scene.add(hole);
+
+    /** Black cylinder mesh to fall through to hide the sky box and plane boundaries */
+    let cyclinderGeometry = new THREE.CylinderBufferGeometry(50, 50, 4000, 8);
+    let cylinderMaterial = new THREE.MeshBasicMaterial( {color: 0x000000, side: THREE.DoubleSide} );
+    let cyclinder = new THREE.Mesh(cyclinderGeometry, cylinderMaterial);
+
+    cyclinder.position.set(460, -2002, -860);
+    
+    scene.add(cyclinder);
+}
+
 /** Changes which bounding boxes to load depending on what the current level is */
 function updateLevel() {
     xPos = controls.getObject().position.x;
@@ -2996,6 +3038,19 @@ function levelThreeBoundingBox() {
     }
 
     if(boxArr[1]) { // In box one
+        /** Hole in the ground */
+        if(zPos > -870 && zPos < -850 && xPos > 445 && xPos < 475 && controls.getObject().position.y == 8) {
+            inHole = true;
+            setTimeout(() => {
+                player.currentHealth = 0;
+                audioCollection.playerDeath.play();
+                playerDeath.classList.add("fadein");
+                playerDeath.style.visibility = "visible";
+                setTimeout(() => audioCollection.deathAudio.play(), 500);
+                controls.unlock();
+            }, 2500);
+        }
+
         if(zPos < boxOneTop) { // Place top boundary
             controls.getObject().position.z = boxOneTop;
         }
@@ -3904,22 +3959,22 @@ function boundingBoxVis() {
  * Starts the previous animation again after running the jump animation for 600ms, unless idle was called while jumping (keyup). 
  */
 function handleJumpAnimation() { 
-    player.jumpAnim.enabled = true;
+    player.animations.jumpAnim.enabled = true;
     audioCollection.jumpBoost.play();
-    let tempAnimation = player.currentAnimation;
-    player.currentAnimation.enabled = false;
-    player.currentAnimation = player.jumpAnim;
+    let tempAnimation = player.animations.currentAnimation;
+    player.animations.currentAnimation.enabled = false;
+    player.animations.currentAnimation = player.animations.jumpAnim;
 
     setTimeout(function() {
         player.jumping = false;
         audioCollection.jumpBoost.stop();
         if(idleCalled == true) {
-            updatePlayerAnimation(player.idleAnim);
+            updatePlayerAnimation(player.animations.idleAnim);
             idleCalled = false;
         }
         else {
-            if(tempAnimation == player.runAnim && player.movingForward && !player.running) {
-                updatePlayerAnimation(player.walkAnim);
+            if(tempAnimation == player.animations.runAnim && player.movingForward && !player.running) {
+                updatePlayerAnimation(player.animations.walkAnim);
             }
             else {
                 updatePlayerAnimation(tempAnimation);
@@ -3937,12 +3992,12 @@ function updatePlayerAnimation(newAnimation) {
     if(cameraType == "fp") return;
 
     if(!player.jumping) {
-        player.currentAnimation.enabled = false;
+        player.animations.currentAnimation.enabled = false;
         newAnimation.enabled = true;
-        player.currentAnimation = newAnimation;
+        player.animations.currentAnimation = newAnimation;
     }
     else {
-        if(newAnimation == player.idleAnim)
+        if(newAnimation == player.animations.idleAnim)
             idleCalled = true;
     }
 }
@@ -4965,6 +5020,7 @@ function initControls() {
 
         controls.isLocked = true;
         lockingClick = false;
+        inHole = false;
         if(!audioCollection.wildlife.isPlaying)
             audioCollection.wildlife.play();
         health.style.visibility = "visible";
@@ -5058,7 +5114,7 @@ function initControls() {
 
                 player.movingForward = true;
                 if(!player.movingLeft && !player.movingRight)
-                    updatePlayerAnimation(player.walkAnim);
+                    updatePlayerAnimation(player.animations.walkAnim);
                 break;
             case 65:    // A
                 if(inPuzzleTwo && !finishedPuzzleTwo) return;
@@ -5068,14 +5124,14 @@ function initControls() {
                     player.running = false;
                     player.runFactor = 1;
                 }
-                updatePlayerAnimation(player.strafeLAnim);
+                updatePlayerAnimation(player.animations.strafeLAnim);
                 break;
             case 83:    // S
                 if(inPuzzleTwo && !finishedPuzzleTwo) return;
             
                 player.movingBackward = true;
                 if(!player.movingLeft && !player.movingRight)
-                    updatePlayerAnimation(player.backwardsAnim);
+                    updatePlayerAnimation(player.animations.backwardsAnim);
                 break;
             case 68:    // D
                 if(inPuzzleTwo && !finishedPuzzleTwo) return;
@@ -5085,7 +5141,7 @@ function initControls() {
                     player.running = false;
                     player.runFactor = 1;
                 }
-                updatePlayerAnimation(player.strafeRAnim);
+                updatePlayerAnimation(player.animations.strafeRAnim);
                 break;
             case 32:    // Space
                 if(inPuzzleTwo && !finishedPuzzleTwo) return;
@@ -5103,7 +5159,7 @@ function initControls() {
                     player.running = true;
                     if(player.movingForward && !player.movingLeft && !player.movingRight) {
                         player.runFactor = 1.5;
-                        updatePlayerAnimation(player.runAnim);
+                        updatePlayerAnimation(player.animations.runAnim);
                     }
                 }
                 break;
@@ -5120,14 +5176,14 @@ function initControls() {
                 cameraType = "tp";
                 if(player.movingForward) {
                     if(player.running) {
-                        updatePlayerAnimation(player.runAnim);
+                        updatePlayerAnimation(player.animations.runAnim);
                     }
                     else {
-                        updatePlayerAnimation(player.walkAnim);
+                        updatePlayerAnimation(player.animations.walkAnim);
                     }
                 }
                 if(player.movingBackward) {
-                    updatePlayerAnimation(player.walkAnim);
+                    updatePlayerAnimation(player.animations.walkAnim);
                 }
                 crosshair.style.top = "56.625%";
                 crosshair.style.transform = "translate(-50%, -56.625%)";                 
@@ -5234,27 +5290,27 @@ function initControls() {
                 break;
             case 49:    // 1
                 if(!inPuzzleTwo || finishedPuzzleTwo || dancePlaying) return;
-                updatePlayerAnimation(player.chickenDance);
+                updatePlayerAnimation(player.animations.chickenDance);
                 checkDance();
                 break;
             case 50:    // 2
                 if(!inPuzzleTwo || finishedPuzzleTwo || dancePlaying) return;
-                updatePlayerAnimation(player.breakdance);
+                updatePlayerAnimation(player.animations.breakdance);
                 checkDance();
                 break;
             case 51:    // 3
                 if(!inPuzzleTwo || finishedPuzzleTwo || dancePlaying) return;
-                updatePlayerAnimation(player.macarenaDance);
+                updatePlayerAnimation(player.animations.macarenaDance);
                 checkDance();
                 break;
             case 52:    // 4
                 if(!inPuzzleTwo || finishedPuzzleTwo || dancePlaying) return;
-                updatePlayerAnimation(player.ymcaDance);
+                updatePlayerAnimation(player.animations.ymcaDance);
                 checkDance();
                 break;
             case 53:    // 5
                 if(!inPuzzleTwo || finishedPuzzleTwo || dancePlaying) return;
-                updatePlayerAnimation(player.gangnamStyle);
+                updatePlayerAnimation(player.animations.gangnamStyle);
                 checkDance();
                 break;
             case 77:    // M (MINIMAP)
@@ -5273,37 +5329,37 @@ function initControls() {
             case 87:    // W
                 player.movingForward = false;
                 if(!player.movingBackward && !player.movingLeft && !player.movingRight)
-                    updatePlayerAnimation(player.idleAnim);
+                    updatePlayerAnimation(player.animations.idleAnim);
                 break;
             case 65:    // A
                 player.movingLeft  = false;
                 if(!player.movingRight && !player.movingForward && !player.movingBackward)
-                    updatePlayerAnimation(player.idleAnim);
+                    updatePlayerAnimation(player.animations.idleAnim);
                 else if(player.movingForward)
-                    updatePlayerAnimation(player.walkAnim);
+                    updatePlayerAnimation(player.animations.walkAnim);
                 else if(player.movingBackward)
-                    updatePlayerAnimation(player.walkBackwardsAnim);
+                    updatePlayerAnimation(player.animations.walkBackwardsAnim);
                 break;
             case 83:    // S
                 player.movingBackward = false;
                 if(!player.movingForward && !player.movingLeft && !player.movingRight)
-                    updatePlayerAnimation(player.idleAnim);
+                    updatePlayerAnimation(player.animations.idleAnim);
                 break;
             case 68:    // D
                 player.movingRight = false;
                 if(!player.movingLeft && !player.movingForward && !player.movingBackward)
-                    updatePlayerAnimation(player.idleAnim);
+                    updatePlayerAnimation(player.animations.idleAnim);
                 else if(player.movingForward)
-                    updatePlayerAnimation(player.walkAnim);
+                    updatePlayerAnimation(player.animations.walkAnim);
                 else if(player.movingBackward)
-                    updatePlayerAnimation(player.walkBackwardsAnim);
+                    updatePlayerAnimation(player.animations.walkBackwardsAnim);
                 break;
             case 16:    // Shift
                 if(player.running) {
                     player.running = false;
                     player.runFactor = 1;
                     if(player.movingForward && !player.movingLeft && !player.movingRight)
-                        updatePlayerAnimation(player.walkAnim);
+                        updatePlayerAnimation(player.animations.walkAnim);
                 }
                 break;
         }
@@ -5739,6 +5795,7 @@ function initWorld() {
     drawTotems();
     drawPaper();
     drawHealthPacks();
+    drawHole();
 
     // boundingBoxVis();
 }
