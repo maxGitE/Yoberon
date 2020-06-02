@@ -2,6 +2,7 @@ html, body {
     margin: 0;
     padding: 0;
     background-color: #000000;
+    overflow: hidden;
 }
 
 #canvas { 
@@ -19,6 +20,11 @@ html, body {
     font-size: 80px;
     font-family: monospace;
     font-weight: bolder;
+}
+
+video {
+    visibility: hidden;
+    object-fit: cover;
 }
 
 .unselectable {
@@ -176,6 +182,19 @@ button:active {
     visibility: hidden;
 }
 
+#endgame-decision {
+    position: fixed;
+    display: none;
+    bottom: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50%;
+    height: 25%;
+    padding: 1% 0;
+    background-color: black;
+    visibility: hidden;
+}
+
 #puzzle-failed {
     position: fixed;
     display: none;
@@ -303,6 +322,42 @@ button:active {
     font-weight: bold;
     text-align: center;
     /* background-color: seashell; */
+}
+
+#weapon-upgrade {
+    visibility: hidden;
+}
+
+#weapon-upgrade-outline {
+    position: fixed;    
+    bottom: 1.5%;
+    right: 4.2%;
+    width: 8.5%;
+    height: 3%;
+    border: 3px solid #034e08;
+    text-align: center;
+}
+
+#weapon-upgrade-bar {
+    position: fixed;            
+    bottom: 2.02%;
+    right: 4.5%;
+    width: 8.25%;
+    height: 2.5%;
+    background-color: #04870d;
+    background-image: url("hud/textures/healthbar_texture.png");
+}
+
+#poison-tick {
+    position: fixed;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -45%);
+    width: 19.54px;
+    height: 25px;
+    background-image: url("hud/crosshairs/poison_tick.svg");
+    background-repeat: no-repeat;
+    visibility: hidden;
 }
 
 #boss-health {

@@ -5,6 +5,9 @@ class AudioCollection {
         this._headshotAnnouncer;
         this._headshot;
         this._hitmarker;
+        this._weaponUpgradeReady;
+        this._weaponUpgradeShot;
+        this._poisonTick;
         this._alienWeapon;
         this._jumpboost;
         this._paper;
@@ -77,6 +80,30 @@ class AudioCollection {
     set headshot(audio) {
         this._headshot = audio;
     }
+
+    get weaponUpgradeReady() {
+        return this._weaponUpgradeReady;
+    }
+
+    set weaponUpgradeReady(audio) {
+        this._weaponUpgradeReady = audio;
+    }
+
+    get weaponUpgradeShot() {
+        return this._weaponUpgradeShot;
+    }
+
+    set weaponUpgradeShot(audio) {
+        this._weaponUpgradeShot = audio;
+    }
+
+    get poisonTick() {
+        return this._poisonTick;
+    }
+
+    set poisonTick(audio) {
+        this._poisonTick = audio;
+    } 
 
     get hitmarker() {
         return this._hitmarker;
@@ -256,5 +283,5 @@ class AudioCollection {
 
     set shieldReady(audio) {
         this._shieldReady = audio;
-    } 
+    }
 }
