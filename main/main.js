@@ -13,7 +13,11 @@ document.body.appendChild(rendererStats.domElement);
 
 const title = document.getElementById("title");
 const menuBlock = document.getElementById("menu");
+const keyControls = document.getElementById("controls");
+const controlsButtonMainMenu = document.getElementById("controls-button-mainmenu");
+const controlsButtonPauseMenu = document.getElementById("controls-button-pausemenu");
 const introCutScene = document.getElementById("intro-cutscene");
+const skipButton = document.getElementById("skip");
 const wakeUp = document.getElementById("wake-up");
 const playerDeath = document.getElementById("playerdeath");
 const deathBlock = document.getElementById("deathmenu");
@@ -52,8 +56,11 @@ const dancecontrols = document.getElementById("dancecontrols");
 const playButton = document.getElementById("play");
 const loadingInfo = document.getElementById("loadinginfo");
 const loadingSymbol = document.getElementById("loadingsymbol");
-const endgame = document.getElementById("endgame");
+const endgameFadeIn = document.getElementById("endgame-fade-in");
 const endGameDecision = document.getElementById("endgame-decision");
+const takeHeartButton = document.getElementById("take-heart");
+const leaveHeartButton = document.getElementById("leave-heart");
+const takeHeartCutScene = document.getElementById("take-heart-cutscene");
 
 window.onload = menu;
 
@@ -118,6 +125,7 @@ let ship;
 
 /** HEART */
 let heart;
+let interactedWithHeart = false;
 
 /** LOADERS */
 let textureLoader;
@@ -253,6 +261,8 @@ let pickedUpHealthPacks = [];
 let blockingTrees;
 let playedTreeSinkAudio = false;
 
+/** MISC */
+let displayedControls = false;
 let requestId; // Needed to clear interval when an enemy is poisoned
 
 function gameLoop() {
@@ -4434,12 +4444,56 @@ function handleHeartInteraction() {
 }
 
 function endGame() {
+    takeHeartButton.addEventListener("click", playEndCutScene);
+    leaveHeartButton.addEventListener("click", playEndCutScene);
+
+    takeHeartButton.param = "takeHeart";
+    leaveHeartButton.param = "leaveHeart";
+
+    takeHeartButton.style.visibility = "visible";
+    leaveHeartButton.style.visibility = "visible";
+
+    interact.style.visibility = "hidden";
+
+    interactedWithHeart = true;
     controls.unlock();
-    // endgame.classList.add("fadein");
-    // endgame.style.visibility = "visible";
-    // setTimeout(() => {
-    //     location.reload();
-    // }, 6000)
+}
+
+function playEndCutScene(event) {
+    let endCutscene;
+    let decision = event.currentTarget.param;
+
+    takeHeartButton.style.visibility = "hidden";
+    leaveHeartButton.style.visibility = "hidden";
+
+    endgameFadeIn.classList.add("fadein");
+    endgameFadeIn.style.visibility = "visible";
+
+    setTimeout(() => { // Play the ending cutscene 2 seconds after the fade in has finished
+        switch(decision) {
+            case "takeHeart":
+                endCutscene = takeHeartCutScene;
+                // PLAY TAKE HEART ANIMATION
+                // video = takeHeart?
+                break;
+            case "leaveHeart":
+                // PLAY LEAVE HEART ANIMATION
+                break;
+        }
+    
+        endCutscene.play();
+        endCutscene.style.visibility = "visible";
+        endCutscene.style.display = "block";
+    
+        endCutscene.onended = function() {
+            endCutscene.remove();
+    
+            setTimeout(() => {
+                // CREDITS
+                location.reload();
+            }, 3000);
+        }
+    }, 5000);
 }
 
 /**
@@ -5257,8 +5311,25 @@ function initControls() {
         setTimeout( () => wakeUp.style.visibility = "hidden", 1000); // Hide the initial screen after 1 second (the length of the fade-out animation)
         document.body.appendChild(stats.dom);
         document.removeEventListener("click", initialPointerLock);
-        resume.addEventListener("click", () => controls.lock());
+        resume.addEventListener("click", () => {
+            controls.lock();
+            if(displayedControls) {
+                keyControls.style.visibility = "hidden";
+                displayedControls = false;
+            }
+        });
         restart.addEventListener("click", restartCheckpoint);
+        controlsButtonPauseMenu.addEventListener("click", () => {
+            displayedControls = !displayedControls;
+            if(displayedControls) {
+                keyControls.style.top = "75%";
+                keyControls.style.transform = "translate(-50%, -75%)";
+                keyControls.style.visibility = "visible";
+            }
+            else {
+                keyControls.style.visibility = "hidden";
+            }
+        });
         lockingClick = false;
     }
 
@@ -5354,7 +5425,12 @@ function initControls() {
             setTimeout(() => deathBlock.style.display = "block", 3000);
         }
         else { // Player interacted with heart
-            endGameDecision.style.display = "block";
+            if(interactedWithHeart) {
+                endGameDecision.style.display = "block";
+            }
+            else {
+                pauseBlock.style.display = "block";
+            }
         }
 
         if(audioCollection.bossRoar.isPlaying) {
@@ -5461,8 +5537,8 @@ function initControls() {
                 currentLevel = 4;
                 break;
             case 89:    // Y
-                currentLevel = 2;
-                controls.getObject().position.set(20, 8, -1140);
+                currentLevel = 3;
+                controls.getObject().position.set(20, 8, -940);
                 camera.lookAt(480, 8, 40);
                 break;
             case 69:    // E
@@ -5660,6 +5736,8 @@ function initSkybox() {
 function initLoadingManager() {
     loadingManager = new THREE.LoadingManager(onLoad, onProgress);
 
+    loadingInfo.style.visibility = "visible";
+
     function onLoad() {
         loadingInfo.style.display = "none";
         loadingSymbol.style.display = "none";
@@ -5756,7 +5834,7 @@ function initBountyHunter() {
     bountyHunter1 = new BountyHunter();
     bountyHunter2 = new BountyHunter();
     bountyHunter3 = new BountyHunter();
-    // loadModel("models/characters/bountyhunter/bounty_hunter.glb", "bounty_hunter");
+    loadModel("models/characters/bountyhunter/bounty_hunter.glb", "bounty_hunter");
 }
 
 function initWeapon() {
@@ -6143,20 +6221,60 @@ function initMenuAudio() {
 
 function menu() {
     initMenuAudio();
+
+    controlsButtonMainMenu.addEventListener("click", () => {
+        displayedControls = !displayedControls;
+        if(displayedControls) {
+            keyControls.style.visibility = "visible";
+        }
+        else {
+            keyControls.style.visibility = "hidden";
+        }
+    });
+
+    skipButton.addEventListener("click", (event) => {
+        skipButton.style.visibility = "hidden";
+
+        switch(event.currentTarget.param) {
+            case "play":
+                introCutScene.remove();
+                loadingSymbol.style.display = "block";
+        
+                setTimeout(() => {
+                    init();
+                }, 1000);
+                break;
+            case "takeHeart":
+                break;
+            case "leaveHeart":
+                break;
+        }        
+    })
+
     playButton.addEventListener("click", () => {
         menuAudioSource.stop();
         title.style.display = "none";
         menuBlock.style.display = "none";
+        if(displayedControls) {
+            keyControls.style.visibility = "hidden";
+            displayedControls = false;
+        }
+
+        skipButton.style.visibility = "visible";
+        skipButton.param = "play";
+
         introCutScene.play();
         introCutScene.style.visibility = "visible";
+        introCutScene.style.display = "block";
     });
 
     introCutScene.onended = function() {
+        skipButton.style.visibility = "hidden";
         introCutScene.remove();
         loadingSymbol.style.display = "block";
 
         setTimeout(() => {
             init();
-        }, 3000);
+        }, 1000);
     }
 }
