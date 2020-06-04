@@ -37,6 +37,13 @@ const interact = document.getElementById("interact");
 const tooltip = document.getElementById("tooltip");
 const checkpoint = document.getElementById("checkpoint");
 const paper = document.getElementById("paper");
+const cluePaper = document.getElementById("clue-paper");
+const alienText = document.getElementById("alien-text");
+const englishText = document.getElementById("english-text");
+const scrollPaper = document.getElementById("scroll-paper");
+const scrollTitle = document.getElementById("scroll-title");
+const alienScroll = document.getElementById("alien-scroll");
+const englishScroll = document.getElementById("english-scroll");
 const dancecontrols = document.getElementById("dancecontrols");
 const playButton = document.getElementById("play");
 const loadingInfo = document.getElementById("loadinginfo");
@@ -127,8 +134,13 @@ let starFieldA;
 let starFieldB;
 let shadowObjects = [];
 
+/** LEVEL 1 */
+let pole;
+let paper_noteOne;
+let noteCollidableMeshlist = [];
+
 /** PUZZLE 1 */
-let cameraDirectionLevelOne;
+let cameraDirectionPuzzleOne;
 let totemCollection;
 let totemOne;
 let totemTwo;
@@ -154,12 +166,17 @@ let paper_clueTwo;
 let paper_clueThree;
 let paper_clueFour;
 let clueWords = ["AIR", "WATER", "FIRE", "EARTH"];
-let levelOneCollidableMeshList = [];
+let puzzleOneCollidableMeshlist = [];
 let disposedTotems = false;
 
 /** LEVEL 2 */
 let rightOfTree = false;
 let onTree = false;
+let crateAndBook;
+let crate;
+let book;
+let donutOne;
+let donutTwo;
 
 /** PUZZLE 2 */
 let removedLevelTwoAliens = false
@@ -183,6 +200,7 @@ let dancePlaying = false;
 let spawnedLevelThreeAliens = false;
 let hole;
 let inHole = false;
+let barrelsAndScroll;
 
 /** LEVEL 4 */
 let bossFightStarted = false;
@@ -361,22 +379,78 @@ function gameLoop() {
             clock.timeBefore = clock.timeNow;
         }
     }
-    if(player.currentHealth <= 0) {
-        updatePlayerAnimation(player.animations.deathAnim);
-    }
+    // if(player.currentHealth <= 0) {
+    //     updatePlayerAnimation(player.animations.deathAnim);
+    // }
 
     render();
+}
+/**
+ * Called when the player is in an area with notes.
+ * Handles the raycasting logic to allow them to select the note and read it.
+ * This function must be called in a bounding box check.
+ */
+function handleNotes() {
+    let cameraDirection = new THREE.Vector3();
+    cameraDirection.normalize();
+    controls.getDirection(cameraDirection);
+    let playerRaycaster = new THREE.Raycaster(controls.getObject().position, cameraDirection);
+
+    let intersects = playerRaycaster.intersectObjects(noteCollidableMeshlist, true);
+
+    if(intersects.length > 0 && intersects[0].distance < 10) {
+        interact.style.visibility = "visible";
+
+        if(intersects[0].object.name == "noteOne") { // Note one
+            interactableObject = "noteOne";
+        }
+        else if(intersects[0].object.name == "noteTwo") { // Note two
+            interactableObject = "noteTwo"; 
+        }
+        else if(intersects[0].object.name == "noteThree") { // Note three
+            interactableObject = "noteThree";
+        }
+    }
+    else {
+        interact.style.visibility = "hidden";
+        cluePaper.style.visibility = "hidden";
+        scrollPaper.style.visibility = "hidden";
+    }
+}
+
+
+function showNote(name) {
+    switch(name) {
+        case "noteOne":
+            cluePaper.style.visibility = "visible";
+            alienText.innerHTML = "They are relentless. I haven’t seen my family in weeks but I must stop them, for the sake of my people.";
+            englishText.innerHTML = alienText.innerHTML;
+            break; 
+            
+        case "noteTwo":
+            cluePaper.style.visibility = "visible";
+            alienText.innerHTML = "Our numbers are decreasing fast. We must protect the heart at all costs. The protector is our last hope.";
+            englishText.innerHTML = alienText.innerHTML;
+            break;
+
+        case "noteThree":
+            scrollPaper.style.visibility = "visible";
+            scrollTitle.innerHTML = "1846 - Yoberon Chronicles";
+            alienScroll.innerHTML = "Since the dawn of time, the heart has powered Yoberon and allowed life to flourish. It must remain untouched, or total destruction shall ensue.";
+            englishScroll.innerHTML = alienScroll.innerHTML;
+            break;
+    }
 }
 
 /********** PUZZLE ONE START **********/
 function levelOnePuzzle() {
     if(!finishedPuzzleOne) {
-        cameraDirectionLevelOne = new THREE.Vector3();
-        cameraDirectionLevelOne.normalize();
-        controls.getDirection(cameraDirectionLevelOne);
-        let playerRaycaster = new THREE.Raycaster(controls.getObject().position, cameraDirectionLevelOne);
+        cameraDirectionPuzzleOne = new THREE.Vector3();
+        cameraDirectionPuzzleOne.normalize();
+        controls.getDirection(cameraDirectionPuzzleOne);
+        let playerRaycaster = new THREE.Raycaster(controls.getObject().position, cameraDirectionPuzzleOne);
         // scene.add(new THREE.ArrowHelper(playerRaycaster.ray.direction, playerRaycaster.ray.origin, 10));
-        let intersects = playerRaycaster.intersectObjects(levelOneCollidableMeshList, false);
+        let intersects = playerRaycaster.intersectObjects(puzzleOneCollidableMeshlist, false);
 
         if(intersects.length > 0 && intersects[0].distance < 10) {
             interact.style.visibility = "visible";
@@ -490,11 +564,11 @@ function updateRockOverClue(rock, name) {
     selectedRock = rock;
     audioCollection.rockSlide.play();
 
-    directionRockSlides = cameraDirectionLevelOne.clone(); // The direction the rock will move is the same direction that the camera is facing
+    directionRockSlides = cameraDirectionPuzzleOne.clone(); // The direction the rock will move is the same direction that the camera is facing
     directionRockSlides.y = 0; // Ignore the y direction of the camera as the rocks will slide along the xz-plane
 
-    let indexToRemove = levelOneCollidableMeshList.findIndex(object => object.name == name); // Remove the selected rock from the collidable mesh list
-    levelOneCollidableMeshList.splice(indexToRemove, 1);
+    let indexToRemove = puzzleOneCollidableMeshlist.findIndex(object => object.name == name); // Remove the selected rock from the collidable mesh list
+    puzzleOneCollidableMeshlist.splice(indexToRemove, 1);
 }
 
 function showClue(name) {
@@ -701,7 +775,7 @@ function checkDance() {
     dancePlaying = true;
 
     if(audioCollection.chickenDance.isPlaying) {
-        if(player.chickenDance.enabled) {
+        if(player.animations.chickenDance.enabled) {
             audioCollection.correct.play();           
 
             audioCollection.chickenDance.source.onended = function() {  
@@ -728,7 +802,7 @@ function checkDance() {
     }
 
     if(audioCollection.gangnamStyle.isPlaying) {
-        if(player.gangnamStyle.enabled) {
+        if(player.animations.gangnamStyle.enabled) {
             audioCollection.correct.play();
 
             audioCollection.gangnamStyle.source.onended = function() { 
@@ -754,7 +828,7 @@ function checkDance() {
     }
 
     if(audioCollection.macarenaDance.isPlaying) {
-        if(player.macarenaDance.enabled) {
+        if(player.animations.macarenaDance.enabled) {
             audioCollection.correct.play();
 
             audioCollection.macarenaDance.source.onended = function() {  
@@ -780,7 +854,7 @@ function checkDance() {
     }
 
     if(audioCollection.ymcaDance.isPlaying) {
-        if(player.ymcaDance.enabled) {
+        if(player.animations.ymcaDance.enabled) {
             audioCollection.correct.play();
 
             audioCollection.ymcaDance.source.onended = function() {                
@@ -1250,6 +1324,7 @@ function initPineTree(gltf) {
 
     let treeGeometry = pinetree.children[0].geometry;
     let treeMaterial = pinetree.children[0].material;
+
     let numInstances = 4173;
 
     let cluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, numInstances);
@@ -1942,7 +2017,7 @@ function initRockOverClueOne(gltf) {
     rockOverClueOne.rotation.z = Math.random() * 2*Math.PI;
     rockOverClueOne.position.set(-20, 0, -625);
 
-    levelOneCollidableMeshList.push(rockOverClueOne);
+    puzzleOneCollidableMeshlist.push(rockOverClueOne);
  
     scene.add(rockOverClueOne);
 }
@@ -1954,7 +2029,7 @@ function initRockOverClueTwo(gltf) {
     rockOverClueTwo.rotation.z = Math.random() * 2*Math.PI;
     rockOverClueTwo.position.set(25, 0, -620);
 
-    levelOneCollidableMeshList.push(rockOverClueTwo);
+    puzzleOneCollidableMeshlist.push(rockOverClueTwo);
  
     scene.add(rockOverClueTwo);
 }
@@ -1966,7 +2041,7 @@ function initRockOverClueThree(gltf) {
     rockOverClueThree.rotation.z = Math.random() * 2*Math.PI;
     rockOverClueThree.position.set(-15, 0, -675);
 
-    levelOneCollidableMeshList.push(rockOverClueThree);
+    puzzleOneCollidableMeshlist.push(rockOverClueThree);
  
     scene.add(rockOverClueThree);
 }
@@ -1978,9 +2053,17 @@ function initRockOverClueFour(gltf) {
     rockOverClueFour.rotation.z = Math.random() * 2*Math.PI;
     rockOverClueFour.position.set(-10, 0, -590);
 
-    levelOneCollidableMeshList.push(rockOverClueFour);
+    puzzleOneCollidableMeshlist.push(rockOverClueFour);
  
     scene.add(rockOverClueFour);
+}
+
+function initLettersRock(gltf) {
+    let lettersRock = gltf.scene;
+    lettersRock.scale.set(5, 5, 5);
+    lettersRock.position.set(-10, 0, -665);
+    lettersRock.rotation.set(0, Math.PI/2, 0);
+    scene.add(lettersRock);
 }
 
 function initBushOne(gltf) {
@@ -2204,6 +2287,7 @@ function drawRocks() {
     loadModel("models/environment/rocks/rock_over_clue_two.glb", "rock_over_clue_two");
     loadModel("models/environment/rocks/rock_over_clue_three.glb", "rock_over_clue_three");
     loadModel("models/environment/rocks/rock_over_clue_four.glb", "rock_over_clue_four");
+    loadModel("models/environment/rocks/letters_rock.glb", "letters_rock");
 }
 
 function drawStars() {
@@ -2278,10 +2362,10 @@ function drawTotems() {
     totemCollection.add(totemThree);
     totemCollection.add(totemFour);
 
-    levelOneCollidableMeshList.push(totemOne);
-    levelOneCollidableMeshList.push(totemTwo);
-    levelOneCollidableMeshList.push(totemThree);
-    levelOneCollidableMeshList.push(totemFour);
+    puzzleOneCollidableMeshlist.push(totemOne);
+    puzzleOneCollidableMeshlist.push(totemTwo);
+    puzzleOneCollidableMeshlist.push(totemThree);
+    puzzleOneCollidableMeshlist.push(totemFour);
 
     loadModel("models/totems/frog.glb", "frog");
     loadModel("models/totems/eagle.glb", "eagle");
@@ -2295,34 +2379,60 @@ function drawTotems() {
 }
 
 function drawPaper() {
+    /** NOTES */
+    paper_noteOne = new THREE.Mesh(new THREE.BoxBufferGeometry(1, 0.01, 1), new THREE.MeshLambertMaterial( {color: "#f2eecb"} ));    
+    paper_noteOne.rotation.z = -Math.PI/4;    
+    paper_noteOne.rotation.x = Math.PI/2;
+    paper_noteOne.position.set(-14.28, 7, -29.28);
+    paper_noteOne.name = "noteOne";
+    noteCollidableMeshlist.push(paper_noteOne);
+    
+    /** PUZZLE 1 CLUES */
     paper_clueOne = new THREE.Mesh(new THREE.BoxBufferGeometry(1, 0.01, 1), new THREE.MeshLambertMaterial( {color: "#f2eecb"} ));
     paper_clueOne.rotation.y = Math.random() * 2*Math.PI;
     paper_clueOne.position.set(-20, 0, -625);
     paper_clueOne.name = "clueOne";
-    levelOneCollidableMeshList.push(paper_clueOne);
+    puzzleOneCollidableMeshlist.push(paper_clueOne);
 
     paper_clueTwo = new THREE.Mesh(new THREE.BoxBufferGeometry(1, 0.01, 1), new THREE.MeshLambertMaterial( {color: "#f2eecb"} ));
     paper_clueTwo.rotation.y = Math.random() * 2*Math.PI;
     paper_clueTwo.position.set(25, 0, -620);
     paper_clueTwo.name = "clueTwo";
-    levelOneCollidableMeshList.push(paper_clueTwo);
+    puzzleOneCollidableMeshlist.push(paper_clueTwo);
 
     paper_clueThree = new THREE.Mesh(new THREE.BoxBufferGeometry(1, 0.01, 1), new THREE.MeshLambertMaterial( {color: "#f2eecb"} ));
     paper_clueThree.rotation.y = Math.random() * 2*Math.PI;
     paper_clueThree.position.set(-15, 0, -675);
     paper_clueThree.name = "clueThree";
-    levelOneCollidableMeshList.push(paper_clueThree);
+    puzzleOneCollidableMeshlist.push(paper_clueThree);
 
     paper_clueFour = new THREE.Mesh(new THREE.BoxBufferGeometry(1, 0.01, 1), new THREE.MeshLambertMaterial( {color: "#f2eecb"} ));
     paper_clueFour.rotation.y = Math.random() * 2*Math.PI;
     paper_clueFour.position.set(-10, 0, -590);
     paper_clueFour.name = "clueFour";
-    levelOneCollidableMeshList.push(paper_clueFour);
+    puzzleOneCollidableMeshlist.push(paper_clueFour);
 
+    scene.add(paper_noteOne);
     scene.add(paper_clueOne);
     scene.add(paper_clueTwo);
     scene.add(paper_clueThree);
     scene.add(paper_clueFour);
+}
+
+function drawNotePoles() {
+    let woodTexture = loadTexture("textures/totem_wood.png");
+    let normalMap = loadTexture("textures/totem_wood_normal.png");
+
+    let poleGeometry = new THREE.CylinderBufferGeometry(1, 1, 8, 32);
+    let poleMaterial = new THREE.MeshStandardMaterial( {color: "#706d71", map: woodTexture, normalMap: normalMap} );
+
+    pole = new THREE.Mesh(poleGeometry, poleMaterial);
+
+    shadowObjects.push(pole);
+
+    pole.position.set(-15, 4, -30);
+
+    scene.add(pole);
 }
 
 function drawHealthPacks() {
@@ -2389,6 +2499,126 @@ function drawHole() {
     cyclinder.position.set(460, -2002, -860);
     
     scene.add(cyclinder);
+}
+
+function drawCrateAndBook() {
+    crateAndBook = new THREE.Object3D();
+
+    loadModel("models/environment/crate.glb", "crate");
+    loadModel("models/environment/book.glb", "book");
+    loadModel("models/environment/donutOne.glb", "donutOne");
+    loadModel("models/environment/donutTwo.glb", "donutTwo");
+
+    crateAndBook.scale.set(4, 4, 4);
+    crateAndBook.position.set(-160, 0, -925);
+    scene.add(crateAndBook);
+}
+
+function initCrate(gltf) {
+    crate = gltf.scene;
+    crateAndBook.add(crate);
+}
+
+function initBook(gltf) {
+    book = gltf.scene.children[0];
+    book.rotation.set(-Math.PI/2, 0, Math.PI/6);
+    book.position.set(0.2, 1.1, 0);
+
+    book.name = "noteTwo";
+    noteCollidableMeshlist.push(book);
+
+    crateAndBook.add(book);
+}
+
+function initDonutOne(gltf) {
+    donutOne = gltf.scene;
+    donutOne.position.set(-0.25, 1, -0.1);
+    donutOne.scale.set(1.5, 1.5, 1.5);
+
+    crateAndBook.add(donutOne);
+}
+
+function initDonutTwo(gltf) {
+    donutTwo = gltf.scene;
+    donutTwo.position.set(-0.15, 1.025, 0.2);
+    donutTwo.scale.set(1.5, 1.5, 1.5);
+
+    crateAndBook.add(donutTwo);
+}
+
+function drawBarrelsAndScroll() {
+    barrelsAndScroll = new THREE.Object3D();
+
+    loadModel("models/environment/barrels/barrel.glb", "barrel");
+    loadModel("models/environment/barrels/barrel_open.glb", "barrel_open");
+    loadModel("models/environment/scroll_draping.glb", "scroll");
+
+    barrelsAndScroll.position.set(460, 0, -620);
+    barrelsAndScroll.rotation.y = Math.PI;
+    scene.add(barrelsAndScroll);
+}
+
+function initBarrel(gltf) {
+    let barrelOne = gltf.scene;
+    barrelOne.scale.set(5, 5, 5);
+
+    let barrelTwo = barrelOne.clone();
+    barrelTwo.rotation.set(Math.PI/2, 0, 0);
+    barrelTwo.position.set(5.5, 1.5, -5);
+
+    let barrelThree = barrelOne.clone();
+    barrelThree.rotation.set(Math.PI/2, 0, 0);
+    barrelThree.position.set(1.7, 1.5, -6);
+
+    let barrelFour = barrelOne.clone();
+    barrelFour.rotation.set(Math.PI/2, 0, 0);
+    barrelFour.position.set(-2.1, 1.5, -6);
+
+    let barrelFive = barrelOne.clone();
+    barrelFive.rotation.set(Math.PI/2, 0, 0);
+    barrelFive.position.set(-5.9, 1.5, -6);
+
+    let barrelSix = barrelOne.clone();
+    barrelSix.rotation.set(Math.PI/2, 0, 0);
+    barrelSix.position.set(-3.8, 4.5, -6);
+
+    let barrelSeven = barrelOne.clone();
+    barrelSeven.rotation.set(Math.PI/2, 0, 0);
+    barrelSeven.position.set(0, 4.5, -6);
+
+    let barrelEight = barrelOne.clone();
+    barrelEight.rotation.set(Math.PI/2, 0, 0);
+    barrelEight.position.set(3.8, 4.5, -5.2);
+
+    barrelsAndScroll.add(barrelOne);
+    barrelsAndScroll.add(barrelTwo);
+    barrelsAndScroll.add(barrelThree);
+    barrelsAndScroll.add(barrelFour);
+    barrelsAndScroll.add(barrelFive);
+    barrelsAndScroll.add(barrelSix);
+    barrelsAndScroll.add(barrelSeven);
+    barrelsAndScroll.add(barrelEight);
+}
+
+function initOpenBarrel(gltf) {
+    let barrel = gltf.scene;
+    barrel.position.set(-4.5, 0, 1);
+    barrel.rotation.set(0, Math.PI/6, 0);
+    barrel.scale.set(-5, 5, 5);
+    barrelsAndScroll.add(barrel);
+}
+
+function initScroll(gltf) {
+    let scroll = gltf.scene;
+    console.log(scroll);
+    scroll.scale.set(0.7, 0.7, 0.7);
+    scroll.rotation.set(-Math.PI/18, Math.PI/2, 0);
+    scroll.position.set(0, 4.4, 0.8);
+    
+    scroll.children[2].name = "noteThree";
+    noteCollidableMeshlist.push(scroll.children[2]);
+
+    barrelsAndScroll.add(scroll);
 }
 
 /** Changes which bounding boxes to load depending on what the current level is */
@@ -2512,6 +2742,7 @@ function levelOneBoundingBox() {
     }
 
     if(boxArr[1]) { // In box one
+        handleNotes();
         if(zPos < boxTwoBottom + 20) { // Show level one tooltip
             displayTooltip("The path is blocked. Find a way around!");
         }
@@ -2729,6 +2960,8 @@ function levelTwoBoundingBox() {
     }
     else if(boxArr[2]) { // In box two
         hideTooltip();
+        handleNotes();
+
         if(zPos > boxTwoBottom - boundaryFactor) { // Place bottom boundary except at box one overlap
             if(xPos < boxOneLeft)
                 controls.getObject().position.z = boxTwoBottom - boundaryFactor;
@@ -3011,6 +3244,8 @@ function levelThreeBoundingBox() {
         }
     }
     else if(boxArr[2]) { // In box two
+        handleNotes();
+
         if(zPos > boxTwoBottom - boundaryFactor) { // Place bottom boundary except at box three overlap
             if(xPos > boxThreeRight)
                 controls.getObject().position.z = boxTwoBottom - boundaryFactor;
@@ -3903,7 +4138,6 @@ function healthPackPickup() {
     scene.remove(selectedHealthPack.object);
 
     if(selectedHealthPack.object.material.color.g == 0) { // Regular health pack
-        console.log("picked up health pack");
         player.currentHealth += 25;
         if(player.currentHealth > 100) {
             player.currentHealth = 100;
@@ -4083,6 +4317,27 @@ function loadModel(url, key) {
             case "healthpack":
                 initHealthPacks(gltf);
                 break;
+            case "crate":
+                initCrate(gltf);
+                break;
+            case "book":
+                initBook(gltf);
+                break;
+            case "donutOne":
+                initDonutOne(gltf);
+                break;
+            case "donutTwo":
+                initDonutTwo(gltf);
+                break;
+            case "barrel":
+                initBarrel(gltf);
+                break;
+            case "barrel_open":
+                initOpenBarrel(gltf);
+                break;
+            case "scroll":
+                initScroll(gltf);
+                break;               
             case "pinetree":
                 initPineTree(gltf);
                 break;
@@ -4118,6 +4373,9 @@ function loadModel(url, key) {
                 break;
             case "rock_over_clue_four":
                 initRockOverClueFour(gltf);
+                break;
+            case "letters_rock":
+                initLettersRock(gltf);
                 break;
             case "bush_one":
                 initBushOne(gltf);
@@ -5005,6 +5263,18 @@ function initControls() {
                         case "clueFour":
                             audioCollection.paper.play();
                             showClue("clueFour");
+                            break; 
+                        case "noteOne":
+                            audioCollection.paper.play();
+                            showNote("noteOne");
+                            break;
+                        case "noteTwo":
+                            audioCollection.paper.play();
+                            showNote("noteTwo");
+                            break; 
+                        case "noteThree":
+                            audioCollection.paper.play();
+                            showNote("noteThree");
                             break;   
                         case "healthpack":
                             healthPackPickup();
@@ -5477,8 +5747,11 @@ function initWorld() {
     drawStars();
     drawTotems();
     drawPaper();
+    drawNotePoles();
     drawHealthPacks();
     drawHole();
+    drawCrateAndBook();
+    drawBarrelsAndScroll();
 
     // boundingBoxVis();
 }
