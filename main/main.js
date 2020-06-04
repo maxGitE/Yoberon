@@ -13,6 +13,7 @@ document.body.appendChild(rendererStats.domElement);
 
 const title = document.getElementById("title");
 const menuBlock = document.getElementById("menu");
+const introCutScene = document.getElementById("intro-cutscene");
 const wakeUp = document.getElementById("wake-up");
 const playerDeath = document.getElementById("playerdeath");
 const deathBlock = document.getElementById("deathmenu");
@@ -27,6 +28,9 @@ const shield = document.getElementById("shield");
 const shieldbar = document.getElementById("shieldbar");
 const shieldDisplay = document.getElementById("shield-display");
 const shieldNumber = document.getElementById("shield-number");
+const weaponUpgrade = document.getElementById("weapon-upgrade");
+const weaponUpgradeBar = document.getElementById("weapon-upgrade-bar");
+const poisonTick = document.getElementById("poison-tick");
 const bossHealth = document.getElementById("boss-health");
 const bossHealthBar = document.getElementById("boss-healthbar");
 const puzzleBlock = document.getElementById("puzzle-failed");
@@ -49,6 +53,7 @@ const playButton = document.getElementById("play");
 const loadingInfo = document.getElementById("loadinginfo");
 const loadingSymbol = document.getElementById("loadingsymbol");
 const endgame = document.getElementById("endgame");
+const endGameDecision = document.getElementById("endgame-decision");
 
 window.onload = menu;
 
@@ -89,7 +94,7 @@ let player;
 let currentLevel = 1;
 let xPos;
 let zPos;
-let shieldWidth;
+let shotPoisonBullet = false;
 
 /** ENEMIES */
 let alienArray = [];
@@ -110,6 +115,9 @@ let bountyHunter3;
 
 /** SHIP */
 let ship;
+
+/** HEART */
+let heart;
 
 /** LOADERS */
 let textureLoader;
@@ -211,6 +219,7 @@ let waveDefeated = false;
 let inWaveTimeout = false;
 let defeatedBoss = false;
 let playedRoarAudio = false;
+let pausedRoarAudio = false;
 let intro = true;
 let bossAttacked = false;
 let bossWalking = false;
@@ -222,6 +231,14 @@ let healthbarWidth = 10.25;
 let healthbarTrailingWidth = healthbarWidth;
 let checkpointDisplayed = false;
 let interactableObject;
+let alienWritings = ["⏁⊑⟒⊬ ⏃⍀⟒ ⍀⟒⌰⟒⋏⏁⌰⟒⌇⌇. ⟟ ⊑⏃⎐⟒⋏’⏁ ⌇⟒⟒⋏ ⋔⊬ ⎎⏃⋔⟟⌰⊬ ⟟⋏ ⏁⊑⍀⟒⟒ ⍙⟒⟒☍⌇ ⏚⎍⏁ ⟟ ⋔⎍⌇⏁ ⌇⏁⍜⌿ ⏁⊑⟒⋔, ⎎⍜⍀ ⏁⊑⟒ ⌇⏃☍⟒ ⍜⎎ ⋔⊬ ⌿⟒⍜⌿⌰⟒.",
+                     "⍜⎍⍀ ⋏⎍⋔⏚⟒⍀⌇ ⏃⍀⟒ ⎅⟒☊⍀⟒⏃⌇⟟⋏☌ ⎎⏃⌇⏁. ⍙⟒ ⋔⎍⌇⏁ ⌿⍀⍜⏁⟒☊⏁ ⏁⊑⟒ ⊑⟒⏃⍀⏁ ⏃⏁ ⏃⌰⌰ ☊⍜⌇⏁⌇. ⏁⊑⟒ ⌿⍀⍜⏁⟒☊⏁⍜⍀ ⟟⌇ ⍜⎍⍀ ⌰⏃⌇⏁ ⊑⍜⌿⟒.",
+                     "⌇⟟⋏☊⟒ ⏁⊑⟒ ⎅⏃⍙⋏ ⍜⎎ ⏁⟟⋔⟒, ⏁⊑⟒ ⊑⟒⏃⍀⏁ ⊑⏃⌇ ⌿⍜⍙⟒⍀⟒⎅ ⊬⍜⏚⟒⍀⍜⋏ ⏃⋏⎅ ⏃⌰⌰⍜⍙⟒⎅ ⌰⟟⎎⟒ ⏁⍜ ⎎⌰⍜⎍⍀⟟⌇⊑. ⟟⏁ ⋔⎍⌇⏁ ⍀⟒⋔⏃⟟⋏ ⎍⋏⏁⍜⎍☊⊑⟒⎅, ⍜⍀ ⏁⍜⏁⏃⌰ ⎅⟒⌇⏁⍀⎍☊⏁⟟⍜⋏ ⌇⊑⏃⌰⌰ ⟒⋏⌇⎍⟒.",
+                     "⏁⊑⟒ ⊑⟒⏃⍀⏁ ⟟⌇ ⌇⍜⎍☌⊑⏁ ⏃⎎⏁⟒⍀ ⏚⊬ ⋔⏃⋏⊬ ⟟⋏ ⏁⊑⟒ ☌⏃⌰⏃⌖⊬ ⎎⍜⍀ ⟟⏁⌇ ⏁⍀⟒⋔⟒⋏⎅⍜⎍⌇ ⌿⍜⍙⟒⍀. ⟟⎎ ⊑⏃⍀⋏⟒⌇⌇⟒⎅, ⟟⏁ ☊⏃⋏ ⌿⍀⍜⎐⟟⎅⟒ ⎍⋏⌰⟟⋔⟟⏁⟒⎅ ⎎⎍⟒⌰ ⏁⍜ ⍙⊑⏃⏁⟒⎐⟒⍀ ⏁⊑⟒ ⎍⌇⟒⍀ ⎅⟒⌇⟟⍀⟒⌇."];
+let alienTranslations = ["They are relentless. I haven’t seen my family in three weeks but I must stop them, for the sake of my people.",
+                         "Our numbers are decreasing fast. We must protect the heart at all costs. The protector is our last hope.",
+                         "Since the dawn of time, the heart has powered Yoberon and allowed life to flourish. It must remain untouched, or total destruction shall ensue.",
+                         "The heart is sought after by many in the galaxy for its tremendous power. If harnessed, it can provide unlimited fuel to whatever the user desires."];
 
 /** GUN */
 let lockingClick = true;
@@ -236,9 +253,11 @@ let pickedUpHealthPacks = [];
 let blockingTrees;
 let playedTreeSinkAudio = false;
 
+let requestId; // Needed to clear interval when an enemy is poisoned
+
 function gameLoop() {
 
-    requestAnimationFrame(gameLoop);
+    requestId = requestAnimationFrame(gameLoop);
 
     if(player.currentHealth > 0) {
 
@@ -362,6 +381,10 @@ function gameLoop() {
                 updateShieldOnGroundAnimation();
             }
 
+            if(!player.weaponUpgrade.hasWeaponUpgrade) {
+                updateWeaponUpgradeOnGroundAnimation();
+            }
+
             if(!player.shield.shieldEnabled && player.shield.shieldValue < 100 && player.shield.shieldRecharging) { // Shield has been broken
                 player.shield.shieldValue += 0.2;
                 shieldNumber.innerHTML = Math.floor(player.shield.shieldValue);
@@ -371,7 +394,9 @@ function gameLoop() {
                     player.shield.shieldValue = 100;
                     player.shield.shieldRecharging = false;
                     shieldbar.style.width = "10.25%";
-                    audioCollection.shieldReady.play();
+                    if(!inPuzzleTwo) {// Don't play shield recharge audio if player is in puzzle two
+                        audioCollection.shieldReady.play();
+                    }
                 }
             }
 
@@ -575,7 +600,7 @@ function showClue(name) {
     switch(name) {
         case "clueOne":
             paper.style.visibility = "visible";
-            paper.innerHTML = clueWords[0];
+            paper.innerHTML = "⏁⊑⟒⊬ ⏃⍀⟒ ⍀⟒⌰⟒⋏⏁⌰⟒⌇⌇. ⟟ ⊑⏃⎐⟒⋏’⏁ ⌇⟒⟒⋏ ⋔⊬ ⎎⏃⋔⟟⌰⊬ ⟟⋏ ⏁⊑⍀⟒⟒ ⍙⟒⟒☍⌇ ⏚⎍⏁ ⟟ ⋔⎍⌇⏁ ⌇⏁⍜⌿ ⏁⊑⟒⋔, ⎎⍜⍀ ⏁⊑⟒ ⌇⏃☍⟒ ⍜⎎ ⋔⊬ ⌿⟒⍜⌿⌰⟒.";
             break;
         case "clueTwo":
             paper.style.visibility = "visible";
@@ -1810,12 +1835,12 @@ function initPineTree(gltf) {
             clusterX = Math.random() * 80 + 440; // x positions between 440 and 520
         }
 
-        scalingFactor = Math.random() * 0.3 + 0.7;
+        scalingFactor = Math.random() * 0.1 + 0.5;
         rotationFactor = Math.random() * 2*Math.PI; // Set rotation to between 0 and 2*PI
 
         tempCluster.scale.set(scalingFactor, scalingFactor, scalingFactor);
-        tempCluster.rotation.set(0, rotationFactor, 0);
-        tempCluster.position.set(clusterX, -8, clusterZ);
+        tempCluster.rotation.set(-Math.PI/2, 0, rotationFactor);
+        tempCluster.position.set(clusterX, 30, clusterZ);
         
         tempCluster.updateMatrix();
     
@@ -2263,12 +2288,39 @@ function drawBushes() {
 }
 
 function drawGround() {
-    let groundGeom = new THREE.PlaneBufferGeometry(2000, 4000, 100, 100);
+    // /** MOUNTAINS */
+    // let mountains = [];
+    // let mountainTexture = loadTexture("textures/mountain_texture.jpg");
+    // let mountainMaterial = new THREE.MeshLambertMaterial( {
+    //     color: "#5e503e",
+    //     side: THREE.DoubleSide,
+    //     map: mountainTexture
+    // } );
+    // let date = new Date();
+    // let perlinNoise = new Perlin("rnd" + date.getTime());
+
+    // /** LEFT SIDE MOUNTAINS */
+    // let mountainOneGeometry = new THREE.PlaneGeometry(280, 930, 100, 100);
+    // let mountainOne = new THREE.Mesh(mountainOneGeometry, mountainMaterial);
+    // mountains.push(mountainOne);
+
+    // for(let i = 0; i < mountains.length; i++) {
+
+    //     for(let j = 0; j < mountains[i].geometry.vertices.length; j++) {
+    //         let vertex = mountains[i].geometry.vertices[j];
+    //         vertex.z = perlinNoise.noise(vertex.x / 10, vertex.y / 10, 0) * 10;
+    //     }
+    //     mountains[i].rotation.x = -Math.PI/2;
+    //     mountains[i].position.y = -2;
+    //     scene.add(mountains[i]);
+    // }
+
+    let groundGeometry = new THREE.PlaneBufferGeometry(2000, 4000, 100, 100);
     let groundTexture = loadTexture("textures/texture_path_outline.jpg");
     groundTexture.wrapS = THREE.RepeatWrapping;
     groundTexture.wrapT = THREE.RepeatWrapping;
     groundTexture.repeat.set(80, 160);
-    ground = new THREE.Mesh(groundGeom,
+    ground = new THREE.Mesh(groundGeometry,
                                     new THREE.MeshLambertMaterial({
                                         color: "#5e503e",
                                         side: THREE.DoubleSide,
@@ -3143,7 +3195,7 @@ function puzzleTwoBoundingBox() {
  *  Called by updateLevel() if currentLevel = 3.
  */
 function levelThreeBoundingBox() {
-    if(!spawnedLevelThreeAliens) {
+    if(!spawnedLevelThreeAliens) { // Spawn the aliens for level 3
         spawnLevelThreeAliens();
         spawnedLevelThreeAliens = true;
     }
@@ -3302,6 +3354,15 @@ function levelThreeBoundingBox() {
         }
     }
     else if(boxArr[7]) { // In box seven
+        if(zPos >= -790 && !player.weaponUpgrade.hasWeaponUpgrade) { // Pick up weapon upgrade
+            completedTooltip = false; // Reset tooltip so that it can reappear          
+            player.weaponUpgrade.hasWeaponUpgrade = true;
+            audioCollection.weaponUpgradeReady.play();
+            scene.remove(player.weaponUpgrade.model);
+            weaponUpgrade.style.visibility = "visible";
+            displayTooltip("Right click to shoot an enhanced damage over time ray. Watch for the recharge!");
+        }
+
         if(zPos > boxSevenBottom - boundaryFactor) { // Place bottom boundary
             controls.getObject().position.z = boxSevenBottom - boundaryFactor;
         }
@@ -3451,7 +3512,7 @@ function levelFourBoundingBox() {
     }
     else if(xPos > boxTwoLeft && xPos < boxTwoRight && zPos < boxTwoBottom && zPos > boxTwoTop) {
         setBox(2, 4);
-        handleShipInteraction();
+        handleHeartInteraction();
     }
 
     if(boxArr[1]) { // In box one
@@ -3518,7 +3579,6 @@ function updateBullets() {
         item.raycaster.ray.set(item.raycaster.ray.origin, item.raycaster.ray.direction);
 
         // scene.add(new THREE.ArrowHelper(item.raycaster.ray.direction, item.raycaster.ray.origin, 1));
-
         let intersects = item.raycaster.intersectObjects(bulletCollidableMeshList, true);
 
         if(intersects.length > 0) {
@@ -3535,49 +3595,49 @@ function updateBullets() {
                         case "alien1":
                             if(item.box >= alien1.canShoot.box) { // Only allow the player's bullet to deal damage if the player is in the same bounding box as the alien
                                 audioCollection.hitmarker.play();
-                                damageAlien(alien1, intersect);
+                                damageAlien(alien1, intersect, item.type);
                                 removeBullet(player, item.bullet, index); // Remove the bullet from the scene after hitting an alien
                             }
                             break;
                         case "alien2":
                             if(item.box >= alien2.canShoot.box) {
                                 audioCollection.hitmarker.play();
-                                damageAlien(alien2, intersect);
+                                damageAlien(alien2, intersect, item.type);
                                 removeBullet(player, item.bullet, index);
                             }
                             break;
                         case "alien3":
                             if(item.box >= alien3.canShoot.box) {
                                 audioCollection.hitmarker.play();
-                                damageAlien(alien3, intersect);
+                                damageAlien(alien3, intersect, item.type);
                                 removeBullet(player, item.bullet, index);
                             }
                             break;
                         case "alien4":
                             if(item.box >= alien4.canShoot.box) {
                                 audioCollection.hitmarker.play();
-                                damageAlien(alien4, intersect);
+                                damageAlien(alien4, intersect, item.type);
                                 removeBullet(player, item.bullet, index);
                             }
                             break;
                         case "alien5":
                             if(item.box >= alien5.canShoot.box) {
                                 audioCollection.hitmarker.play();
-                                damageAlien(alien5, intersect);
+                                damageAlien(alien5, intersect, item.type);
                                 removeBullet(player, item.bullet, index);
                             }
                             break;
                         case "alien6":
                             if(item.box >= alien6.canShoot.box) {
                                 audioCollection.hitmarker.play();
-                                damageAlien(alien6, intersect);
+                                damageAlien(alien6, intersect, item.type);
                                 removeBullet(player, item.bullet, index);
                             }
                             break;
                         case "boss": // Boss
                             if(!bossFightStarted || intro) return; // Prevent player from shooting boss before combat is enabled
                             audioCollection.hitmarker.play();
-                            damageBoss();
+                            damageBoss(item.type);
                             removeBullet(player, item.bullet, index);
                             break;
                     }
@@ -3652,12 +3712,12 @@ function updateAlienCombat() {
             
             if(alien.movement.leftOrRight == "left") { // Moving left
                 updateAlienAnimation(alien, alien.strafeLAnim);
-                alien.model.position.x -= 0.05;
+                alien.model.position.z -= 0.05;
                 alien.movement.distanceMoved += 0.05;
             }
             else if(alien.movement.leftOrRight == "right") { // Moving right
                 updateAlienAnimation(alien, alien.strafeRAnim);
-                alien.model.position.x += 0.05;
+                alien.model.position.z += 0.05;
                 alien.movement.distanceMoved += 0.05;
             }
     
@@ -3773,8 +3833,9 @@ function updateAlienBullet(alien) {
  * Plays death animation for the current alien when health drops to zero and removes the hitbox from the scene.
  * @param {alien} alien The alien that was shot
  * @param {*} intersect First index of the intersects array
+ * @param {string} type The type of bullet that hit the alien. Possible values are normal and poison 
  */
-function damageAlien(alien, intersect) {
+function damageAlien(alien, intersect, type) {
     if(intersect.object.name == "head") { // Headshot
         alien.currentHealth -= 100;
         if(audioCollection.headshotAnnouncer.isPlaying) {
@@ -3786,17 +3847,66 @@ function damageAlien(alien, intersect) {
         audioCollection.headshotAnnouncer.play();
         audioCollection.headshot.play();
         crosshair.style.background = "url(hud/crosshairs/crosshair_hitmarker.svg)";
-        crosshair.style.filter = "brightness(0) saturate(100%) invert(11%) sepia(96%) saturate(6875%) hue-rotate(0deg) brightness(91%) contrast(126%)";
     }
     else { // Bodyshot
-        alien.currentHealth -= 35;
-        crosshair.style.background = "url(hud/crosshairs/crosshair_hitmarker.svg)";
-        if(alien.currentHealth <= 0) {
-            crosshair.style.filter = "brightness(0) saturate(100%) invert(11%) sepia(96%) saturate(6875%) hue-rotate(0deg) brightness(91%) contrast(126%)";
+        if(type == "normal") { // Normal shot
+            alien.currentHealth -= 35;
+            crosshair.style.background = "url(hud/crosshairs/crosshair_hitmarker.svg)";
+        }
+        else { // Poison shot
+            alien.currentHealth -= 50;
+            crosshair.style.background = "url(hud/crosshairs/crosshair_hitmarker.svg)";
+
+            if(alien.currentHealth > 0) {
+                let ticks = 0;
+                let timerId;
+
+                timerId = setInterval(() => {
+                    if(player.currentHealth <= 0) { // Poison stops ticking if player dies
+                        clearInterval(timerId);
+                        return;
+                    }
+                    ticks++;
+
+                    alien.currentHealth -= 10;
+                    if(alien.currentHealth <= 0) {
+                        poisonTick.style.filter = "brightness(0) saturate(100%) invert(11%) sepia(96%) saturate(6875%) hue-rotate(0deg) brightness(91%) contrast(126%)";
+                    }
+
+                    if(audioCollection.hitmarker.isPlaying) {
+                        audioCollection.hitmarker.stop();
+                    }
+                    audioCollection.hitmarker.play();
+                    poisonTick.style.visibility = "visible";
+                    
+                    setTimeout(() => {
+                        poisonTick.style.visibility = "hidden";
+                        poisonTick.style.filter = "none";
+                    }, 500);
+
+                    if(ticks == 3 || alien.currentHealth <= 0) {
+
+                        if(alien.currentHealth <= 0) {
+                            if(!alien.deathAnim.enabled) { // Only if the death sequence is not already playing
+                                alien.deathAnim.reset();
+                                updateAlienAnimation(alien, alien.deathAnim);
+                                let indexOfCollidableMesh = bulletCollidableMeshList.indexOf(alien.hitbox.mesh);
+                                bulletCollidableMeshList.splice(indexOfCollidableMesh, 1);
+                                alien.model.remove(alien.hitbox.mesh);
+                            }
+                        }
+
+                        if(timerId) {
+                            clearInterval(timerId);
+                        }   
+                    }
+                }, 1000);
+            }
         }
     }
 
     if(alien.currentHealth <= 0) {
+        crosshair.style.filter = "brightness(0) saturate(100%) invert(11%) sepia(96%) saturate(6875%) hue-rotate(0deg) brightness(91%) contrast(126%)";
         alien.deathAnim.reset();
         updateAlienAnimation(alien, alien.deathAnim);
         let indexOfCollidableMesh = bulletCollidableMeshList.indexOf(alien.hitbox.mesh);
@@ -3814,13 +3924,72 @@ function damageAlien(alien, intersect) {
  * Called when the player's bullet collides with the boss.
  * Plays death animation and audio for the boss when health drops to zero and removes the boss's hitbox from the scene.
  * Plays the hitmarker audio and updates crosshair styling.
+ * @param {string} type The type of bullet that hit the alien. Possible values are normal and poison 
  */
-function damageBoss() {
-    boss.currentHealth -= 35;
-    bossHealthBar.setAttribute("style", "width: " + boss.currentHealth / 33.33 + "%");
+function damageBoss(type) {
+    if(type == "normal") { // Normal shot
+        boss.currentHealth -= 1000;
+        bossHealthBar.setAttribute("style", "width: " + boss.currentHealth / 33.33 + "%");
+        crosshair.style.background = "url(hud/crosshairs/crosshair_hitmarker.svg)";
+    }
+    else { // Poison shot
+        boss.currentHealth -= 50;
+        bossHealthBar.setAttribute("style", "width: " + boss.currentHealth / 33.33 + "%");
+        crosshair.style.background = "url(hud/crosshairs/crosshair_hitmarker.svg)";
 
-    crosshair.style.background = "url(hud/crosshairs/crosshair_hitmarker.svg)";
+        if(boss.currentHealth > 0) {
+            let ticks = 0;
+            let timerId;
 
+            timerId = setInterval(() => {
+                ticks++;
+
+                boss.currentHealth -= 10;
+                bossHealthBar.setAttribute("style", "width: " + boss.currentHealth / 33.33 + "%");
+                if(boss.currentHealth <= 0) {
+                    poisonTick.style.filter = "brightness(0) saturate(100%) invert(11%) sepia(96%) saturate(6875%) hue-rotate(0deg) brightness(91%) contrast(126%)";
+                }
+
+                if(audioCollection.hitmarker.isPlaying) {
+                    audioCollection.hitmarker.stop();
+                }
+                audioCollection.hitmarker.play();
+                poisonTick.style.visibility = "visible";
+                
+                setTimeout(() => {
+                    poisonTick.style.visibility = "hidden";
+                    poisonTick.style.filter = "none";
+                }, 500);
+
+                if(ticks == 3 || boss.currentHealth <= 0) {
+
+                    if(boss.currentHealth <= 0) {
+                        if(!boss.deathAnim.isPlaying) { // Only if the death sequence is not already playing
+                            audioCollection.bossFightMusic.stop();
+                            checkpoint.style.visibility = "visible"; // The player will only have to defeat the boss once
+                            setTimeout(() => {
+                                checkpoint.style.visibility = "hidden";
+                            }, 2000);
+                            
+                            boss.deathAnim.reset();
+                            updateBossAnimation(boss.deathAnim);
+                            audioCollection.bossDeath.play();
+                            let indexOfCollidableMesh = bulletCollidableMeshList.indexOf(boss.hitbox.mesh);
+                            bulletCollidableMeshList.splice(indexOfCollidableMesh, 1);
+                            boss.model.remove(boss.hitbox.mesh);
+                            defeatedBoss = true;
+                            bossHealth.style.visibility = "hidden";
+                        }
+                    }
+
+                    if(timerId) {
+                        clearInterval(timerId);
+                    }   
+                }
+            }, 1000);
+        }
+    }
+    
     if(boss.currentHealth <= 0) {
         audioCollection.bossFightMusic.stop();
         checkpoint.style.visibility = "visible"; // The player will only have to defeat the boss once
@@ -4128,7 +4297,7 @@ function handleHealthPacks() {
  */
 function healthPackPickup() {
     if(player.currentHealth == 100) {
-        audioCollection.wrongMove.play(); 
+        audioCollection.wrongMove.play();
         return;
     }
 
@@ -4161,7 +4330,7 @@ function healthPackPickup() {
 function updateHealthPackAnimation() {
     healthPackCollidableMeshList.forEach(healthPack => {
         if(healthPack.material.color.g == 0) { // Regular health pack
-            if(healthPack.position.y <= 1.25 || healthPack.position.y >= 2.75) { // Reached boundary
+            if(healthPack.position.y <= 6.25 || healthPack.position.y >= 7.75) { // Reached boundary
                 if(healthPack.direction == "down") {
                     healthPack.direction = "up";
                 }
@@ -4171,7 +4340,7 @@ function updateHealthPackAnimation() {
             }
         }
         else { // Super health pack
-            if(healthPack.position.y <= 2.5 || healthPack.position.y >= 5.5) { // Reached boundary
+            if(healthPack.position.y <= 6.5 || healthPack.position.y >= 8) { // Reached boundary
                 if(healthPack.direction == "down") {
                     healthPack.direction = "up";
                 }
@@ -4192,65 +4361,72 @@ function updateHealthPackAnimation() {
     });
 }
 
+/** 
+ * Helper function. 
+ * Handles the animation of an item in the world before the player has picked it up.
+ * @param {object} model The model of the item.
+ * @param {number} lowerBound The lower bound of the up-down animation
+ * @param {number} upperBound The upper bound of the up-down animation
+ */ 
+function itemAnimation(model, lowerBound, upperBound) {
+    if(model.position.y <= lowerBound || model.position.y >= upperBound) { // Reached boundary
+        if(model.direction == "down") {
+            model.direction = "up";
+        }
+        else {
+            model.direction = "down";
+        }
+    }
+
+    if(model.direction == "down") { // Decrease y position
+        model.position.y -= 0.01;
+    }
+    else { // Increase y position
+        model.position.y += 0.01;
+    }
+
+    model.rotation.y += 0.01; // Rotate counterclockwise
+}
+
 /**
  * Called every game loop until the player picks up the gun.
  * Handles the animation of the gun on the ground.
  */
 function updateGunOnGroundAnimation() {
-    if(player.weapon.model.position.y <= 1 || player.weapon.model.position.y >= 2) { // Reached boundary
-        if(player.weapon.model.direction == "down") {
-            player.weapon.model.direction = "up";
-        }
-        else {
-            player.weapon.model.direction = "down";
-        }
-    }
-
-    if(player.weapon.model.direction == "down") { // Decrease y position
-        player.weapon.model.position.y -= 0.01;
-    }
-    else { // Increase y position
-        player.weapon.model.position.y += 0.01;
-    }
-
-    player.weapon.model.rotation.y += 0.01; // Rotate counterclockwise
+    itemAnimation(player.weapon.model, 1, 2);
 }
 
+/**
+ * Called every game loop until the player picks up the shield.
+ * Handles the animation of the shield on the ground.
+ */
 function updateShieldOnGroundAnimation() {
-    if(player.shield.model.position.y <= 2 || player.shield.model.position.y >= 3) { // Reached boundary
-        if(player.shield.model.direction == "down") {
-            player.shield.model.direction = "up";
-        }
-        else {
-            player.shield.model.direction = "down";
-        }
-    }
+    itemAnimation(player.shield.model, 2, 3);
+}
 
-    if(player.shield.model.direction == "down") { // Decrease y position
-        player.shield.model.position.y -= 0.01;
-    }
-    else { // Increase y position
-        player.shield.model.position.y += 0.01;
-    }
-
-    player.shield.model.rotation.y += 0.01; // Rotate counterclockwise
+/**
+ * Called every game loop until the player picks up the weapon upgrade.
+ * Handles the animation of the weapon upgrade on the ground.
+ */
+function updateWeaponUpgradeOnGroundAnimation() {
+    itemAnimation(player.weaponUpgrade.model, 2, 3);
 }
 
 /**
  * Called when the player has defeated the boss and walks into the final area.
- * Handles the raycasting logic to allow them to enter their ship and finish the game.
+ * Handles the raycasting logic to allow them to interact with the heart of the planet and make a final decision.
  */
-function handleShipInteraction() {
+function handleHeartInteraction() {
     let cameraDirection = new THREE.Vector3();
     cameraDirection.normalize();
     controls.getDirection(cameraDirection);
     let playerRaycaster = new THREE.Raycaster(controls.getObject().position, cameraDirection);
 
-    let intersects = playerRaycaster.intersectObjects([ship], true);
+    let intersects = playerRaycaster.intersectObjects([heart], true);
 
     if(intersects.length > 0 && intersects[0].distance < 10) {
         interact.style.visibility = "visible";
-        interactableObject = "ship";
+        interactableObject = "heart";
     }
     else {
         interact.style.visibility = "hidden";
@@ -4258,11 +4434,12 @@ function handleShipInteraction() {
 }
 
 function endGame() {
-    endgame.classList.add("fadein");
-    endgame.style.visibility = "visible";
-    setTimeout(() => {
-        location.reload();
-    }, 6000)
+    controls.unlock();
+    // endgame.classList.add("fadein");
+    // endgame.style.visibility = "visible";
+    // setTimeout(() => {
+    //     location.reload();
+    // }, 6000)
 }
 
 /**
@@ -4311,8 +4488,14 @@ function loadModel(url, key) {
             case "shield":
                 initShieldModel(gltf);
                 break;
+            case "weapon_upgrade":
+                initWeaponUpgradeModel(gltf);
+                break;
             case "ship":
                 initShipModel(gltf);
+                break;
+            case "heart":
+                initHeartModel(gltf);
                 break;
             case "healthpack":
                 initHealthPacks(gltf);
@@ -4354,7 +4537,7 @@ function loadModel(url, key) {
                 initRockTwo(gltf);
                 break;
             case "rock_three":
-                initRockThree(gltf);
+                // initRockThree(gltf);
                 break;
             case "rock_four":
                 // initRockFour(gltf);
@@ -4461,6 +4644,18 @@ function loadAudio(url, key) {
             audioCollection.hitmarker = new THREE.Audio(listener);
             configureAudio(url, audioCollection.hitmarker, false, 0.5, false);
             break;
+        case "poison_bullet_ready":
+            audioCollection.weaponUpgradeReady = new THREE.Audio(listener);
+            configureAudio(url, audioCollection.weaponUpgradeReady, false, 0.9, false);
+            break;
+        case "poison_bullet_shot":
+            audioCollection.weaponUpgradeShot = new THREE.Audio(listener);
+            configureAudio(url, audioCollection.weaponUpgradeShot, false, 0.5, false);
+            break;
+        case "poison_tick":
+            audioCollection.poisonTick = new THREE.Audio(listener);
+            configureAudio(url, audioCollection.poisonTick, false, 0.5, false);
+            break;
         case "jump_boost":
             audioCollection.jumpBoost = new THREE.Audio(listener);
             configureAudio(url, audioCollection.jumpBoost, false, 0.3, false);
@@ -4555,7 +4750,7 @@ function loadAudio(url, key) {
             break;
         case "boss_fight_music":
             audioCollection.bossFightMusic = new THREE.Audio(listener);
-            configureAudio(url, audioCollection.bossFightMusic, true, 0.35, false);
+            configureAudio(url, audioCollection.bossFightMusic, true, 0.25, false);
             break;
         case "boss_attack":
             audioCollection.bossAttack = new THREE.Audio(listener);
@@ -4631,6 +4826,11 @@ function setCheckPoint() {
             }
         }
 
+        if(player.weaponUpgrade.hasWeaponUpgrade) {
+            weaponUpgradeBar.style.width = "8.25%";
+            player.weaponUpgrade.onCooldown = false;
+        }
+
         checkpoint.style.visibility = "visible";
         setTimeout(() => {
             checkpoint.style.visibility = "hidden";
@@ -4665,11 +4865,18 @@ function restartCheckpoint() {
     healthbarWidth = 10.25;
     healthbarTrailingWidth = healthbarWidth;
 
-    player.shield.shieldValue = 100;
-    player.shield.shieldEnabled = false;
-    player.shield.shieldRecharging = false;
-    shieldbar.setAttribute("style", "width: 10.25%");
-    shieldNumber.innerHTML = player.shield.shieldValue;
+    if(player.shield.hasShield) {
+        player.shield.shieldValue = 100;
+        player.shield.shieldEnabled = false;
+        player.shield.shieldRecharging = false;
+        shieldbar.setAttribute("style", "width: 10.25%");
+        shieldNumber.innerHTML = player.shield.shieldValue;
+    }
+
+    if(player.weaponUpgrade.hasWeaponUpgrade && player.weaponUpgrade.onCooldown) {
+        weaponUpgradeBar.style.width = "8.25%";
+        player.weaponUpgrade.onCooldown = false;
+    }
 
     controls.lock();
 
@@ -5058,7 +5265,18 @@ function initControls() {
     controls.addEventListener("lock", lock);
     controls.addEventListener("unlock", unlock);
 
+    document.addEventListener("keyup", onKeyUp);
+
     function lock() {
+        player.velocityX = 0;
+        player.velocityY = 0;
+        player.velocityZ = 0;
+
+        setTimeout(() => {
+            gameLoop();
+            document.addEventListener("keydown", onKeyDown);
+        }, 1);
+
         controls.isLocked = true;
         lockingClick = false;
         inHole = false;
@@ -5070,23 +5288,35 @@ function initControls() {
         if(player.shield.hasShield) {
             shield.style.visibility = "visible";
         }
-
-        if(tooltipVisible) {
-            tooltip.style.visibility = "visible";
-        }
         if(player.shield.shieldEnabled) {
             shieldDisplay.style.visibility = "visible";
         }
 
+        if(player.weaponUpgrade.hasWeaponUpgrade) {
+            weaponUpgrade.style.visibility = "visible";
+        }
+
+        if(tooltipVisible) {
+            tooltip.style.visibility = "visible";
+        }
+        
         if(currentLevel == 4 && !defeatedBoss) {
             audioCollection.bossFightMusic.play();
         }
 
         pauseBlock.style.display = "none";
         deathBlock.style.display = "none";
+
+        if(pausedRoarAudio) {
+            pausedRoarAudio = false;
+            audioCollection.bossRoar.play();
+        }
     }
 
     function unlock() {
+        cancelAnimationFrame(requestId);
+        document.removeEventListener("keydown", onKeyDown);
+
         controls.isLocked = false;
         lockingClick = true;
         audioCollection.wildlife.pause();
@@ -5096,32 +5326,42 @@ function initControls() {
         if(player.shield.hasShield) {
             shield.style.visibility = "hidden";
         }
+        if(player.shield.shieldEnabled) {
+            shieldDisplay.style.visibility = "hidden";
+        }
+
+        if(player.weaponUpgrade.hasWeaponUpgrade) {
+            weaponUpgrade.style.visibility = "hidden";
+        }
 
         if(tooltipVisible) {
             tooltip.style.visibility = "hidden";
         }
-        if(player.shield.shieldEnabled) {
-            shieldDisplay.style.visibility = "hidden";
-        }
+        
         pauseSongs();
 
         if(currentLevel == 4 && !defeatedBoss) {
             audioCollection.bossFightMusic.pause();
         }
 
-        if(player.currentHealth > 0 && danceIncorrect < 2) {
+        if(player.currentHealth > 0 && danceIncorrect < 2 && !defeatedBoss) {
             pauseBlock.style.display = "block";
         }
         else if(danceIncorrect == 2) {
             puzzleBlock.style.display = "block";
         }
-        else { // Player is dead
+        else if(player.currentHealth <= 0) { // Player is dead
             setTimeout(() => deathBlock.style.display = "block", 3000);
         }
-    }
+        else { // Player interacted with heart
+            endGameDecision.style.display = "block";
+        }
 
-    document.addEventListener("keydown", onKeyDown);
-    document.addEventListener("keyup", onKeyUp);
+        if(audioCollection.bossRoar.isPlaying) {
+            pausedRoarAudio = true;
+            audioCollection.bossRoar.pause();
+        }
+    }
 
     function onKeyDown(event) {
 
@@ -5204,8 +5444,8 @@ function initControls() {
                 if(player.movingBackward) {
                     updatePlayerAnimation(player.animations.walkAnim);
                 }
-                crosshair.style.top = "55.625%";
-                crosshair.style.transform = "translate(-50%, -55.625%)";                 
+                crosshair.style.top = "56.625%";
+                crosshair.style.transform = "translate(-50%, -56.625%)";                 
                 break;
             case 114:   // F3
                 if(inPuzzleTwo && !finishedPuzzleTwo) return;
@@ -5213,13 +5453,12 @@ function initControls() {
                 cameraType = "bev"; break;
             case 82:  // R
                 controls.getObject().position.set(0, 8, -720);
-                camera.lookAt(0, 8, -730);
                 currentLevel = 2;
                 break;
             case 84:  // T
-                controls.getObject().position.set(460, 8, -930);
-                camera.lookAt(460, 8, 1);
-                currentLevel = 3;
+                controls.getObject().position.set(475, 8, -100);
+                camera.lookAt(475, 8, -790);
+                currentLevel = 4;
                 break;
             case 89:    // Y
                 currentLevel = 2;
@@ -5279,7 +5518,7 @@ function initControls() {
                         case "healthpack":
                             healthPackPickup();
                             break;    
-                        case "ship":
+                        case "heart":
                             endGame();
                             break;   
                     }
@@ -5425,9 +5664,8 @@ function initLoadingManager() {
         loadingInfo.style.display = "none";
         loadingSymbol.style.display = "none";
         wakeUp.style.visibility = "visible";
-        renderer.compile(scene, camera);
+       // renderer.compile(scene, camera);
         initControls();
-        gameLoop();
     }
 
     function onProgress(url, itemsLoaded, itemsTotal) {
@@ -5488,6 +5726,17 @@ function initShipModel(gltf) {
     scene.add(ship);
 }
 
+function initHeart() {
+    loadModel("models/heart/heart.glb", "heart");
+}
+
+function initHeartModel(gltf) {
+    heart = gltf.scene;
+    heart.scale.set(3, 3, 3);
+    heart.position.set(485, 5, 50);
+    scene.add(heart);
+}
+
 /** Loads reflective texture for use in environment mapping  */
 function loadReflectiveTexture(url) {
     function callback(material) {
@@ -5507,7 +5756,7 @@ function initBountyHunter() {
     bountyHunter1 = new BountyHunter();
     bountyHunter2 = new BountyHunter();
     bountyHunter3 = new BountyHunter();
-    loadModel("models/characters/bountyhunter/bounty_hunter.glb", "bounty_hunter");
+    // loadModel("models/characters/bountyhunter/bounty_hunter.glb", "bounty_hunter");
 }
 
 function initWeapon() {
@@ -5530,7 +5779,48 @@ function initWeaponModel(gltf) {
 
     player.weapon.bullets = [];
 
-    document.addEventListener("mousedown", createPlayerBullet);
+    document.addEventListener("mousedown", function(event) {
+        switch(event.button) {
+            case 0: // Left click
+                /** Normal bullet */
+                createPlayerBullet("normal");
+                break;
+            case 2: // Right click
+                /** Enhanced poison bullet */
+                if(player.weaponUpgrade.hasWeaponUpgrade && !player.weaponUpgrade.onCooldown) {
+                    if(player.weapon.cooldown != 0) {
+                        return;
+                    }
+
+                    if(!shotPoisonBullet) {
+                        shotPoisonBullet = true;
+                        hideTooltip();
+                    }
+                    createPlayerBullet("poison");
+
+                    weaponUpgradeBar.style.width = "0%";
+                    player.weaponUpgrade.onCooldown = true;
+
+                    setTimeout(() => { // Allow player to use poisoned bullet every 15 seconds
+                        if(controls.isLocked && player.weaponUpgrade.onCooldown) { // Only play audio if the game is not paused and the upgrade is on cooldown
+                            audioCollection.weaponUpgradeReady.play();
+                        }
+                        weaponUpgradeBar.style.width = "8.25%";
+                        player.weaponUpgrade.onCooldown = false;
+                    }, 15000);
+                }
+                else if(player.weaponUpgrade.hasWeaponUpgrade) { // If the player has the weapon upgrade but it's on cooldown
+                    if(audioCollection.wrongMove.isPlaying) {
+                        audioCollection.wrongMove.stop();
+                    }
+                    audioCollection.wrongMove.play();
+                }
+                else { // If the player doesn't have the weapon upgrade at all
+                    return;
+                }
+                break;
+        }
+    });
 }
 
 function initShield() {
@@ -5540,7 +5830,7 @@ function initShield() {
 function initShieldModel(gltf) {
     player.shield.model = gltf.scene;
 
-    player.shield.model.scale.set(2.5, 2.5, 2.5);
+    player.shield.model.scale.set(3, 3, 3);
     player.shield.model.rotation.y = Math.random() * 2*Math.PI;
     player.shield.model.position.set(50, Math.random() + 2, -1140); // Random height between 2 and 3
     player.shield.model.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
@@ -5548,9 +5838,22 @@ function initShieldModel(gltf) {
     scene.add(player.shield.model);
 }
 
+function initWeaponUpgrade() {
+    loadModel("models/gun/weapon_upgrade.glb", "weapon_upgrade");
+}
+
+function initWeaponUpgradeModel(gltf) {
+    player.weaponUpgrade.model = gltf.scene;
+    player.weaponUpgrade.model.scale.set(5, 5, 5);
+    player.weaponUpgrade.model.position.set(575, Math.random() + 2, -790); // Random height between 2 and 3
+    player.weaponUpgrade.model.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
+
+    scene.add(player.weaponUpgrade.model);
+}
+
 function initHealthPacks(gltf) {
     let healthPackOne = gltf.scene.children[0];
-    healthPackOne.scale.set(0.5, 0.5, 0.5);
+    healthPackOne.scale.set(0.75, 0.75, 0.75);
     let healthPackTwo = healthPackOne.clone();
     let healthPackThree = healthPackOne.clone();
     let healthPackFour = healthPackOne.clone();
@@ -5564,40 +5867,40 @@ function initHealthPacks(gltf) {
     superHealthPack.material = healthPackOne.material.clone();
 
     healthPackOne.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
-    healthPackOne.position.set(-245, Math.random() * 1.5 + 1.25, -1050); // Random height between 1.25 and 2.75
+    healthPackOne.position.set(-245, Math.random() * 1.5 + 6.25, -1050); // Random height between 6.25 and 7.75
     healthPackOne.rotation.y = Math.random() * 2*Math.PI;
 
     healthPackTwo.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
-    healthPackTwo.position.set(-240, Math.random() * 1.5 + 1.25, -1050);
+    healthPackTwo.position.set(-240, Math.random() * 1.5 + 6.25, -1050);
     healthPackTwo.rotation.y = Math.random() * 2*Math.PI;
 
     healthPackThree.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
-    healthPackThree.position.set(-235, Math.random() * 1.5 + 1.25, -1050);
+    healthPackThree.position.set(-235, Math.random() * 1.5 + 6.25, -1050);
     healthPackThree.rotation.y = Math.random() * 2*Math.PI;
 
     healthPackFour.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
-    healthPackFour.position.set(240, Math.random() * 1.5 + 1.25, -525);
+    healthPackFour.position.set(240, Math.random() * 1.5 + 6.25, -525);
     healthPackFour.rotation.y = Math.random() * 2*Math.PI;
     
     healthPackFive.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
-    healthPackFive.position.set(360, Math.random() * 1.5 + 1.25, -265);
+    healthPackFive.position.set(360, Math.random() * 1.5 + 6.25, -265);
     healthPackFive.rotation.y = Math.random() * 2*Math.PI;
 
     healthPackSix.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
-    healthPackSix.position.set(360, Math.random() * 1.5 + 1.25, -115);
+    healthPackSix.position.set(360, Math.random() * 1.5 + 6.25, -115);
     healthPackSix.rotation.y = Math.random() * 2*Math.PI;
 
     healthPackSeven.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
-    healthPackSeven.position.set(600, Math.random() * 1.5 + 1.25, -265);
+    healthPackSeven.position.set(600, Math.random() * 1.5 + 6.25, -265);
     healthPackSeven.rotation.y = Math.random() * 2*Math.PI;
 
     healthPackEight.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
-    healthPackEight.position.set(600, Math.random() * 1.5 + 1.25, -115);
+    healthPackEight.position.set(600, Math.random() * 1.5 + 6.25, -115);
     healthPackEight.rotation.y = Math.random() * 2*Math.PI;
 
     superHealthPack.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
     superHealthPack.scale.set(1, 1, 1);
-    superHealthPack.position.set(480, Math.random() * 3 + 2.5, -70); // Random height between 2.5 and 5.5
+    superHealthPack.position.set(480, Math.random() * 1.5 + 6.5, -70); // Random height between 6.5 and 8
     superHealthPack.rotation.y = Math.random() * 2*Math.PI;
     superHealthPack.material.color.setHex(0x21ad0a);
 
@@ -5630,7 +5933,7 @@ function initHealthPacks(gltf) {
     scene.add(superHealthPack);
 }
 
-function createPlayerBullet() {
+function createPlayerBullet(type) {
     if(lockingClick || player.weapon.cooldown != 0 || !player.hasGun || (inPuzzleTwo && !finishedPuzzleTwo)) return;
 
     player.weapon.recoil.reachedBottom = false;
@@ -5638,7 +5941,14 @@ function createPlayerBullet() {
 
     let cylinderGeometry = new THREE.CylinderBufferGeometry(0.05, 0.05, 5);
     cylinderGeometry.rotateX(-Math.PI/2);
-    let singleBullet = new THREE.Mesh(cylinderGeometry, new THREE.MeshBasicMaterial( {color: "#03c3fb"} ));
+    let bulletColour;
+    if(type == "normal") { // Normal bullet
+        bulletColour = "#03c3fb";
+    }
+    else { // Enhanced DoT bullet
+        bulletColour = "#04870d";
+    }
+    let singleBullet = new THREE.Mesh(cylinderGeometry, new THREE.MeshBasicMaterial( {color: bulletColour} ));
     player.weapon.bulletStart.getWorldPosition(singleBullet.position);
     singleBullet.rotation.copy(camera.rotation);
 
@@ -5653,9 +5963,14 @@ function createPlayerBullet() {
 
     let raycaster = new THREE.Raycaster(origin, direction.normalize());
 
-    player.weapon.bullets.push({bullet: singleBullet, raycaster: raycaster, lastPosition: lastPosition, originalPosition: originalPosition, box: currentBox});
+    player.weapon.bullets.push({bullet: singleBullet, raycaster: raycaster, lastPosition: lastPosition, originalPosition: originalPosition, box: currentBox, type: type});
     scene.add(singleBullet);
-    audioCollection.weapon.play();
+    if(type == "normal") {
+        audioCollection.weapon.play();
+    }
+    else {
+        audioCollection.weaponUpgradeShot.play();
+    }
     player.weapon.cooldown = 50;
 }
 
@@ -5703,6 +6018,9 @@ function initAudio() {
     loadAudio("audio/weapon/headshot_announcer.mp3", "headshot_announcer");
     loadAudio("audio/weapon/headshot.wav", "headshot");
     loadAudio("audio/weapon/hitmarker.mp3", "hitmarker");
+    loadAudio("audio/weapon/poison_bullet_ready.wav", "poison_bullet_ready");
+    loadAudio("audio/weapon/poison_bullet_shot.wav", "poison_bullet_shot");
+    loadAudio("audio/weapon/poison_tick.wav", "poison_tick");
     loadAudio("audio/items/paper.wav", "paper");
     loadAudio("audio/character/jump_boost.wav", "jump_boost");
     loadAudio("audio/environment/level_one/totem_select.wav", "totem_select");
@@ -5784,11 +6102,6 @@ function render() {
 }
 
 function init() {
-    // menuAudioSource.stop();
-    title.style.display = "none";
-    menuBlock.style.display = "none";
-    loadingSymbol.style.display = "block";
-    
     initRenderer();
     initScene();
     initCameras();
@@ -5800,9 +6113,11 @@ function init() {
     initPlayer();
     initAliens();
     initShip();
+    initHeart();
     initBountyHunter();
     initWeapon();
     initShield();
+    initWeaponUpgrade();
     initAudio();
     initBoss();
     initWorld();
@@ -5827,6 +6142,21 @@ function initMenuAudio() {
 }
 
 function menu() {
-    // initMenuAudio();
-    playButton.addEventListener("click", () => init());
+    initMenuAudio();
+    playButton.addEventListener("click", () => {
+        menuAudioSource.stop();
+        title.style.display = "none";
+        menuBlock.style.display = "none";
+        introCutScene.play();
+        introCutScene.style.visibility = "visible";
+    });
+
+    introCutScene.onended = function() {
+        introCutScene.remove();
+        loadingSymbol.style.display = "block";
+
+        setTimeout(() => {
+            init();
+        }, 3000);
+    }
 }

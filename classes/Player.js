@@ -7,6 +7,7 @@ class Player {
         this._inventory = [];
         this._hitbox = undefined;
         this._weapon = {model: undefined, bulletStart: undefined, bullets: undefined, cooldown: 0, recoil: {direction: "up", reachedTop: false, reachedBottom: false}};
+        this._weaponUpgrade = {model: undefined, hasWeaponUpgrade: false, onCooldown: false, weaponUpgradeEnabled: false};
         this._bullet = undefined;
         this._upgrades = [];
         this._velocity = {x: 0, y: 0, z: 0};
@@ -57,6 +58,10 @@ class Player {
 
     get weapon() {
         return this._weapon;
+    }
+    
+    get weaponUpgrade() {
+        return this._weaponUpgrade;
     }
 
     get upgrades() {

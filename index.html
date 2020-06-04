@@ -9,6 +9,7 @@
     <script src="js/three.js"></script>
     <script src="js/PointerLockControls.js"></script>
     <script src="js/threex.rendererstats.js"></script>
+    <script src="js/perlin.js"></script>
     <script src="classes/Player.js"></script>
     <script src="classes/Alien.js"></script>
     <script src="classes/BountyHunter.js"></script>
@@ -26,6 +27,9 @@
         <button id="controls" class="buttons">CONTROLS</button>
         <button id="credits" class="buttons">CREDITS</button>
     </div>
+    <video id="intro-cutscene">
+        <source src="intro_cutscene.mp4" type="video/mp4">
+    </video>
     <div id="wake-up" class="unselectable">WAKE UP</div>
     <div id="playerdeath" class="unselectable">YOU DIED</div>
     <div id="deathmenu">
@@ -53,6 +57,12 @@
                 <div id="shieldbar"></div>
             </div>
             <div id="shield-number" class="unselectable">100</div>
+        </div>
+        <div id="weapon-upgrade">
+            <div id="weapon-upgrade-outline">
+                <div id="weapon-upgrade-bar"></div>
+            </div>
+            <div id="poison-tick"></div>
         </div>
         <div id="boss-health">
             <div id="boss-healthbar-outline"></div>
@@ -97,6 +107,10 @@
         </div>
     </div>
     <div id="endgame"></div>
+    <div id="endgame-decision">
+        <button id="takeHeart" class="buttons">TAKE THE HEART</button>
+        <button id="leaveHeart" class="buttons">LEAVE THE HEART</button>
+    </div>
     <div id="loadinginfo"></div>
     <svg id="loadingsymbol" width="200" height="200" viewBox="0 0 100 100">
         <polyline class="line-cornered stroke-still" points="0,0 100,0 100,100" stroke-width="10" fill="none"></polyline>
