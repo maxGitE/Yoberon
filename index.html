@@ -23,12 +23,20 @@
     <div id="title" class="unselectable">YOBERON</div>
     <div id="menu">
         <button id="play" class="buttons">PLAY</button>
-        <button id="controls" class="buttons">CONTROLS</button>
+        <button id="controls-button-mainmenu" class="buttons">CONTROLS</button>
         <button id="credits" class="buttons">CREDITS</button>
     </div>
-    <video id="intro-cutscene">
-        <source src="intro_cutscene.mp4" type="video/mp4">
-    </video>
+    <div id="controls">
+    </div>
+    <div id="cutscenes">
+        <video id="intro-cutscene">
+            <source src="intro_cutscene.mp4" type="video/mp4">
+        </video>
+        <video id="take-heart-cutscene">
+            <source src="take_heart_cutscene.mp4" type="video/mp4">
+        </video>
+        <button id="skip" class="buttons">SKIP</button>
+    </div>
     <div id="wake-up" class="unselectable">WAKE UP</div>
     <div id="playerdeath" class="unselectable">YOU DIED</div>
     <div id="deathmenu">
@@ -36,7 +44,8 @@
     </div>
     <div id="pausemenu">
         <button id="resume" class="buttons">RESUME</button>
-        <button id="controlspause" class="buttons">CONTROLS</button>
+        <button id="controls-button-pausemenu" class="buttons">CONTROLS</button>
+        <button id="shadows" class="buttons">SHADOWS: OFF</button>
     </div>
     <div id="puzzle-failed">
         <div id="failed" class="unselectable">FAILED</div>
@@ -96,10 +105,10 @@
             </div>
         </div>
     </div>
-    <div id="endgame"></div>
+    <div id="endgame-fade-in"></div>
     <div id="endgame-decision">
-        <button id="takeHeart" class="buttons">TAKE THE HEART</button>
-        <button id="leaveHeart" class="buttons">LEAVE THE HEART</button>
+        <button id="take-heart" class="buttons endgame-buttons">TAKE THE HEART</button>
+        <button id="leave-heart" class="buttons endgame-buttons">LEAVE THE HEART</button>
     </div>
     <div id="loadinginfo"></div>
     <svg id="loadingsymbol" width="200" height="200" viewBox="0 0 100 100">
