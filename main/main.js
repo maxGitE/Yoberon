@@ -53,6 +53,17 @@ const scrollTitle = document.getElementById("scroll-title");
 const alienScroll = document.getElementById("alien-scroll");
 const englishScroll = document.getElementById("english-scroll");
 const dancecontrols = document.getElementById("dancecontrols");
+const danceResults = document.getElementById("dance-circles");
+const danceCorrect1 = document.getElementById("correct1");
+const danceCorrect2 = document.getElementById("correct2");
+const danceCorrect3 = document.getElementById("correct3");
+const danceCorrect4 = document.getElementById("correct4");
+const danceWrong1 = document.getElementById("wrong1");
+const danceWrong2 = document.getElementById("wrong2");
+const danceWrong3 = document.getElementById("wrong3");
+const danceWrong4 = document.getElementById("wrong4");
+const danceStrike1 = document.getElementById("strike1");
+const danceStrike2 = document.getElementById("strike2");
 const playButton = document.getElementById("play");
 const loadingInfo = document.getElementById("loadinginfo");
 const loadingSymbol = document.getElementById("loadingsymbol");
@@ -61,6 +72,7 @@ const endGameDecision = document.getElementById("endgame-decision");
 const takeHeartButton = document.getElementById("take-heart");
 const leaveHeartButton = document.getElementById("leave-heart");
 const takeHeartCutScene = document.getElementById("take-heart-cutscene");
+const leaveHeartCutScene = document.getElementById("leave-heart-cutscene");
 
 window.onload = menu;
 
@@ -239,14 +251,6 @@ let healthbarWidth = 10.25;
 let healthbarTrailingWidth = healthbarWidth;
 let checkpointDisplayed = false;
 let interactableObject;
-let alienWritings = ["⏁⊑⟒⊬ ⏃⍀⟒ ⍀⟒⌰⟒⋏⏁⌰⟒⌇⌇. ⟟ ⊑⏃⎐⟒⋏’⏁ ⌇⟒⟒⋏ ⋔⊬ ⎎⏃⋔⟟⌰⊬ ⟟⋏ ⏁⊑⍀⟒⟒ ⍙⟒⟒☍⌇ ⏚⎍⏁ ⟟ ⋔⎍⌇⏁ ⌇⏁⍜⌿ ⏁⊑⟒⋔, ⎎⍜⍀ ⏁⊑⟒ ⌇⏃☍⟒ ⍜⎎ ⋔⊬ ⌿⟒⍜⌿⌰⟒.",
-                     "⍜⎍⍀ ⋏⎍⋔⏚⟒⍀⌇ ⏃⍀⟒ ⎅⟒☊⍀⟒⏃⌇⟟⋏☌ ⎎⏃⌇⏁. ⍙⟒ ⋔⎍⌇⏁ ⌿⍀⍜⏁⟒☊⏁ ⏁⊑⟒ ⊑⟒⏃⍀⏁ ⏃⏁ ⏃⌰⌰ ☊⍜⌇⏁⌇. ⏁⊑⟒ ⌿⍀⍜⏁⟒☊⏁⍜⍀ ⟟⌇ ⍜⎍⍀ ⌰⏃⌇⏁ ⊑⍜⌿⟒.",
-                     "⌇⟟⋏☊⟒ ⏁⊑⟒ ⎅⏃⍙⋏ ⍜⎎ ⏁⟟⋔⟒, ⏁⊑⟒ ⊑⟒⏃⍀⏁ ⊑⏃⌇ ⌿⍜⍙⟒⍀⟒⎅ ⊬⍜⏚⟒⍀⍜⋏ ⏃⋏⎅ ⏃⌰⌰⍜⍙⟒⎅ ⌰⟟⎎⟒ ⏁⍜ ⎎⌰⍜⎍⍀⟟⌇⊑. ⟟⏁ ⋔⎍⌇⏁ ⍀⟒⋔⏃⟟⋏ ⎍⋏⏁⍜⎍☊⊑⟒⎅, ⍜⍀ ⏁⍜⏁⏃⌰ ⎅⟒⌇⏁⍀⎍☊⏁⟟⍜⋏ ⌇⊑⏃⌰⌰ ⟒⋏⌇⎍⟒.",
-                     "⏁⊑⟒ ⊑⟒⏃⍀⏁ ⟟⌇ ⌇⍜⎍☌⊑⏁ ⏃⎎⏁⟒⍀ ⏚⊬ ⋔⏃⋏⊬ ⟟⋏ ⏁⊑⟒ ☌⏃⌰⏃⌖⊬ ⎎⍜⍀ ⟟⏁⌇ ⏁⍀⟒⋔⟒⋏⎅⍜⎍⌇ ⌿⍜⍙⟒⍀. ⟟⎎ ⊑⏃⍀⋏⟒⌇⌇⟒⎅, ⟟⏁ ☊⏃⋏ ⌿⍀⍜⎐⟟⎅⟒ ⎍⋏⌰⟟⋔⟟⏁⟒⎅ ⎎⎍⟒⌰ ⏁⍜ ⍙⊑⏃⏁⟒⎐⟒⍀ ⏁⊑⟒ ⎍⌇⟒⍀ ⎅⟒⌇⟟⍀⟒⌇."];
-let alienTranslations = ["They are relentless. I haven’t seen my family in three weeks but I must stop them, for the sake of my people.",
-                         "Our numbers are decreasing fast. We must protect the heart at all costs. The protector is our last hope.",
-                         "Since the dawn of time, the heart has powered Yoberon and allowed life to flourish. It must remain untouched, or total destruction shall ensue.",
-                         "The heart is sought after by many in the galaxy for its tremendous power. If harnessed, it can provide unlimited fuel to whatever the user desires."];
 
 /** GUN */
 let lockingClick = true;
@@ -632,7 +636,6 @@ function showClue(name) {
 
 /********** PUZZLE TWO START **********/
 function levelTwoPuzzle() {
-    // TODO: Visual queues for correct and incorrect songs + chceck if player enters backwards
     if(!finishedPuzzleTwo) {
         inPuzzleTwo = true;
 
@@ -699,6 +702,7 @@ function levelTwoPuzzle() {
             player.movingForward = false;
             updatePlayerAnimation(player.animations.idleAnim);
             inPositionZ = true;
+            danceResults.style.visibility = "visible";
             dancecontrols.style.visibility = "visible";
             pointLight.intensity = 0;
         }
@@ -720,10 +724,18 @@ function levelTwoPuzzle() {
                 audioCollection.losePuzzle.play();
             controls.unlock();
             pauseSongs();
+            dancecontrols.style.visibility = "hidden";
+            danceResults.style.visibility = "hidden";
+            hideDanceResults();
             puzzleSpotLight.color.setHex(0xff0000);
 
             restartPuzzle.addEventListener("click", () => {
-                puzzleBlock.style.display = "none";               
+                puzzleBlock.style.display = "none";                
+                danceStrike1.style.visibility = "hidden";
+                danceStrike2.style.visibility = "hidden";
+                dancecontrols.style.visibility = "visible";
+                danceResults.style.visibility = "visible";
+
                 controls.lock();
 
                 danceIncorrect = 0;
@@ -745,6 +757,11 @@ function levelTwoPuzzle() {
     }
     else { // Solved puzzle        
         dancecontrols.style.visibility = "hidden";
+        danceResults.style.visibility = "hidden";
+        hideDanceResults();        
+        danceStrike1.style.visibility = "hidden";
+        danceStrike2.style.visibility = "hidden";
+
         crosshair.style.visibility = "visible";        
         health.style.visibility = "visible";
         shield.style.visibility = "visible";
@@ -774,28 +791,28 @@ function playMusic() {
 
     switch(songNumber) {
         case 0:
-            if(!chickenDanceCorrect && (lastPlayed != "chicken_dance" || countCorrect == 2)) {
+            if(!chickenDanceCorrect && (lastPlayed != "chicken_dance" || countCorrect == 3)) {
                 answered = false;
                 audioCollection.chickenDance.play();
                 lastPlayed = "chicken_dance";
             }
             break;
         case 1:
-            if(!gangnamStyleCorrect && (lastPlayed != "gangnam_style" || countCorrect == 2)) {
+            if(!gangnamStyleCorrect && (lastPlayed != "gangnam_style" || countCorrect == 3)) {
                 answered = false;
                 audioCollection.gangnamStyle.play();
                 lastPlayed = "gangnam_style";
             }
             break;
         case 2:
-            if(!macarenaDanceCorrect && (lastPlayed != "macarena_dance" || countCorrect == 2)) {
+            if(!macarenaDanceCorrect && (lastPlayed != "macarena_dance" || countCorrect == 3)) {
                 answered = false;
                 audioCollection.macarenaDance.play();
                 lastPlayed = "macarena_dance";
             }
             break;
         case 3:
-            if(!ymcaDanceCorrect && (lastPlayed != "ymca_dance" || countCorrect == 2)) {
+            if(!ymcaDanceCorrect && (lastPlayed != "ymca_dance" || countCorrect == 3)) {
                 answered = false;
                 audioCollection.ymcaDance.play();
                 lastPlayed = "ymca_dance";
@@ -811,14 +828,23 @@ function checkDance() {
 
     if(audioCollection.chickenDance.isPlaying) {
         if(player.animations.chickenDance.enabled) {
-            audioCollection.correct.play();           
-
-            audioCollection.chickenDance.source.onended = function() {  
+            audioCollection.correct.play();
+            danceWrong1.style.visibility = "hidden";
+            danceCorrect1.style.visibility = "visible";
+            
+            if(countCorrect != 3) {
                 chickenDanceCorrect = true;
-                countCorrect++;   
-                    
+            }            
+            countCorrect++;
+
+            audioCollection.chickenDance.source.onended = function() {                 
                 updatePlayerAnimation(player.animations.idleAnim);
                 dancePlaying = false;
+
+                if(countCorrect == 4) {
+                    chickenDanceCorrect = true;
+                } 
+
                 audioCollection.chickenDance.isPlaying = false;
             };
             
@@ -827,8 +853,12 @@ function checkDance() {
             audioCollection.chickenDance.stop();
 
             audioCollection.recordScratch.play();
+            danceWrong1.style.visibility = "visible";
+            danceStrikes(); 
+
             audioCollection.recordScratch.source.onended = function() {              
-                danceIncorrect++;  
+                danceIncorrect++;
+
                 updatePlayerAnimation(player.animations.idleAnim);
                 dancePlaying = false;
                 audioCollection.recordScratch.isPlaying = false;
@@ -839,13 +869,22 @@ function checkDance() {
     if(audioCollection.gangnamStyle.isPlaying) {
         if(player.animations.gangnamStyle.enabled) {
             audioCollection.correct.play();
+            danceWrong2.style.visibility = "hidden";
+            danceCorrect2.style.visibility = "visible";
 
-            audioCollection.gangnamStyle.source.onended = function() { 
+            if(countCorrect != 3) {
                 gangnamStyleCorrect = true;
-                countCorrect++;  
+            } 
+            countCorrect++;
 
+            audioCollection.gangnamStyle.source.onended = function() {
                 updatePlayerAnimation(player.animations.idleAnim);
                 dancePlaying = false;
+
+                if(countCorrect == 4) {
+                    gangnamStyleCorrect = true;
+                }
+
                 audioCollection.gangnamStyle.isPlaying = false;
             };
         }
@@ -853,8 +892,12 @@ function checkDance() {
             audioCollection.gangnamStyle.stop();
 
             audioCollection.recordScratch.play();
+            danceWrong2.style.visibility = "visible";
+            danceStrikes(); 
+            
             audioCollection.recordScratch.source.onended = function() {              
-                danceIncorrect++;  
+                danceIncorrect++;
+
                 updatePlayerAnimation(player.animations.idleAnim);
                 dancePlaying = false;
                 audioCollection.recordScratch.isPlaying = false;
@@ -865,13 +908,22 @@ function checkDance() {
     if(audioCollection.macarenaDance.isPlaying) {
         if(player.animations.macarenaDance.enabled) {
             audioCollection.correct.play();
+            danceWrong3.style.visibility = "hidden";
+            danceCorrect3.style.visibility = "visible";
+
+            if(countCorrect != 3) {
+                macarenaDanceCorrect = true;
+            }  
+            countCorrect++;
 
             audioCollection.macarenaDance.source.onended = function() {  
-                macarenaDanceCorrect = true;
-                countCorrect++; 
-
                 updatePlayerAnimation(player.animations.idleAnim);
                 dancePlaying = false;
+
+                if(countCorrect == 4) {
+                    macarenaDanceCorrect = true;
+                }
+
                 audioCollection.macarenaDance.isPlaying = false;
             };
         }
@@ -879,8 +931,11 @@ function checkDance() {
             audioCollection.macarenaDance.stop();
 
             audioCollection.recordScratch.play();
+            danceWrong3.style.visibility = "visible";
+            danceStrikes(); 
+            
             audioCollection.recordScratch.source.onended = function() {              
-                danceIncorrect++;  
+                danceIncorrect++;
                 updatePlayerAnimation(player.animations.idleAnim);
                 dancePlaying = false;
                 audioCollection.recordScratch.isPlaying = false;
@@ -891,13 +946,22 @@ function checkDance() {
     if(audioCollection.ymcaDance.isPlaying) {
         if(player.animations.ymcaDance.enabled) {
             audioCollection.correct.play();
+            danceWrong4.style.visibility = "hidden";
+            danceCorrect4.style.visibility = "visible";
 
-            audioCollection.ymcaDance.source.onended = function() {                
+            if(countCorrect != 3) {
                 ymcaDanceCorrect = true;
-                countCorrect++; 
-                    
+            } 
+            countCorrect++;
+
+            audioCollection.ymcaDance.source.onended = function() {                                  
                 updatePlayerAnimation(player.animations.idleAnim);
                 dancePlaying = false;
+
+                if(countCorrect == 4) {
+                    ymcaDanceCorrect = true;
+                } 
+
                 audioCollection.ymcaDance.isPlaying = false;
             };
         }
@@ -905,8 +969,12 @@ function checkDance() {
             audioCollection.ymcaDance.stop();
 
             audioCollection.recordScratch.play();
+            danceWrong4.style.visibility = "visible";
+            danceStrikes(); 
+            
             audioCollection.recordScratch.source.onended = function() {              
-                danceIncorrect++;  
+                danceIncorrect++; 
+
                 updatePlayerAnimation(player.animations.idleAnim);
                 dancePlaying = false;
                 audioCollection.recordScratch.isPlaying = false;
@@ -924,6 +992,9 @@ function initDanceChecks() {
                 audioCollection.chickenDance.isPlaying = false;
                 
                 audioCollection.recordScratch.play();
+                danceWrong1.style.visibility = "visible";
+                danceStrikes(); 
+                
                 audioCollection.recordScratch.source.onended = function() {              
                     danceIncorrect++;
                     audioCollection.recordScratch.isPlaying = false;
@@ -937,6 +1008,9 @@ function initDanceChecks() {
                 audioCollection.gangnamStyle.isPlaying = false;
                 
                 audioCollection.recordScratch.play();
+                danceWrong2.style.visibility = "visible";
+                danceStrikes(); 
+                
                 audioCollection.recordScratch.source.onended = function() {              
                     danceIncorrect++;
                     audioCollection.recordScratch.isPlaying = false;
@@ -950,6 +1024,9 @@ function initDanceChecks() {
                 audioCollection.macarenaDance.isPlaying = false;
                 
                 audioCollection.recordScratch.play();
+                danceWrong3.style.visibility = "visible";
+                danceStrikes(); 
+                
                 audioCollection.recordScratch.source.onended = function() {              
                     danceIncorrect++;
                     audioCollection.recordScratch.isPlaying = false;
@@ -963,6 +1040,9 @@ function initDanceChecks() {
                 audioCollection.ymcaDance.isPlaying = false;
                 
                 audioCollection.recordScratch.play();
+                danceWrong4.style.visibility = "visible";
+                danceStrikes(); 
+                
                 audioCollection.recordScratch.source.onended = function() {              
                     danceIncorrect++;
                     audioCollection.recordScratch.isPlaying = false;
@@ -974,28 +1054,52 @@ function initDanceChecks() {
     }
 }
 
+/** Visual indicator of how many songs the player has gotten wrong */
+function danceStrikes() {
+    if(danceIncorrect == 0) {
+        danceStrike1.style.visibility = "visible";
+    }
+    else if(danceIncorrect == 1) {
+        danceStrike2.style.visibility = "visible";
+    }
+}
+
+/** Hide all the dance result elements */
+function hideDanceResults() {
+    danceCorrect1.style.visibility = "hidden";
+    danceCorrect2.style.visibility = "hidden";
+    danceCorrect3.style.visibility = "hidden";
+    danceCorrect4.style.visibility = "hidden";
+    danceWrong1.style.visibility = "hidden";
+    danceWrong2.style.visibility = "hidden";
+    danceWrong3.style.visibility = "hidden";
+    danceWrong4.style.visibility = "hidden";
+}
+
 /**
  * Stops the song which is currently playing and sets the player back to idle animation.
  * Called when controls are unlocked.
  */
 function pauseSongs() {
-    updatePlayerAnimation(player.animations.idleAnim);
-    dancePlaying = false;
+    if(countCorrect != 4) {
+        updatePlayerAnimation(player.animations.idleAnim);
+        dancePlaying = false;
 
-    switch (lastPlayed) {
-        case "chicken_dance":
-            audioCollection.chickenDance.stop();
-            break;
-        case "gangnam_style":
-            audioCollection.gangnamStyle.stop();
-            break;
-        case "macarena_dance":
-            audioCollection.macarenaDance.stop();
-            break;
-        case "ymca_dance":
-            audioCollection.ymcaDance.stop();
-            break;
-    }
+        switch (lastPlayed) {
+            case "chicken_dance":
+                audioCollection.chickenDance.stop();
+                break;
+            case "gangnam_style":
+                audioCollection.gangnamStyle.stop();
+                break;
+            case "macarena_dance":
+                audioCollection.macarenaDance.stop();
+                break;
+            case "ymca_dance":
+                audioCollection.ymcaDance.stop();
+                break;
+        }
+    }   
 }
 /********** PUZZLE TWO END **********/
 
@@ -2672,7 +2776,6 @@ function initOpenBarrel(gltf) {
 
 function initScroll(gltf) {
     let scroll = gltf.scene;
-    console.log(scroll);
     scroll.scale.set(0.7, 0.7, 0.7);
     scroll.rotation.set(-Math.PI/18, Math.PI/2, 0);
     scroll.position.set(0, 4.4, 0.8);
@@ -4478,6 +4581,7 @@ function playEndCutScene(event) {
                 break;
             case "leaveHeart":
                 // PLAY LEAVE HEART ANIMATION
+                endCutscene = leaveHeartCutScene;
                 break;
         }
     
@@ -5408,14 +5512,14 @@ function initControls() {
         if(tooltipVisible) {
             tooltip.style.visibility = "hidden";
         }
-        
+
         pauseSongs();
 
         if(currentLevel == 4 && !defeatedBoss) {
             audioCollection.bossFightMusic.pause();
         }
 
-        if(player.currentHealth > 0 && danceIncorrect < 2 && !defeatedBoss) {
+        if(player.currentHealth > 0 && danceIncorrect < 2 && !defeatedBoss && !inHole) {
             pauseBlock.style.display = "block";
         }
         else if(danceIncorrect == 2) {
@@ -5428,7 +5532,7 @@ function initControls() {
             if(interactedWithHeart) {
                 endGameDecision.style.display = "block";
             }
-            else {
+            else if(!inHole) {
                 pauseBlock.style.display = "block";
             }
         }
@@ -5446,7 +5550,7 @@ function initControls() {
         switch(event.keyCode) {
             case 87:    // W
                 if(inPuzzleTwo && !finishedPuzzleTwo) return;
-
+                
                 player.movingForward = true;
                 if(!player.movingLeft && !player.movingRight)
                     updatePlayerAnimation(player.animations.walkAnim);
@@ -5537,9 +5641,9 @@ function initControls() {
                 currentLevel = 4;
                 break;
             case 89:    // Y
-                currentLevel = 3;
-                controls.getObject().position.set(20, 8, -940);
-                camera.lookAt(480, 8, 40);
+                currentLevel = 2;
+                controls.getObject().position.set(460, 8, -1090);
+                camera.lookAt(460, 8, 1);
                 break;
             case 69:    // E
                 if(interact.style.visibility == "visible") {

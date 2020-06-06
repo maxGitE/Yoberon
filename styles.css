@@ -254,8 +254,7 @@ button:active {
     position: fixed;
     bottom: 20%;
     left: 50%;
-    transform: translate(-50%, -20%);    
-    background-color: black;
+    transform: translate(-50%, -20%);  
 }
 
 #failed {
@@ -581,6 +580,38 @@ img {
     text-align: center;
     display: inline-block;
     margin: 3%;
+}
+
+.dance-results {
+    position: fixed;
+    text-align: center;
+    top: 10%;
+    left: 50%;
+    transform: translate(-50%, -10%);
+}
+
+#dance-results-full {
+    visibility: hidden;
+}
+
+.dot {
+    height: 100px;
+    width: 100px;
+    margin: 10px;
+    background-color: rgba(156, 156, 156, 0.2); 
+    border: none;
+    outline: none;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+#dance-strikes {
+    position: fixed;
+    height: 160px;
+    top: 50%;
+    left: 90%;
+    transform: translate(-90%, -50%);
+    display: inline-block;
 }
 
 #loadinginfo {
