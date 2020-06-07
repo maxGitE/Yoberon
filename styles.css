@@ -26,6 +26,7 @@ video {
     display: none;
     visibility: hidden;
     object-fit: cover;
+    pointer-events: none;
 }
 
 .unselectable {

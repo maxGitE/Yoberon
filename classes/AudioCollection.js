@@ -1,6 +1,8 @@
 class AudioCollection {
     constructor() {
         this._wildlife;
+        this._footstepsLeaves;
+        this._footstepsWood;
         this._weapon;
         this._headshotAnnouncer;
         this._headshot;
@@ -31,6 +33,10 @@ class AudioCollection {
         this._shieldHit;
         this._shieldBreak;
         this._shieldReady;
+        this._transmissionOne;
+        this._transmissionTwo;
+        this._tripwireActivated;
+        this._tripwireBuzz;
     }
 
     get wildlife() {
@@ -39,6 +45,22 @@ class AudioCollection {
 
     set wildlife(audio) {
         this._wildlife = audio;
+    }
+
+    get footstepsLeaves() {
+        return this._footstepsLeaves;
+    }
+
+    set footstepsLeaves(audio) {
+        this._footstepsLeaves = audio;
+    }
+
+    get footstepsWood() {
+        return this._footstepsWood;
+    }
+
+    set footstepsWood(audio) {
+        this._footstepsWood = audio;
     }
     
     get weapon() {
@@ -283,5 +305,37 @@ class AudioCollection {
 
     set shieldReady(audio) {
         this._shieldReady = audio;
+    }
+
+    get transmissionOne() {
+        return this._transmissionOne;
+    }
+
+    set transmissionOne(audio) {
+        this._transmissionOne = audio;
+    }
+
+    get transmissionTwo() {
+        return this._transmissionTwo;
+    }
+
+    set transmissionTwo(audio) {
+        this._transmissionTwo = audio;
+    }
+
+    get tripwireActivated() {
+        return this._tripwireActivated;
+    }
+
+    set tripwireActivated(audio) {
+        this._tripwireActivated = audio;
+    }
+
+    get tripwireBuzz() {
+        return this._tripwireBuzz;
+    }
+
+    set tripwireBuzz(audio) {
+        this._tripwireBuzz = audio;
     }
 }
