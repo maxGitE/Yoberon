@@ -39,25 +39,28 @@
         <video id="take-heart-cutscene">
             <source src="cutscenes/take_heart_cutscene.mp4" type="video/mp4">
         </video>
+        <video id="leave-heart-cutscene">
+            <source src="cutscenes/leave_heart_cutscene.mp4" type="video/mp4">
+        </video>
         <button id="skip" class="buttons">SKIP</button>
     </div>
     <div id="wake-up" class="unselectable">WAKE UP</div>
     <div id="playerdeath" class="unselectable">YOU DIED</div>
-    <div id="deathmenu">
+    <div id="deathmenu" style="z-index: 2;">
         <button id="restart" class="buttons">RESTART CHECKPOINT</button>
     </div>
-    <div id="pausemenu">
+    <div id="pausemenu" style="z-index: 2;">
         <button id="resume" class="buttons">RESUME</button>
         <button id="controls-button-pausemenu" class="buttons">CONTROLS</button>
         <button id="shadows" class="buttons">SHADOWS: OFF</button>
     </div>
-    <div id="puzzle-failed">
+    <div id="puzzle-failed" style="z-index: 2;">
         <div id="failed" class="unselectable">FAILED</div>
         <button id="restart-puzzle" class="buttons">RESTART</button>
     </div>
     <div id="hud">
         <div id="health">
-            <div id="healthbar-outline"">
+            <div id="healthbar-outline">
                 <div id="healthbar-trailing"></div>
                 <div id="healthbar"></div>
             </div>
@@ -95,6 +98,31 @@
             <div id="alien-scroll" class="unselectable"></div>
             <div id="english-scroll" class="unselectable"></div>
         </div>
+        <div id="dance-results-full" style="z-index: 0;">
+            <div id="dance-circles" class="dance-results unselectable">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+            </div>
+            <div id="dance-correct" class="dance-results unselectable">
+                <a id="correct1" class="dot"><img src="hud/dancecontrols/Tick.png" alt=""></a>
+                <a id="correct2" class="dot"><img src="hud/dancecontrols/Tick.png" alt=""></a>
+                <a id="correct3" class="dot"><img src="hud/dancecontrols/Tick.png" alt=""></a>
+                <a id="correct4" class="dot"><img src="hud/dancecontrols/Tick.png" alt=""></a>
+            </div>
+            <div id="dance-wrong" class="dance-results unselectable">
+                <a id="wrong1" class="dot"><img src="hud/dancecontrols/Cross.png" alt=""></a>
+                <a id="wrong2" class="dot"><img src="hud/dancecontrols/Cross.png" alt=""></a>
+                <a id="wrong3" class="dot"><img src="hud/dancecontrols/Cross.png" alt=""></a>
+                <a id="wrong4" class="dot"><img src="hud/dancecontrols/Cross.png" alt=""></a>
+            </div>
+            <div id="dance-strikes" class="unselectable">
+                <a id="strike1"><img src="hud/dancecontrols/strike.png" alt=""></a>
+                <a id="strike2"><img src="hud/dancecontrols/strike.png" alt=""></a>
+            </div>
+        </div>
+        
         <div id="dancecontrols" class="unselectable">
             <div id="action1" class="action">
                 <a id="key1" ><img src="hud/dancecontrols/1.svg" alt=""></a>                
