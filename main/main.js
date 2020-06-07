@@ -16,6 +16,7 @@ const menuBlock = document.getElementById("menu");
 const keyControls = document.getElementById("controls");
 const controlsButtonMainMenu = document.getElementById("controls-button-mainmenu");
 const controlsButtonPauseMenu = document.getElementById("controls-button-pausemenu");
+const shadowsButton = document.getElementById("shadows");
 const menuCinematic = document.getElementById("menu-cinematic");
 const introCutScene = document.getElementById("intro-cutscene");
 const skipButton = document.getElementById("skip");
@@ -2460,7 +2461,6 @@ function drawGround() {
     ground = new THREE.Mesh(groundGeometry,
                                     new THREE.MeshLambertMaterial({
                                         color: "#5e503e",
-  
                                         map: groundTexture
                                     }));
     ground.rotation.x = -Math.PI/2;
@@ -2687,7 +2687,7 @@ function drawHoles() {
     scene.add(holeOne);
     scene.add(holeTwo);
 
-    platform = new THREE.Mesh(new THREE.BoxBufferGeometry(30, 2, 11), new THREE.MeshLambertMaterial( {map: loadTexture("textures/wood1.jpg") }));
+    platform = new THREE.Mesh(new THREE.BoxBufferGeometry(30, 2, 12), new THREE.MeshLambertMaterial( {map: loadTexture("textures/wood1.jpg") }));
     platform.position.set(480, 3, -410);
 
     scene.add(platform);
@@ -3647,7 +3647,7 @@ function puzzleThreeBoundingBox() {
     }
 
     if(boxArr[1]) { // In box one
-        if(xPos > 462.5 && xPos < 497.5 && zPos > -415.5 && zPos < -404.5) {
+        if(xPos > 462.5 && xPos < 497.5 && zPos > -416.5 && zPos < -403.5) {
             onPlatform = true;
             inHole = false;
         }
@@ -5729,6 +5729,18 @@ function initControls() {
                 keyControls.style.visibility = "hidden";
             }
         });
+        shadowsButton.addEventListener("click", () => {
+            pointLight.castShadow = !pointLight.castShadow;
+            ground.receiveShadow = !ground.receiveShadow;
+            shadowObjects.forEach(object => object.castShadow = !object.castShadow);
+
+            if(pointLight.castShadow) { // Shadows are on
+                shadowsButton.innerHTML = "SHADOWS: ON";
+            }
+            else {
+                shadowsButton.innerHTML = "SHADOWS: OFF";
+            }
+        });
         lockingClick = false;
     }
 
@@ -6063,12 +6075,7 @@ function initControls() {
                 checkDance();
                 break;
             case 77:    // M (MINIMAP)
-                minimapToggle = !minimapToggle;
-                break;
-            case 78:    // N (SHADOWS)
-                pointLight.castShadow = !pointLight.castShadow;
-                ground.receiveShadow = !ground.receiveShadow;
-                shadowObjects.forEach(object => object.castShadow = !object.castShadow);
+                minimapToggle = true;
                 break;
         }
     }
@@ -6110,6 +6117,9 @@ function initControls() {
                     if(player.movingForward && !player.movingLeft && !player.movingRight)
                         updatePlayerAnimation(player.animations.walkAnim);
                 }
+                break;
+            case 77:    // M
+                minimapToggle = false;
                 break;
         }
     }
@@ -6605,7 +6615,7 @@ function init() {
     initLoaders();
     initSkybox();
     initPlayer();
-    initAliens();
+    // initAliens();
     initShip();
     initHeart();
     initBountyHunter();
