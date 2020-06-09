@@ -100,6 +100,7 @@ let ambientLight;
 let pointLight;
 let puzzleSpotLight;
 let alienLight;
+let speakerLight;
 
 /** AUDIO */
 let listener;
@@ -205,6 +206,7 @@ let crate;
 let book;
 let donutOne;
 let donutTwo;
+let speakers;
 
 /** PUZZLE 2 */
 let removedLevelTwoAliens = false
@@ -637,6 +639,9 @@ function showClue(name) {
 /********** PUZZLE TWO START **********/
 function levelTwoPuzzle() {
     if(!finishedPuzzleTwo) {
+        if(!inPuzzleTwo) {
+            // loadModel("models/environment/speakers.glb", "speakers");
+        }
         inPuzzleTwo = true;
 
         /** Set the camera to look at the player from the front */
@@ -2654,6 +2659,7 @@ function drawHole() {
 
     hole.rotation.set(-Math.PI/2, 0, 0);
     hole.position.set(460, 0.1, -860);
+    hole.add(audioCollection.hole);
 
     scene.add(hole);
 
@@ -2784,6 +2790,30 @@ function initScroll(gltf) {
     noteCollidableMeshlist.push(scroll.children[2]);
 
     barrelsAndScroll.add(scroll);
+}
+
+function drawSpeakers() {
+    speakers = new THREE.Object3D();
+
+    loadModel("models/environment/speaker.glb", "speakers");
+
+    speakers.position.set(460, 0, -1060);
+    speakers.scale.set(2, 2, 2);
+    scene.add(speakers);
+}
+
+function initSpeakers(gltf) {
+    let speaker1 = gltf.scene;
+    let speaker2 = speaker1.clone();
+
+    speaker1.position.set(-15, 0, 0);
+    speaker1.rotation.set(0, Math.PI/6, 0);
+
+    speaker2.position.set(15, 0, 0);
+    speaker2.rotation.set(0, -Math.PI/6, 0);
+
+    speakers.add(speaker1);
+    speakers.add(speaker2);
 }
 
 /** Changes which bounding boxes to load depending on what the current level is */
@@ -3397,6 +3427,8 @@ function levelThreeBoundingBox() {
             }, 2500);
         }
 
+        audioCollection.hole.play();
+
         if(zPos < boxOneTop) { // Place top boundary
             controls.getObject().position.z = boxOneTop;
         }
@@ -3427,6 +3459,8 @@ function levelThreeBoundingBox() {
         }
     }
     else if(boxArr[3]) { // In box three
+        audioCollection.hole.stop();
+
         if(xPos < boxThreeLeft + boundaryFactor) { // Place left boundary
             controls.getObject().position.x = boxThreeLeft + boundaryFactor;
         }
@@ -4678,7 +4712,10 @@ function loadModel(url, key) {
                 break;
             case "scroll":
                 initScroll(gltf);
-                break;               
+                break;
+            case "speakers":
+                initSpeakers(gltf);
+                break;                
             case "pinetree":
                 initPineTree(gltf);
                 break;
@@ -4947,6 +4984,14 @@ function loadAudio(url, key) {
         case "shield_ready":
             audioCollection.shieldReady = new THREE.Audio(listener);
             configureAudio(url, audioCollection.shieldReady, false, 0.4, false);
+            break;
+        case "hole":
+            audioCollection.hole = new THREE.PositionalAudio(listener);
+            audioLoader.load(url, function(buffer) {
+                audioCollection.hole.setBuffer(buffer);
+                audioCollection.hole.setLoop(true);
+                audioCollection.hole.setRefDistance(20);
+            });
             break;
     }
 }
@@ -5401,6 +5446,19 @@ function initLights() {
     /** Lights on the aliens */
     alienLight = new THREE.PointLight("white", 1);
     alienLight.distance = 30;
+
+    /** Lights on the speakers */
+    speakerLight = new THREE.PointLight("white", 1);
+    let speakerLight2 = speakerLight.clone();
+
+    speakerLight.distance = 30;
+    speakerLight.position.set(445, 5, -1060);
+
+    speakerLight2.distance = 30;
+    speakerLight2.position.set(475, 5, -1060);
+
+    scene.add(speakerLight);
+    scene.add(speakerLight2);
 }
 
 function initControls() {
@@ -6231,6 +6289,7 @@ function initAudio() {
     loadAudio("audio/boss/boss_footstep.wav", "boss_footstep");
     loadAudio("audio/boss/boss_death.wav", "boss_death");
     loadAudio("audio/environment/tree_fall.wav", "tree_fall");
+    loadAudio("audio/environment/black_hole.wav", "hole");
 
     /** SHIELD */
     loadAudio("audio/character/shield_active.ogg", "shield_active");
@@ -6252,7 +6311,7 @@ function initWorld() {
     drawHole();
     drawCrateAndBook();
     drawBarrelsAndScroll();
-
+    drawSpeakers();
     // boundingBoxVis();
 }
 

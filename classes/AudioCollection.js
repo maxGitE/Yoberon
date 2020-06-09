@@ -31,6 +31,7 @@ class AudioCollection {
         this._shieldHit;
         this._shieldBreak;
         this._shieldReady;
+        this._hole;
     }
 
     get wildlife() {
@@ -283,5 +284,13 @@ class AudioCollection {
 
     set shieldReady(audio) {
         this._shieldReady = audio;
+    }
+
+    get hole() {
+        return this._hole;
+    }
+
+    set hole(audio) {
+        this._hole = audio;
     }
 }
