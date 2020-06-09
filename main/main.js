@@ -75,6 +75,7 @@ const takeHeartButton = document.getElementById("take-heart");
 const leaveHeartButton = document.getElementById("leave-heart");
 const takeHeartCutScene = document.getElementById("take-heart-cutscene");
 const leaveHeartCutScene = document.getElementById("leave-heart-cutscene");
+const creditsCutScene = document.getElementById("credits-cutscene");
 
 window.onload = menu;
 
@@ -140,6 +141,7 @@ let ship;
 /** HEART */
 let heart;
 let interactedWithHeart = false;
+let pausedHeartAudio = false;
 
 /** LOADERS */
 let textureLoader;
@@ -163,6 +165,7 @@ let skyboxURLs = ["cubemap/space_one/px.png", "cubemap/space_one/nx.png",
 let ground;
 let starFieldA;
 let starFieldB;
+let pausedRockSinkAudio = false;
 let shadowObjects = [];
 let tripwireOne;
 let tripwireTwo;
@@ -253,6 +256,7 @@ let pausedRoarAudio = false;
 let intro = true;
 let bossAttacked = false;
 let bossWalking = false;
+let updatedAlienRange = false;
 
 /** HUD */
 let tooltipVisible = false;
@@ -275,12 +279,16 @@ let pickedUpHealthPacks = [];
 let blockingTrees;
 let playedTreeSinkAudio = false;
 
-/** MISC */
-let displayedControls = false;
+/** TRANSMISSIONS */
 let transmissionCount = 0;
 let playedInitialTransmission = false;
+let pausedTransmissionAudio = false;
+let pausedTransmissionOne = false;
+let pausedTransmissionTwo = false;
+
+/** MISC */
+let displayedControls = false;
 let requestId; // Needed to clear interval when an enemy is poisoned
-let footstepsPlaybackSpeed = 1;
 
 function gameLoop() {
 
@@ -431,6 +439,9 @@ function gameLoop() {
             if(!player.weaponUpgrade.hasWeaponUpgrade) {
                 updateWeaponUpgradeOnGroundAnimation();
             }
+
+            // Updates the animation of the heart on the ground (before it is picked up)
+            updateHeartAnimation();
 
             // Handles recharge of the shield when it is broken
             rechargeShield();
@@ -2027,42 +2038,42 @@ function initBlockingTrees(gltf) {
 }
 
 function initBroadLeaf(gltf) {
-    /* let broadleaf = gltf.scene;
+    // let broadleaf = gltf.scene;
 
-    let shellBarkGeometry = broadleaf.children[0].children[0].geometry;
-    let shellBarkMaterial = broadleaf.children[0].children[0].material;
+    // let shellBarkGeometry = broadleaf.children[0].children[0].geometry;
+    // let shellBarkMaterial = broadleaf.children[0].children[0].material;
+    // console.log(shellBarkGeometry);
+    // let branchGeometry = broadleaf.children[0].children[1].geometry;
+    // let branchMaterial = broadleaf.children[0].children[1].material;
 
-    let branchGeometry = broadleaf.children[0].children[1].geometry;
-    let branchMaterial = broadleaf.children[0].children[1].material;
+    // let leafGeometry = broadleaf.children[0].children[2].geometry;
+    // let leafMaterial = broadleaf.children[0].children[2].material;
 
-    let leafGeometry = broadleaf.children[0].children[2].geometry;
-    let leafMaterial = broadleaf.children[0].children[2].material;
+    // let barkGeometry = broadleaf.children[0].children[3].geometry;
+    // let barkMaterial = broadleaf.children[0].children[3].material;
 
-    let barkGeometry = broadleaf.children[0].children[3].geometry;
-    let barkMaterial = broadleaf.children[0].children[3].material;
+    // let shellCluster = new THREE.InstancedMesh(shellBarkGeometry, shellBarkMaterial, 4);
+    // let branchCluster = new THREE.InstancedMesh(branchGeometry, branchMaterial, 4);
+    // let leafCluster = new THREE.InstancedMesh(leafGeometry, leafMaterial, 4);
+    // let barkCluster = new THREE.InstancedMesh(barkGeometry, barkMaterial, 4);
 
-    let shellCluster = new THREE.InstancedMesh(shellBarkGeometry, shellBarkMaterial, 4);
-    let branchCluster = new THREE.InstancedMesh(branchGeometry, branchMaterial, 4);
-    let leafCluster = new THREE.InstancedMesh(leafGeometry, leafMaterial, 4);
-    let barkCluster = new THREE.InstancedMesh(barkGeometry, barkMaterial, 4);
+    // let tempCluster = new THREE.Object3D();
 
-    let tempCluster = new THREE.Object3D();
+    // for(let i = 0; i < 4; i++) {
+    //     tempCluster.scale.set(10, 10, 10);
+    //     tempCluster.position.set(0, 0, 0);
 
-    for(let i = 0; i < 4; i++) {
-        tempCluster.scale.set(50, 50, 50);
-        tempCluster.position.set(0, 0, -10);
-
-        tempCluster.updateMatrix();
+    //     tempCluster.updateMatrix();
         
-        shellCluster.setMatrixAt(i, tempCluster.matrix);
-        branchCluster.setMatrixAt(i, tempCluster.matrix);
-        leafCluster.setMatrixAt(i, tempCluster.matrix);
-        barkCluster.setMatrixAt(i, tempCluster.matrix);
-    }
-    scene.add(shellCluster);
-    scene.add(branchCluster);
-    scene.add(leafCluster);
-    scene.add(barkCluster); */
+    //     shellCluster.setMatrixAt(i, tempCluster.matrix);
+    //     branchCluster.setMatrixAt(i, tempCluster.matrix);
+    //     leafCluster.setMatrixAt(i, tempCluster.matrix);
+    //     barkCluster.setMatrixAt(i, tempCluster.matrix);
+    // }
+    // scene.add(shellCluster);
+    // scene.add(branchCluster);
+    // scene.add(leafCluster);
+    // scene.add(barkCluster);
 
     let broadLeafGroup = new THREE.Object3D();
 
@@ -2490,8 +2501,8 @@ function drawStars() {
 function drawTotems() {
     totemCollection = new THREE.Object3D();
 
-    let totemTexture = loadTexture("textures/totem_wood.png");
-    let normalMap = loadTexture("textures/totem_wood_normal.png");
+    let totemTexture = loadTexture("textures/texture_totem_wood.png");
+    let normalMap = loadTexture("textures/texture_totem_wood_normal.png");
 
     let totemGeometry = new THREE.CylinderBufferGeometry(3, 3, 12, 32);
     let totemOneMaterial = new THREE.MeshStandardMaterial( {color: "#706d71", map: totemTexture, normalMap: normalMap} );
@@ -2609,8 +2620,8 @@ function drawPaper() {
 }
 
 function drawNotePoles() {
-    let woodTexture = loadTexture("textures/totem_wood.png");
-    let normalMap = loadTexture("textures/totem_wood_normal.png");
+    let woodTexture = loadTexture("textures/texture_totem_wood.png");
+    let normalMap = loadTexture("textures/exture_totem_wood_normal.png");
 
     let poleGeometry = new THREE.CylinderBufferGeometry(1, 1, 8, 32);
     let poleMaterial = new THREE.MeshStandardMaterial( {color: "#706d71", map: woodTexture, normalMap: normalMap} );
@@ -2672,7 +2683,7 @@ function drawHoles() {
     let holeOneGeometry = new THREE.PlaneBufferGeometry(50, 50);
     let holeTwoGeometry = new THREE.PlaneBufferGeometry(130, 130);
 
-    let holeTexture = loadTexture("textures/hole.png");
+    let holeTexture = loadTexture("textures/texture_hole.png");
 
     let holeMaterial = new THREE.MeshBasicMaterial( {map: holeTexture, transparent: true} );
     
@@ -2686,8 +2697,9 @@ function drawHoles() {
 
     scene.add(holeOne);
     scene.add(holeTwo);
+    // scene.add(baseHoleTwo);
 
-    platform = new THREE.Mesh(new THREE.BoxBufferGeometry(30, 2, 12), new THREE.MeshLambertMaterial( {map: loadTexture("textures/wood1.jpg") }));
+    platform = new THREE.Mesh(new THREE.BoxBufferGeometry(30, 2, 12), new THREE.MeshLambertMaterial( {map: loadTexture("textures/texture_platform.jpg") }));
     platform.position.set(480, 3, -410);
 
     scene.add(platform);
@@ -2766,18 +2778,6 @@ function drawBarrelsAndScroll() {
     barrelsAndScroll.position.set(460, 0, -620);
     barrelsAndScroll.rotation.y = Math.PI;
     scene.add(barrelsAndScroll);
-}
-
-function drawHoverPlatform() {
-    loadModel("models/environment/hover/hover_platform.glb", "hover_platform");
-}
-
-function initHoverPlatform(gltf) {
-    platform = gltf.scene;
-    platform.scale.set(22.5, 10, 15);
-    platform.position.set(480, 0, -410);
-
-    scene.add(platform);
 }
 
 function drawTripwires() {
@@ -3745,6 +3745,13 @@ function levelFourBoundingBox() {
     let boxTwoRight = 520;
     let boxTwoTop = boxOneBottom;
 
+    if(!updatedAlienRange) { // Increase alien's range in the final boss fight
+        updatedAlienRange = true;
+        for(let i = 0; i < 4; i++) {
+             alienArray[i].range = 300;
+        }
+    }
+
     // Check which box the player is in at any point in time
     if(xPos > boxOneLeft && xPos < boxOneRight && zPos < boxOneBottom && zPos > boxOneTop) {
         setBox(1, 4);
@@ -3783,9 +3790,13 @@ function levelFourBoundingBox() {
                     setTimeout(() =>  audioCollection.treeFall.play(), 1500);
                     playedTreeSinkAudio = true;
                 }
-                // TODO: SHOW HEART
+
                 if(blockingTrees.position.y > -100) {
                     blockingTrees.position.y -= 0.1;
+                }
+
+                if(!audioCollection.heartAudio.isPlaying) {
+                    audioCollection.heartAudio.play();
                 }
             }
         }
@@ -3793,9 +3804,13 @@ function levelFourBoundingBox() {
     else if(xPos > boxTwoLeft && xPos < boxTwoRight && zPos < boxTwoBottom && zPos > boxTwoTop) {
         setBox(2, 4);
         handleHeartInteraction();
+
+        if(blockingTrees.position.y > -100) {
+            blockingTrees.position.y -= 0.1;
+        }
     }
 
-    if(boxArr[1]) { // In box one
+    if(boxArr[1]) { // In box one        
         if(zPos > boxOneBottom - boundaryFactor) { // Place bottom boundary (except at box two overlap if the boss is defeated)
             if(bulletCollidableMeshList.length == 0 && defeatedBoss) {
                 if(xPos < (boxTwoLeft + 10) || xPos > (boxTwoRight - 10))
@@ -3955,7 +3970,7 @@ function updateBullets() {
 }
 
 function updateAlienCombat() {
-    alienArray.forEach(alien => { 
+    alienArray.forEach(alien => {
         if(alienCanShoot(alien)) {
             alien.model.lookAt(player.playerModel.position.clone());
             createAlienBullet(alien);
@@ -4023,7 +4038,7 @@ function updateAlienBullet(alien) {
 
     alien.weapon.bullets.forEach((item, index) => {
 
-        if(item.originalPosition.distanceTo(item.bullet.position) > 250) { // Restrict the bullet from travelling past 250 units
+        if(item.originalPosition.distanceTo(item.bullet.position) > alien.range) { // Restrict the bullet from travelling past 250 units
             removeBullet(alien, item.bullet, index);
             return; // Iterate to the next bullet
         }
@@ -4665,7 +4680,9 @@ function itemAnimation(model, lowerBound, upperBound) {
         model.position.y += 0.01;
     }
 
-    model.rotation.y += 0.01; // Rotate counterclockwise
+    if(model != heart) {
+        model.rotation.y += 0.01; // Rotate counterclockwise
+    }
 }
 
 /**
@@ -4682,6 +4699,10 @@ function updateGunOnGroundAnimation() {
  */
 function updateShieldOnGroundAnimation() {
     itemAnimation(player.shield.model, 2, 3);
+}
+
+function updateHeartAnimation() {
+    itemAnimation(heart, 6, 7);
 }
 
 function playFootsteps() {
@@ -4834,25 +4855,31 @@ function playEndCutScene(event) {
         switch(decision) {
             case "takeHeart":
                 endCutscene = takeHeartCutScene;
-                // PLAY TAKE HEART ANIMATION
-                // video = takeHeart?
+                skipButton.param = "takeHeart";
                 break;
             case "leaveHeart":
-                // PLAY LEAVE HEART ANIMATION
                 endCutscene = leaveHeartCutScene;
+                skipButton.param = "leaveHeart";
                 break;
         }
     
         endCutscene.play();
         endCutscene.style.visibility = "visible";
         endCutscene.style.display = "block";
+
+        skipButton.style.visibility = "visible";
     
         endCutscene.onended = function() {
             endCutscene.remove();
-    
+            skipButton.style.visibility = "hidden";
+
             setTimeout(() => {
-                // CREDITS
-                location.reload();
+                creditsCutScene.play();
+                creditsCutScene.style.visibility = "visible";
+                creditsCutScene.style.display = "block";
+
+                skipButton.param = "credits";
+                skipButton.style.visibility = "hidden";
             }, 3000);
         }
     }, 5000);
@@ -5079,10 +5106,6 @@ function loadAudio(url, key) {
             audioCollection.weaponUpgradeShot = new THREE.Audio(listener);
             configureAudio(url, audioCollection.weaponUpgradeShot, false, 0.5, false);
             break;
-        case "poison_tick":
-            audioCollection.poisonTick = new THREE.Audio(listener);
-            configureAudio(url, audioCollection.poisonTick, false, 0.5, false);
-            break;
         case "jump_boost":
             audioCollection.jumpBoost = new THREE.Audio(listener);
             configureAudio(url, audioCollection.jumpBoost, false, 0.3, false);
@@ -5232,6 +5255,14 @@ function loadAudio(url, key) {
         case "tripwire_buzz":
             audioCollection.tripwireBuzz = new THREE.Audio(listener);
             configureAudio(url, audioCollection.tripwireBuzz, false, 0.75, false);
+            break;
+        case "heart":
+            audioCollection.heartAudio = new THREE.PositionalAudio(listener);
+            audioLoader.load(url, function(buffer) {
+                audioCollection.heartAudio.setBuffer(buffer);
+                audioCollection.heartAudio.setLoop(true);
+                audioCollection.heartAudio.setRefDistance(25);
+            });
             break;
     }
 }
@@ -5791,9 +5822,32 @@ function initControls() {
         pauseBlock.style.display = "none";
         deathBlock.style.display = "none";
 
+        if(pausedRockSinkAudio) {
+            pausedRockSinkAudio = false;
+            audioCollection.rockSink.play();
+        }
+
+        if(pausedTransmissionAudio) {
+            pausedTransmissionAudio = false;
+
+            if(pausedTransmissionOne) {
+                audioCollection.transmissionOne.play();
+                pausedTransmissionOne = false;
+            }
+            else {
+                audioCollection.transmissionTwo.play();
+                pausedTransmissionOne = false;
+            }
+        }
+
         if(pausedRoarAudio) {
             pausedRoarAudio = false;
             audioCollection.bossRoar.play();
+        }
+
+        if(pausedHeartAudio) {
+            pausedHeartAudio = false;
+            audioCollection.heartAudio.play();
         }
     }
 
@@ -5846,9 +5900,32 @@ function initControls() {
             }
         }
 
+        if(audioCollection.rockSink.isPlaying) {
+            pausedRockSinkAudio = true;
+            audioCollection.rockSink.pause();
+        }
+
+        if(audioCollection.transmissionOne.isPlaying || audioCollection.transmissionTwo.isPlaying) {
+            pausedTransmissionAudio = true;
+
+            if(audioCollection.transmissionOne.isPlaying) {
+                audioCollection.transmissionOne.pause();
+                pausedTransmissionOne = true;
+            }
+            else {
+                audioCollection.transmissionTwo.pause();
+                pausedTransmissionTwo = true;
+            }
+        }
+
         if(audioCollection.bossRoar.isPlaying) {
             pausedRoarAudio = true;
             audioCollection.bossRoar.pause();
+        }
+
+        if(audioCollection.heartAudio.isPlaying) {
+            pausedHeartAudio = true;
+            audioCollection.heartAudio.pause();
         }
     }
 
@@ -6222,8 +6299,10 @@ function initHeart() {
 
 function initHeartModel(gltf) {
     heart = gltf.scene;
+    heart.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
     heart.scale.set(3, 3, 3);
-    heart.position.set(485, 5, 50);
+    heart.position.set(485, Math.random() * 1 + 6, 50); // Random height between 6 and 7
+    heart.add(audioCollection.heartAudio);
     scene.add(heart);
 }
 
@@ -6510,7 +6589,6 @@ function initAudio() {
     loadAudio("audio/weapon/hitmarker.mp3", "hitmarker");
     loadAudio("audio/weapon/poison_bullet_ready.wav", "poison_bullet_ready");
     loadAudio("audio/weapon/poison_bullet_shot.wav", "poison_bullet_shot");
-    loadAudio("audio/weapon/poison_tick.wav", "poison_tick");
     loadAudio("audio/items/paper.wav", "paper");
     loadAudio("audio/character/jump_boost.wav", "jump_boost");
     loadAudio("audio/environment/level_one/totem_select.wav", "totem_select");
@@ -6539,6 +6617,9 @@ function initAudio() {
     loadAudio("audio/boss/boss_footstep.wav", "boss_footstep");
     loadAudio("audio/boss/boss_death.wav", "boss_death");
     loadAudio("audio/environment/tree_fall.wav", "tree_fall");
+
+    /** HEART */
+    loadAudio("audio/environment/heart/heart.wav", "heart");
 
     /** FOOTSTEPS */
     loadAudio("audio/character/footsteps_leaves.wav", "footsteps_leaves");
@@ -6572,7 +6653,6 @@ function initWorld() {
     drawHoles();
     drawCrateAndBook();
     drawBarrelsAndScroll();
-    // drawHoverPlatform();
     drawTripwires();
 
     // boundingBoxVis();
@@ -6615,7 +6695,7 @@ function init() {
     initLoaders();
     initSkybox();
     initPlayer();
-    // initAliens();
+    initAliens();
     initShip();
     initHeart();
     initBountyHunter();
@@ -6683,8 +6763,20 @@ function menu() {
                 }, 1000);
                 break;
             case "takeHeart":
+                takeHeartCutScene.remove();
+                creditsCutScene.play();
+                creditsCutScene.style.visibility = "visible";
+                creditsCutScene.style.display = "block";
                 break;
             case "leaveHeart":
+                leaveHeartCutScene.remove();
+                creditsCutScene.play();
+                creditsCutScene.style.visibility = "visible";
+                creditsCutScene.style.display = "block";
+                break;
+            case "credits":
+                creditsCutScene.remove();
+                creditsCutScene.reload();
                 break;
         }        
     })

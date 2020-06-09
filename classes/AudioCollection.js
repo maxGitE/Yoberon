@@ -9,7 +9,6 @@ class AudioCollection {
         this._hitmarker;
         this._weaponUpgradeReady;
         this._weaponUpgradeShot;
-        this._poisonTick;
         this._alienWeapon;
         this._jumpboost;
         this._paper;
@@ -37,6 +36,7 @@ class AudioCollection {
         this._transmissionTwo;
         this._tripwireActivated;
         this._tripwireBuzz;
+        this._heartAudio;
     }
 
     get wildlife() {
@@ -337,5 +337,13 @@ class AudioCollection {
 
     set tripwireBuzz(audio) {
         this._tripwireBuzz = audio;
+    }
+
+    get heartAudio() {
+        return this._heartAudio;
+    }
+
+    set heartAudio(audio) {
+        this._heartAudio = audio;
     }
 }
