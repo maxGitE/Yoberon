@@ -1,6 +1,6 @@
 class Player {
     constructor() {
-        this._currentHealth = 10000;
+        this._currentHealth = 100000;
         this._maxHealth = 100;
         this._currentStamina = 100;
         this._maxStamina = 100;
@@ -94,6 +94,10 @@ class Player {
 
     get movingRight() {
         return this._movingRight;
+    }
+
+    get moving() {
+        return this._movingForward || this._movingBackward || this._movingLeft || this._movingRight;
     }
 
     get jumping() {

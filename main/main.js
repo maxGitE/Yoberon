@@ -16,6 +16,8 @@ const menuBlock = document.getElementById("menu");
 const keyControls = document.getElementById("controls");
 const controlsButtonMainMenu = document.getElementById("controls-button-mainmenu");
 const controlsButtonPauseMenu = document.getElementById("controls-button-pausemenu");
+const shadowsButton = document.getElementById("shadows");
+const menuCinematic = document.getElementById("menu-cinematic");
 const introCutScene = document.getElementById("intro-cutscene");
 const skipButton = document.getElementById("skip");
 const wakeUp = document.getElementById("wake-up");
@@ -73,6 +75,7 @@ const takeHeartButton = document.getElementById("take-heart");
 const leaveHeartButton = document.getElementById("leave-heart");
 const takeHeartCutScene = document.getElementById("take-heart-cutscene");
 const leaveHeartCutScene = document.getElementById("leave-heart-cutscene");
+const creditsCutScene = document.getElementById("credits-cutscene");
 
 window.onload = menu;
 
@@ -139,6 +142,7 @@ let ship;
 /** HEART */
 let heart;
 let interactedWithHeart = false;
+let pausedHeartAudio = false;
 
 /** LOADERS */
 let textureLoader;
@@ -152,7 +156,8 @@ let loadingManager;
 let mixers = [];
 let idleCalled = false;
 
-/** SKYBOX TEXTURES */
+/** SKYBOX */
+let skybox;
 let skyboxURLs = ["cubemap/space_one/px.png", "cubemap/space_one/nx.png",
                   "cubemap/space_one/py.png", "cubemap/space_one/ny.png", 
                   "cubemap/space_one/pz.png", "cubemap/space_one/nz.png"]
@@ -161,7 +166,12 @@ let skyboxURLs = ["cubemap/space_one/px.png", "cubemap/space_one/nx.png",
 let ground;
 let starFieldA;
 let starFieldB;
+let pausedRockSinkAudio = false;
 let shadowObjects = [];
+let tripwireOne;
+let tripwireTwo;
+let tripwireOneActivated = false;
+let tripwireTwoActivated = false;
 
 /** LEVEL 1 */
 let pole;
@@ -228,9 +238,12 @@ let dancePlaying = false;
 
 /** LEVEL 3 */
 let spawnedLevelThreeAliens = false;
-let hole;
+let holeOne;
 let inHole = false;
 let barrelsAndScroll;
+let holeTwo;
+let platform;
+let onPlatform = false;
 
 /** LEVEL 4 */
 let bossFightStarted = false;
@@ -245,6 +258,7 @@ let pausedRoarAudio = false;
 let intro = true;
 let bossAttacked = false;
 let bossWalking = false;
+let updatedAlienRange = false;
 
 /** HUD */
 let tooltipVisible = false;
@@ -266,6 +280,13 @@ let pickedUpHealthPacks = [];
 /** TREES */
 let blockingTrees;
 let playedTreeSinkAudio = false;
+
+/** TRANSMISSIONS */
+let transmissionCount = 0;
+let playedInitialTransmission = false;
+let pausedTransmissionAudio = false;
+let pausedTransmissionOne = false;
+let pausedTransmissionTwo = false;
 
 /** MISC */
 let displayedControls = false;
@@ -314,27 +335,44 @@ function gameLoop() {
                 player.velocityZ = player.velocityZ + 400 * clock.delta * player.runFactor;
             }
 
+            // Play footsteps audio if the player is moving
+            playFootsteps();
+            
+
             minimapCamera.position.set(camera.position.x, 0, camera.position.z);
 
-            controls.moveRight(player.velocityX * clock.delta);
-            controls.moveForward(-player.velocityZ * clock.delta); // Negate the value as moveForward() uses left-handed coordinates
-            controls.getObject().position.y += player.velocityY * clock.delta;
+            if(inHole && controls.getObject().position.y <= -10) {
+                controls.moveRight(0);
+                controls.moveForward(0); // Negate the value as moveForward() uses left-handed coordinates
+                controls.getObject().position.y += player.velocityY * clock.delta;
+            }
+            else {
+                controls.moveRight(player.velocityX * clock.delta);
+                controls.moveForward(-player.velocityZ * clock.delta); // Negate the value as moveForward() uses left-handed coordinates
+                controls.getObject().position.y += player.velocityY * clock.delta;
+            }
 
             if(!inHole) { // Remove gravity when the player is in the hole
-                if(!onTree) { // Allow the player to land on the fallen tree
-                    if(controls.getObject().position.y < 8) {
-                        controls.getObject().position.y = 8;
-                        player.velocityY = 0;
-                    }
-                }
-                else {
+                if(onTree) { // Allow the player to land on the fallen tree
                     if(controls.getObject().position.y < 18) {
                         controls.getObject().position.y = 18;
                         player.velocityY = 0;
                     }
                 }
+                else if(onPlatform) { // Allow the player to land on the platform
+                    if(controls.getObject().position.y < 12) {
+                        controls.getObject().position.y = 12;
+                        player.velocityY = 0;
+                    }
+                }
+                else {
+                    if(controls.getObject().position.y < 8) {
+                        controls.getObject().position.y = 8;
+                        player.velocityY = 0;
+                    }
+                }
             }
-            else {                
+            else {      
                 updatePlayerAnimation(player.animations.fallAnim);
             }
 
@@ -374,7 +412,9 @@ function gameLoop() {
             starFieldA.updateColour(0.0035);
             starFieldB.updateColour(0.0075);
 
-            hole.rotation.z -= 0.001;
+            // Update hole rotation
+            holeOne.rotation.z -= 0.001;
+            holeTwo.rotation.z -= 0.001;
 
             updateLevel();
             updateBullets(); // So anyway I started blasting
@@ -397,24 +437,19 @@ function gameLoop() {
                 updateShieldOnGroundAnimation();
             }
 
+            // Updates the animation of the weapon upgrade capsule on the ground (before it is picked up)
             if(!player.weaponUpgrade.hasWeaponUpgrade) {
                 updateWeaponUpgradeOnGroundAnimation();
             }
 
-            if(!player.shield.shieldEnabled && player.shield.shieldValue < 100 && player.shield.shieldRecharging) { // Shield has been broken
-                player.shield.shieldValue += 0.2;
-                shieldNumber.innerHTML = Math.floor(player.shield.shieldValue);
-                shieldbar.style.width = player.shield.shieldValue / 10 + "%";
+            // Updates the animation of the heart on the ground (before it is picked up)
+            updateHeartAnimation();
 
-                if(player.shield.shieldValue >= 100) {
-                    player.shield.shieldValue = 100;
-                    player.shield.shieldRecharging = false;
-                    shieldbar.style.width = "10.25%";
-                    if(!inPuzzleTwo) {// Don't play shield recharge audio if player is in puzzle two
-                        audioCollection.shieldReady.play();
-                    }
-                }
-            }
+            // Handles recharge of the shield when it is broken
+            rechargeShield();
+
+            // Handles playing alien transmissions when transmission count has reached the appropriate value
+            playAlienTransmission();
 
             // Update clock time
             clock.timeBefore = clock.timeNow;
@@ -458,7 +493,6 @@ function handleNotes() {
         scrollPaper.style.visibility = "hidden";
     }
 }
-
 
 function showNote(name) {
     switch(name) {
@@ -616,7 +650,7 @@ function showClue(name) {
     switch(name) {
         case "clueOne":
             paper.style.visibility = "visible";
-            paper.innerHTML = "⏁⊑⟒⊬ ⏃⍀⟒ ⍀⟒⌰⟒⋏⏁⌰⟒⌇⌇. ⟟ ⊑⏃⎐⟒⋏’⏁ ⌇⟒⟒⋏ ⋔⊬ ⎎⏃⋔⟟⌰⊬ ⟟⋏ ⏁⊑⍀⟒⟒ ⍙⟒⟒☍⌇ ⏚⎍⏁ ⟟ ⋔⎍⌇⏁ ⌇⏁⍜⌿ ⏁⊑⟒⋔, ⎎⍜⍀ ⏁⊑⟒ ⌇⏃☍⟒ ⍜⎎ ⋔⊬ ⌿⟒⍜⌿⌰⟒.";
+            paper.innerHTML = clueWords[0];
             break;
         case "clueTwo":
             paper.style.visibility = "visible";
@@ -643,6 +677,7 @@ function levelTwoPuzzle() {
             // loadModel("models/environment/speakers.glb", "speakers");
         }
         inPuzzleTwo = true;
+        shieldDisplay.style.visibility = "hidden";
 
         /** Set the camera to look at the player from the front */
         puzzleTwoCamera.position.set(camera.position.x, camera.position.y + 2, camera.position.z + 25);
@@ -1954,12 +1989,12 @@ function initPineTree(gltf) {
             clusterX = Math.random() * 80 + 440; // x positions between 440 and 520
         }
 
-        scalingFactor = Math.random() * 0.1 + 0.5;
+        scalingFactor = 0.4;//Math.random() * 0.1 + 0.5;
         rotationFactor = Math.random() * 2*Math.PI; // Set rotation to between 0 and 2*PI
 
         tempCluster.scale.set(scalingFactor, scalingFactor, scalingFactor);
         tempCluster.rotation.set(-Math.PI/2, 0, rotationFactor);
-        tempCluster.position.set(clusterX, 30, clusterZ);
+        tempCluster.position.set(clusterX, 20, clusterZ);
         
         tempCluster.updateMatrix();
     
@@ -2008,42 +2043,42 @@ function initBlockingTrees(gltf) {
 }
 
 function initBroadLeaf(gltf) {
-    /* let broadleaf = gltf.scene;
+    // let broadleaf = gltf.scene;
 
-    let shellBarkGeometry = broadleaf.children[0].children[0].geometry;
-    let shellBarkMaterial = broadleaf.children[0].children[0].material;
+    // let shellBarkGeometry = broadleaf.children[0].children[0].geometry;
+    // let shellBarkMaterial = broadleaf.children[0].children[0].material;
+    // console.log(shellBarkGeometry);
+    // let branchGeometry = broadleaf.children[0].children[1].geometry;
+    // let branchMaterial = broadleaf.children[0].children[1].material;
 
-    let branchGeometry = broadleaf.children[0].children[1].geometry;
-    let branchMaterial = broadleaf.children[0].children[1].material;
+    // let leafGeometry = broadleaf.children[0].children[2].geometry;
+    // let leafMaterial = broadleaf.children[0].children[2].material;
 
-    let leafGeometry = broadleaf.children[0].children[2].geometry;
-    let leafMaterial = broadleaf.children[0].children[2].material;
+    // let barkGeometry = broadleaf.children[0].children[3].geometry;
+    // let barkMaterial = broadleaf.children[0].children[3].material;
 
-    let barkGeometry = broadleaf.children[0].children[3].geometry;
-    let barkMaterial = broadleaf.children[0].children[3].material;
+    // let shellCluster = new THREE.InstancedMesh(shellBarkGeometry, shellBarkMaterial, 4);
+    // let branchCluster = new THREE.InstancedMesh(branchGeometry, branchMaterial, 4);
+    // let leafCluster = new THREE.InstancedMesh(leafGeometry, leafMaterial, 4);
+    // let barkCluster = new THREE.InstancedMesh(barkGeometry, barkMaterial, 4);
 
-    let shellCluster = new THREE.InstancedMesh(shellBarkGeometry, shellBarkMaterial, 4);
-    let branchCluster = new THREE.InstancedMesh(branchGeometry, branchMaterial, 4);
-    let leafCluster = new THREE.InstancedMesh(leafGeometry, leafMaterial, 4);
-    let barkCluster = new THREE.InstancedMesh(barkGeometry, barkMaterial, 4);
+    // let tempCluster = new THREE.Object3D();
 
-    let tempCluster = new THREE.Object3D();
+    // for(let i = 0; i < 4; i++) {
+    //     tempCluster.scale.set(10, 10, 10);
+    //     tempCluster.position.set(0, 0, 0);
 
-    for(let i = 0; i < 4; i++) {
-        tempCluster.scale.set(50, 50, 50);
-        tempCluster.position.set(0, 0, -10);
-
-        tempCluster.updateMatrix();
+    //     tempCluster.updateMatrix();
         
-        shellCluster.setMatrixAt(i, tempCluster.matrix);
-        branchCluster.setMatrixAt(i, tempCluster.matrix);
-        leafCluster.setMatrixAt(i, tempCluster.matrix);
-        barkCluster.setMatrixAt(i, tempCluster.matrix);
-    }
-    scene.add(shellCluster);
-    scene.add(branchCluster);
-    scene.add(leafCluster);
-    scene.add(barkCluster); */
+    //     shellCluster.setMatrixAt(i, tempCluster.matrix);
+    //     branchCluster.setMatrixAt(i, tempCluster.matrix);
+    //     leafCluster.setMatrixAt(i, tempCluster.matrix);
+    //     barkCluster.setMatrixAt(i, tempCluster.matrix);
+    // }
+    // scene.add(shellCluster);
+    // scene.add(branchCluster);
+    // scene.add(leafCluster);
+    // scene.add(barkCluster);
 
     let broadLeafGroup = new THREE.Object3D();
 
@@ -2442,7 +2477,6 @@ function drawGround() {
     ground = new THREE.Mesh(groundGeometry,
                                     new THREE.MeshLambertMaterial({
                                         color: "#5e503e",
-                                        side: THREE.DoubleSide,
                                         map: groundTexture
                                     }));
     ground.rotation.x = -Math.PI/2;
@@ -2472,8 +2506,8 @@ function drawStars() {
 function drawTotems() {
     totemCollection = new THREE.Object3D();
 
-    let totemTexture = loadTexture("textures/totem_wood.png");
-    let normalMap = loadTexture("textures/totem_wood_normal.png");
+    let totemTexture = loadTexture("textures/texture_totem_wood.png");
+    let normalMap = loadTexture("textures/texture_totem_wood_normal.png");
 
     let totemGeometry = new THREE.CylinderBufferGeometry(3, 3, 12, 32);
     let totemOneMaterial = new THREE.MeshStandardMaterial( {color: "#706d71", map: totemTexture, normalMap: normalMap} );
@@ -2591,8 +2625,8 @@ function drawPaper() {
 }
 
 function drawNotePoles() {
-    let woodTexture = loadTexture("textures/totem_wood.png");
-    let normalMap = loadTexture("textures/totem_wood_normal.png");
+    let woodTexture = loadTexture("textures/texture_totem_wood.png");
+    let normalMap = loadTexture("textures/exture_totem_wood_normal.png");
 
     let poleGeometry = new THREE.CylinderBufferGeometry(1, 1, 8, 32);
     let poleMaterial = new THREE.MeshStandardMaterial( {color: "#706d71", map: woodTexture, normalMap: normalMap} );
@@ -2650,27 +2684,51 @@ function drawHealthPacks() {
     // scene.add(healthPackThree);
 }
 
-function drawHole() {
-    let holeGeometry = new THREE.PlaneBufferGeometry(50, 50);
-    let holeTexture = loadTexture("textures/hole.png");
+function drawHoles() {
+    let holeOneGeometry = new THREE.PlaneBufferGeometry(50, 50);
+    let holeTwoGeometry = new THREE.PlaneBufferGeometry(130, 130);
+
+    let holeTexture = loadTexture("textures/texture_hole.png");
+
     let holeMaterial = new THREE.MeshBasicMaterial( {map: holeTexture, transparent: true} );
+    
+    holeOne = new THREE.Mesh(holeOneGeometry, holeMaterial.clone()); 
+    holeOne.rotation.x = -Math.PI/2;
+    holeOne.position.set(460, 0.1, -860);
 
-    hole = new THREE.Mesh(holeGeometry, holeMaterial); 
+    holeTwo = new THREE.Mesh(holeTwoGeometry, holeMaterial.clone()); 
+    holeTwo.rotation.x = -Math.PI/2;
+    holeTwo.position.set(480, 0.1, -420);
 
+    scene.add(holeOne);
+    scene.add(holeTwo);
+    // scene.add(baseHoleTwo);
     hole.rotation.set(-Math.PI/2, 0, 0);
     hole.position.set(460, 0.1, -860);
     hole.add(audioCollection.hole);
 
-    scene.add(hole);
+    platform = new THREE.Mesh(new THREE.BoxBufferGeometry(30, 2, 12), new THREE.MeshLambertMaterial( {map: loadTexture("textures/texture_platform.jpg") }));
+    platform.position.set(480, 3, -410);
 
-    /** Black cylinder mesh to fall through to hide the sky box and plane boundaries */
-    let cyclinderGeometry = new THREE.CylinderBufferGeometry(50, 50, 4000, 8);
-    let cylinderMaterial = new THREE.MeshBasicMaterial( {color: 0x000000, side: THREE.DoubleSide} );
+    scene.add(platform);
+
+    /** Black cylinder and cube mesh to fall through to hide the sky box and plane boundaries */
+    let cyclinderGeometry = new THREE.CylinderBufferGeometry(50, 50, 245, 8);
+    let cylinderMaterial = new THREE.MeshBasicMaterial( {color: "black", side: THREE.DoubleSide} );
     let cyclinder = new THREE.Mesh(cyclinderGeometry, cylinderMaterial);
 
-    cyclinder.position.set(460, -2002, -860);
-    
+    cyclinder.position.set(460, -125, -860);
     scene.add(cyclinder);
+
+    let cube = new THREE.Mesh(new THREE.BoxBufferGeometry(180, 245, 180), new THREE.MeshBasicMaterial( {color: "black", side: THREE.DoubleSide} ));
+    cube.position.set(480, -125, -410);
+    scene.add(cube);
+
+    // Cover the base of the trees
+    let cubeCover = new THREE.Mesh(new THREE.PlaneBufferGeometry(180, 180), new THREE.MeshBasicMaterial( {color: "black", side: THREE.DoubleSide} )); 
+    cubeCover.rotation.x = -Math.PI/2;
+    cubeCover.position.set(480, -15, -410);
+    scene.add(cubeCover);
 }
 
 function drawCrateAndBook() {
@@ -2678,8 +2736,8 @@ function drawCrateAndBook() {
 
     loadModel("models/environment/crate.glb", "crate");
     loadModel("models/environment/book.glb", "book");
-    loadModel("models/environment/donutOne.glb", "donutOne");
-    loadModel("models/environment/donutTwo.glb", "donutTwo");
+    //loadModel("models/environment/donutOne.glb", "donutOne");
+    //loadModel("models/environment/donutTwo.glb", "donutTwo");
 
     crateAndBook.scale.set(4, 4, 4);
     crateAndBook.position.set(-160, 0, -925);
@@ -2728,6 +2786,27 @@ function drawBarrelsAndScroll() {
     barrelsAndScroll.position.set(460, 0, -620);
     barrelsAndScroll.rotation.y = Math.PI;
     scene.add(barrelsAndScroll);
+}
+
+function drawTripwires() {
+    let material = new THREE.LineBasicMaterial( {color: "white"} );
+
+    let tripwireOnePoints = [];
+    tripwireOnePoints.push(new THREE.Vector3(-55, 3, -300));
+    tripwireOnePoints.push(new THREE.Vector3(55, 3, -300));
+
+    let tripwireTwoPoints = [];
+    tripwireTwoPoints.push(new THREE.Vector3(185, 3, -550));
+    tripwireTwoPoints.push(new THREE.Vector3(295, 3, -550));
+
+    let tripwireOneGeometry = new THREE.BufferGeometry().setFromPoints(tripwireOnePoints);
+    let tripwireTwoGeometry = new THREE.BufferGeometry().setFromPoints(tripwireTwoPoints);
+
+    tripwireOne = new THREE.Line(tripwireOneGeometry, material.clone());
+    tripwireTwo = new THREE.Line(tripwireTwoGeometry, material.clone());
+
+    scene.add(tripwireOne);
+    scene.add(tripwireTwo);
 }
 
 function initBarrel(gltf) {
@@ -2938,6 +3017,22 @@ function levelOneBoundingBox() {
 
     if(boxArr[1]) { // In box one
         handleNotes();
+
+        /** Tripwire */
+        if(controls.getObject().position.y <= 8 && controls.getObject().position.z <= -299 && controls.getObject().position.z >= -301 && !tripwireOneActivated) {
+            tripwireOneActivated = true;
+            scene.remove(tripwireOne);
+
+            audioCollection.tripwireActivated.play();
+            setTimeout(() => {
+                audioCollection.tripwireBuzz.play();
+                audioCollection.playerInjured.play();
+                player.currentHealth -= 50;
+                updatePlayerHealth();
+            }, 200);
+
+        }
+
         if(zPos < boxTwoBottom + 20) { // Show level one tooltip
             displayTooltip("The path is blocked. Find a way around!");
         }
@@ -3417,17 +3512,7 @@ function levelThreeBoundingBox() {
         /** Hole in the ground */
         if(zPos > -870 && zPos < -850 && xPos > 445 && xPos < 475 && controls.getObject().position.y == 8) {
             inHole = true;
-            setTimeout(() => {
-                player.currentHealth = 0;
-                audioCollection.playerDeath.play();
-                playerDeath.classList.add("fadein");
-                playerDeath.style.visibility = "visible";
-                setTimeout(() => audioCollection.deathAudio.play(), 500);
-                controls.unlock();
-            }, 2500);
         }
-
-        audioCollection.hole.play();
 
         if(zPos < boxOneTop) { // Place top boundary
             controls.getObject().position.z = boxOneTop;
@@ -3459,8 +3544,6 @@ function levelThreeBoundingBox() {
         }
     }
     else if(boxArr[3]) { // In box three
-        audioCollection.hole.stop();
-
         if(xPos < boxThreeLeft + boundaryFactor) { // Place left boundary
             controls.getObject().position.x = boxThreeLeft + boundaryFactor;
         }
@@ -3563,6 +3646,38 @@ function puzzleThreeBoundingBox() {
     }
 
     if(boxArr[1]) { // In box one
+        if(xPos > 462.5 && xPos < 497.5 && zPos > -416.5 && zPos < -403.5) {
+            onPlatform = true;
+            inHole = false;
+        }
+        else if(!inHole) {
+            onPlatform = false;
+            inHole = true;
+            // setTimeout(() => {
+            //     if(inHole) {
+            //         player.currentHealth = 0;
+            //         audioCollection.playerDeath.play();
+            //         playerDeath.classList.add("fadein");
+            //         playerDeath.style.visibility = "visible";
+            //         setTimeout(() => audioCollection.deathAudio.play(), 500);
+            //         setTimeout(() => deathBlock.style.display = "block", 3000);
+            //         controls.unlock();
+            //     }
+            //     fellInSecondHole = false;
+            // }, 2500);
+        }
+        else {
+            if(controls.getObject().position.y <= -240) {
+                player.currentHealth = 0;
+                audioCollection.playerDeath.play();
+                playerDeath.classList.add("fadein");
+                playerDeath.style.visibility = "visible";
+                setTimeout(() => audioCollection.deathAudio.play(), 500);
+                setTimeout(() => deathBlock.style.display = "block", 3000);
+                controls.unlock();
+            }
+        }
+
         if(zPos > boxOneBottom - boundaryFactor) { // Place bottom boundary
             if(puzzleCompleted) { // Allow player through the path only after the puzzle is completed
                 if(xPos < boxTwoLeft || xPos > boxTwoRight)
@@ -3584,13 +3699,30 @@ function puzzleThreeBoundingBox() {
         }
     }
     else if(boxArr[2]) { // In box two
+        if(controls.getObject().position.y <= -240) {
+            player.currentHealth = 0;
+            audioCollection.playerDeath.play();
+            playerDeath.classList.add("fadein");
+            playerDeath.style.visibility = "visible";
+            setTimeout(() => audioCollection.deathAudio.play(), 500);
+            setTimeout(() => deathBlock.style.display = "block", 3000);
+            controls.unlock();
+        }
+
+        if(controls.getObject().position.y >= 8) {
+            inHole = false;
+        }
+        
+        if(zPos < boxTwoTop + boundaryFactor) {
+            controls.getObject().position.z = boxTwoTop + boundaryFactor;
+        }
         if(xPos < boxTwoLeft + boundaryFactor) { // Place left boundary
             controls.getObject().position.x = boxTwoLeft + boundaryFactor;
         }
         if(xPos > boxTwoRight - boundaryFactor) { // Place right boundary
             controls.getObject().position.x = boxTwoRight - boundaryFactor;
         }
-        if(zPos > boxTwoBottom) { // Change the level once the player leaves the box
+        if(zPos > boxTwoBottom - boundaryFactor) { // Change the level once the player leaves the box
             currentLevel = 4;
         }
     }
@@ -3611,6 +3743,13 @@ function levelFourBoundingBox() {
     let boxTwoLeft = 440;
     let boxTwoRight = 520;
     let boxTwoTop = boxOneBottom;
+
+    if(!updatedAlienRange) { // Increase alien's range in the final boss fight
+        updatedAlienRange = true;
+        for(let i = 0; i < 4; i++) {
+             alienArray[i].range = 300;
+        }
+    }
 
     // Check which box the player is in at any point in time
     if(xPos > boxOneLeft && xPos < boxOneRight && zPos < boxOneBottom && zPos > boxOneTop) {
@@ -3650,9 +3789,13 @@ function levelFourBoundingBox() {
                     setTimeout(() =>  audioCollection.treeFall.play(), 1500);
                     playedTreeSinkAudio = true;
                 }
-                // TODO: SHOW HEART
+
                 if(blockingTrees.position.y > -100) {
                     blockingTrees.position.y -= 0.1;
+                }
+
+                if(!audioCollection.heartAudio.isPlaying) {
+                    audioCollection.heartAudio.play();
                 }
             }
         }
@@ -3660,9 +3803,13 @@ function levelFourBoundingBox() {
     else if(xPos > boxTwoLeft && xPos < boxTwoRight && zPos < boxTwoBottom && zPos > boxTwoTop) {
         setBox(2, 4);
         handleHeartInteraction();
+
+        if(blockingTrees.position.y > -100) {
+            blockingTrees.position.y -= 0.1;
+        }
     }
 
-    if(boxArr[1]) { // In box one
+    if(boxArr[1]) { // In box one        
         if(zPos > boxOneBottom - boundaryFactor) { // Place bottom boundary (except at box two overlap if the boss is defeated)
             if(bulletCollidableMeshList.length == 0 && defeatedBoss) {
                 if(xPos < (boxTwoLeft + 10) || xPos > (boxTwoRight - 10))
@@ -3672,8 +3819,8 @@ function levelFourBoundingBox() {
                 controls.getObject().position.z = boxOneBottom - boundaryFactor;
             }
         }
-        if(zPos < boxOneTop) { // Place top boundary
-            controls.getObject().position.z = boxOneTop;
+        if(zPos < boxOneTop + boundaryFactor) { // Place top boundary
+            controls.getObject().position.z = boxOneTop + boundaryFactor;
         }
         if(xPos < boxOneLeft + boundaryFactor) { // Place left boundary
             controls.getObject().position.x = boxOneLeft + boundaryFactor;
@@ -3822,7 +3969,7 @@ function updateBullets() {
 }
 
 function updateAlienCombat() {
-    alienArray.forEach(alien => { 
+    alienArray.forEach(alien => {
         if(alienCanShoot(alien)) {
             alien.model.lookAt(player.playerModel.position.clone());
             createAlienBullet(alien);
@@ -3890,7 +4037,7 @@ function updateAlienBullet(alien) {
 
     alien.weapon.bullets.forEach((item, index) => {
 
-        if(item.originalPosition.distanceTo(item.bullet.position) > 250) { // Restrict the bullet from travelling past 250 units
+        if(item.originalPosition.distanceTo(item.bullet.position) > alien.range) { // Restrict the bullet from travelling past 250 units
             removeBullet(alien, item.bullet, index);
             return; // Iterate to the next bullet
         }
@@ -4532,7 +4679,9 @@ function itemAnimation(model, lowerBound, upperBound) {
         model.position.y += 0.01;
     }
 
-    model.rotation.y += 0.01; // Rotate counterclockwise
+    if(model != heart) {
+        model.rotation.y += 0.01; // Rotate counterclockwise
+    }
 }
 
 /**
@@ -4549,6 +4698,101 @@ function updateGunOnGroundAnimation() {
  */
 function updateShieldOnGroundAnimation() {
     itemAnimation(player.shield.model, 2, 3);
+}
+
+function updateHeartAnimation() {
+    itemAnimation(heart, 6, 7);
+}
+
+function playFootsteps() {
+    if(player.moving) {
+        if(player.running) { // Increase playback rate if the player is running
+            audioCollection.footstepsLeaves.setPlaybackRate(1.25);
+            audioCollection.footstepsWood.setPlaybackRate(1.25);
+        }
+        else {
+            audioCollection.footstepsLeaves.setPlaybackRate(1);
+            audioCollection.footstepsWood.setPlaybackRate(1);
+        }
+
+        if(!onTree && !onPlatform) { // On leaves / ground
+            if(controls.getObject().position.y <= 8) {
+                if(!audioCollection.footstepsLeaves.isPlaying) {
+                    audioCollection.footstepsLeaves.play();
+                }
+            }
+        }
+        else if(onTree) { // On tree
+            if(controls.getObject().position.y <= 18) {
+                if(!audioCollection.footstepsWood.isPlaying) {
+                    audioCollection.footstepsWood.play();
+                }
+            }
+        }
+        else { // On platform
+            if(controls.getObject().position.y <= 12) {
+                if(!audioCollection.footstepsWood.isPlaying) {
+                    audioCollection.footstepsWood.play();
+                }
+            }
+        }
+    }
+    else {
+        if(audioCollection.footstepsLeaves.isPlaying) {
+            audioCollection.footstepsLeaves.stop();
+        }
+        if(audioCollection.footstepsWood.isPlaying) {
+            audioCollection.footstepsWood.stop();
+        }
+    }
+}
+
+function rechargeShield() {
+    if(player.shield.hasShield && !player.shield.shieldEnabled && player.shield.shieldValue < 100 && player.shield.shieldRecharging) { // Shield has been broken
+        player.shield.shieldValue += 0.2;
+        shieldNumber.innerHTML = Math.floor(player.shield.shieldValue);
+        shieldbar.style.width = player.shield.shieldValue / 10 + "%";
+
+        if(player.shield.shieldValue >= 100) {
+            player.shield.shieldValue = 100;
+            player.shield.shieldRecharging = false;
+            shieldbar.style.width = "10.25%";
+            if(!inPuzzleTwo) {// Don't play shield recharge audio if player is in puzzle two
+                audioCollection.shieldReady.play();
+            }
+        }
+    }
+}
+
+function playAlienTransmission() {
+    if(currentLevel != 4 && !inPuzzleTwo) {
+        transmissionCount += 0.1;
+        if(currentLevel == 1 && !playedInitialTransmission && Math.floor(transmissionCount) >= 25) { // Play initial early transmission
+            transmissionCount = 0;
+            playedInitialTransmission = true;
+            if(Math.floor(Math.random() * 2) == 0) {
+                audioCollection.transmissionOne.play();
+            }
+            else {
+                audioCollection.transmissionTwo.play()
+            }
+        }
+
+        if(Math.floor(transmissionCount) >= 500) {
+            transmissionCount = 0;
+            let random = Math.floor(Math.random() * 3);
+            switch(random) {
+                case 0: 
+                    audioCollection.transmissionOne.play();
+                    break;
+                case 1:
+                    audioCollection.transmissionTwo.play();
+                    break;
+                case 2: // Don't play any transmission
+                    return;
+            }
+        }
+    }
 }
 
 /**
@@ -4610,25 +4854,31 @@ function playEndCutScene(event) {
         switch(decision) {
             case "takeHeart":
                 endCutscene = takeHeartCutScene;
-                // PLAY TAKE HEART ANIMATION
-                // video = takeHeart?
+                skipButton.param = "takeHeart";
                 break;
             case "leaveHeart":
-                // PLAY LEAVE HEART ANIMATION
                 endCutscene = leaveHeartCutScene;
+                skipButton.param = "leaveHeart";
                 break;
         }
     
         endCutscene.play();
         endCutscene.style.visibility = "visible";
         endCutscene.style.display = "block";
+
+        skipButton.style.visibility = "visible";
     
         endCutscene.onended = function() {
             endCutscene.remove();
-    
+            skipButton.style.visibility = "hidden";
+
             setTimeout(() => {
-                // CREDITS
-                location.reload();
+                creditsCutScene.play();
+                creditsCutScene.style.visibility = "visible";
+                creditsCutScene.style.display = "block";
+
+                skipButton.param = "credits";
+                skipButton.style.visibility = "hidden";
             }, 3000);
         }
     }, 5000);
@@ -4712,10 +4962,7 @@ function loadModel(url, key) {
                 break;
             case "scroll":
                 initScroll(gltf);
-                break;
-            case "speakers":
-                initSpeakers(gltf);
-                break;                
+                break;               
             case "pinetree":
                 initPineTree(gltf);
                 break;
@@ -4823,6 +5070,14 @@ function loadAudio(url, key) {
             audioCollection.wildlife = new THREE.Audio(listener);
             configureAudio(url, audioCollection.wildlife, true, 0.1, true); // url, audio, looping, volume, play
             break;
+        case "footsteps_leaves":
+            audioCollection.footstepsLeaves = new THREE.Audio(listener);
+            configureAudio(url, audioCollection.footstepsLeaves, false, 0.1, false);
+            break;
+        case "footsteps_wood":
+            audioCollection.footstepsWood = new THREE.Audio(listener);
+            configureAudio(url, audioCollection.footstepsWood, false, 0.1, false);
+            break;   
         case "weapon":
             audioCollection.weapon = new THREE.Audio(listener);
             configureAudio(url, audioCollection.weapon, false, 0.3, false);
@@ -4846,10 +5101,6 @@ function loadAudio(url, key) {
         case "poison_bullet_shot":
             audioCollection.weaponUpgradeShot = new THREE.Audio(listener);
             configureAudio(url, audioCollection.weaponUpgradeShot, false, 0.5, false);
-            break;
-        case "poison_tick":
-            audioCollection.poisonTick = new THREE.Audio(listener);
-            configureAudio(url, audioCollection.poisonTick, false, 0.5, false);
             break;
         case "jump_boost":
             audioCollection.jumpBoost = new THREE.Audio(listener);
@@ -4985,14 +5236,6 @@ function loadAudio(url, key) {
             audioCollection.shieldReady = new THREE.Audio(listener);
             configureAudio(url, audioCollection.shieldReady, false, 0.4, false);
             break;
-        case "hole":
-            audioCollection.hole = new THREE.PositionalAudio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.hole.setBuffer(buffer);
-                audioCollection.hole.setLoop(true);
-                audioCollection.hole.setRefDistance(20);
-            });
-            break;
     }
 }
 
@@ -5097,6 +5340,16 @@ function restartCheckpoint() {
             controls.getObject().position.set(460, 8, -935);
             camera.lookAt(460, 8, 1);
             respawnAliens();
+            if(tripwireTwo.parent == null) { // Tripwire was activated
+                tripwireTwoActivated = false;
+                scene.add(tripwireTwo);
+            }
+            break;
+        case 3.5:
+            controls.getObject().position.set(280, 8, -410);
+            camera.lookAt(281, 8, -410);
+            currentLevel = 3;
+            // respawnAliens();
             break;
         case 4:
             controls.getObject().position.set(480, 8, -335);
@@ -5492,6 +5745,18 @@ function initControls() {
                 keyControls.style.visibility = "hidden";
             }
         });
+        shadowsButton.addEventListener("click", () => {
+            pointLight.castShadow = !pointLight.castShadow;
+            ground.receiveShadow = !ground.receiveShadow;
+            shadowObjects.forEach(object => object.castShadow = !object.castShadow);
+
+            if(pointLight.castShadow) { // Shadows are on
+                shadowsButton.innerHTML = "SHADOWS: ON";
+            }
+            else {
+                shadowsButton.innerHTML = "SHADOWS: OFF";
+            }
+        });
         lockingClick = false;
     }
 
@@ -5513,6 +5778,8 @@ function initControls() {
         controls.isLocked = true;
         lockingClick = false;
         inHole = false;
+        onPlatform = false;
+
         if(!audioCollection.wildlife.isPlaying)
             audioCollection.wildlife.play();
         health.style.visibility = "visible";
@@ -5540,9 +5807,32 @@ function initControls() {
         pauseBlock.style.display = "none";
         deathBlock.style.display = "none";
 
+        if(pausedRockSinkAudio) {
+            pausedRockSinkAudio = false;
+            audioCollection.rockSink.play();
+        }
+
+        if(pausedTransmissionAudio) {
+            pausedTransmissionAudio = false;
+
+            if(pausedTransmissionOne) {
+                audioCollection.transmissionOne.play();
+                pausedTransmissionOne = false;
+            }
+            else {
+                audioCollection.transmissionTwo.play();
+                pausedTransmissionOne = false;
+            }
+        }
+
         if(pausedRoarAudio) {
             pausedRoarAudio = false;
             audioCollection.bossRoar.play();
+        }
+
+        if(pausedHeartAudio) {
+            pausedHeartAudio = false;
+            audioCollection.heartAudio.play();
         }
     }
 
@@ -5595,9 +5885,32 @@ function initControls() {
             }
         }
 
+        if(audioCollection.rockSink.isPlaying) {
+            pausedRockSinkAudio = true;
+            audioCollection.rockSink.pause();
+        }
+
+        if(audioCollection.transmissionOne.isPlaying || audioCollection.transmissionTwo.isPlaying) {
+            pausedTransmissionAudio = true;
+
+            if(audioCollection.transmissionOne.isPlaying) {
+                audioCollection.transmissionOne.pause();
+                pausedTransmissionOne = true;
+            }
+            else {
+                audioCollection.transmissionTwo.pause();
+                pausedTransmissionTwo = true;
+            }
+        }
+
         if(audioCollection.bossRoar.isPlaying) {
             pausedRoarAudio = true;
             audioCollection.bossRoar.pause();
+        }
+
+        if(audioCollection.heartAudio.isPlaying) {
+            pausedHeartAudio = true;
+            audioCollection.heartAudio.pause();
         }
     }
 
@@ -5694,9 +6007,9 @@ function initControls() {
                 currentLevel = 2;
                 break;
             case 84:  // T
-                controls.getObject().position.set(475, 8, -100);
+                controls.getObject().position.set(400, 8, -410);
                 camera.lookAt(475, 8, -790);
-                currentLevel = 4;
+                currentLevel = 3;
                 break;
             case 89:    // Y
                 currentLevel = 2;
@@ -5770,14 +6083,15 @@ function initControls() {
 
                     setTimeout(() => { // Timer is started for the shield to break after 5 seconds
 
-                        if(player.shield.shieldEnabled) { // If the shield hasn't been broken by a bullet
+                        if(player.shield.shieldEnabled) { // If the shield hasn't already been broken by a bullet
                             player.shield.shieldValue = 0;
 
-                            if(audioCollection.shieldBreak.isPlaying) {
-                                audioCollection.shieldBreak.stop();
+                            if(controls.isLocked && !inPuzzleTwo) { // Only play shield break audio if player is not in the second puzzle and the game is not paused
+                                if(audioCollection.shieldBreak.isPlaying) {
+                                    audioCollection.shieldBreak.stop();
+                                }
+                                audioCollection.shieldBreak.play();
                             }
-                            audioCollection.shieldBreak.play();
-                            
                             shieldDisplay.style.visibility = "hidden";
                             player.shield.shieldEnabled = false;
 
@@ -5823,12 +6137,7 @@ function initControls() {
                 checkDance();
                 break;
             case 77:    // M (MINIMAP)
-                minimapToggle = !minimapToggle;
-                break;
-            case 78:    // N (SHADOWS)
-                pointLight.castShadow = !pointLight.castShadow;
-                ground.receiveShadow = !ground.receiveShadow;
-                shadowObjects.forEach(object => object.castShadow = !object.castShadow);
+                minimapToggle = true;
                 break;
         }
     }
@@ -5871,6 +6180,9 @@ function initControls() {
                         updatePlayerAnimation(player.animations.walkAnim);
                 }
                 break;
+            case 77:    // M
+                minimapToggle = false;
+                break;
         }
     }
 }
@@ -5890,9 +6202,9 @@ function initSkybox() {
             map: texture
         } ));
     }
-    let cube = new THREE.Mesh(new THREE.BoxGeometry(3000, 1000, 4000), material);
-    cube.position.y += 250;
-    scene.add(cube);
+    skybox = new THREE.Mesh(new THREE.BoxGeometry(3000, 1000, 4000), material);
+    skybox.position.y += 250;
+    scene.add(skybox);
 }
 
 function initLoadingManager() {
@@ -5972,8 +6284,10 @@ function initHeart() {
 
 function initHeartModel(gltf) {
     heart = gltf.scene;
+    heart.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
     heart.scale.set(3, 3, 3);
-    heart.position.set(485, 5, 50);
+    heart.position.set(485, Math.random() * 1 + 6, 50); // Random height between 6 and 7
+    heart.add(audioCollection.heartAudio);
     scene.add(heart);
 }
 
@@ -6260,7 +6574,6 @@ function initAudio() {
     loadAudio("audio/weapon/hitmarker.mp3", "hitmarker");
     loadAudio("audio/weapon/poison_bullet_ready.wav", "poison_bullet_ready");
     loadAudio("audio/weapon/poison_bullet_shot.wav", "poison_bullet_shot");
-    loadAudio("audio/weapon/poison_tick.wav", "poison_tick");
     loadAudio("audio/items/paper.wav", "paper");
     loadAudio("audio/character/jump_boost.wav", "jump_boost");
     loadAudio("audio/environment/level_one/totem_select.wav", "totem_select");
@@ -6291,11 +6604,26 @@ function initAudio() {
     loadAudio("audio/environment/tree_fall.wav", "tree_fall");
     loadAudio("audio/environment/black_hole.wav", "hole");
 
+    /** HEART */
+    loadAudio("audio/environment/heart/heart.wav", "heart");
+
+    /** FOOTSTEPS */
+    loadAudio("audio/character/footsteps_leaves.wav", "footsteps_leaves");
+    loadAudio("audio/character/footsteps_wood.wav", "footsteps_wood");
+
     /** SHIELD */
     loadAudio("audio/character/shield_active.ogg", "shield_active");
     loadAudio("audio/character/shield_hit.wav", "shield_hit");
     loadAudio("audio/character/shield_break.wav", "shield_break");
     loadAudio("audio/character/shield_ready.wav", "shield_ready");
+
+    /** TRANSMISSIONS */
+    loadAudio("audio/transmissions/alien_transmission_one.mp3", "alien_transmission_one");
+    loadAudio("audio/transmissions/alien_transmission_two.wav", "alien_transmission_two");
+
+    /** TRIPWIRE */
+    loadAudio("audio/environment/tripwire/tripwire_activated.wav", "tripwire_activated");
+    loadAudio("audio/environment/tripwire/tripwire_buzz.wav", "tripwire_buzz");
 }
 
 function initWorld() {
@@ -6308,10 +6636,10 @@ function initWorld() {
     drawPaper();
     drawNotePoles();
     drawHealthPacks();
-    drawHole();
+    drawHoles();
     drawCrateAndBook();
     drawBarrelsAndScroll();
-    drawSpeakers();
+
     // boundingBoxVis();
 }
 
@@ -6372,18 +6700,30 @@ function initMenuAudio() {
     xmlhr.addEventListener("load", () => {
         let playsound = (audioBuffer) => {
             menuAudioSource = audioContext.createBufferSource();
-            menuAudioSource.buffer = audioBuffer;
-            menuAudioSource.connect(audioContext.destination);
-            menuAudioSource.loop = true;
-            menuAudioSource.start();
+            if(menuAudioSource) {
+                menuAudioSource.buffer = audioBuffer;
+                menuAudioSource.connect(audioContext.destination);
+                menuAudioSource.loop = true;
+                menuAudioSource.start();
+            }
         };
         audioContext.decodeAudioData(xmlhr.response).then(playsound);
     });
     xmlhr.send();
 }
 
+function playMenuCinematic() {
+    menuCinematic.play();
+    menuCinematic.loop = true;
+    menuCinematic.controls = false;
+    menuCinematic.muted = true;
+    menuCinematic.style.visibility = "visible";
+    menuCinematic.style.display = "block";
+}
+
 function menu() {
     initMenuAudio();
+    playMenuCinematic();
 
     controlsButtonMainMenu.addEventListener("click", () => {
         displayedControls = !displayedControls;
@@ -6408,8 +6748,20 @@ function menu() {
                 }, 1000);
                 break;
             case "takeHeart":
+                takeHeartCutScene.remove();
+                creditsCutScene.play();
+                creditsCutScene.style.visibility = "visible";
+                creditsCutScene.style.display = "block";
                 break;
             case "leaveHeart":
+                leaveHeartCutScene.remove();
+                creditsCutScene.play();
+                creditsCutScene.style.visibility = "visible";
+                creditsCutScene.style.display = "block";
+                break;
+            case "credits":
+                creditsCutScene.remove();
+                creditsCutScene.reload();
                 break;
         }        
     })
@@ -6425,6 +6777,8 @@ function menu() {
 
         skipButton.style.visibility = "visible";
         skipButton.param = "play";
+
+        menuCinematic.remove();
 
         introCutScene.play();
         introCutScene.style.visibility = "visible";
