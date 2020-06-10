@@ -116,7 +116,8 @@ let player;
 let currentLevel = 1;
 let xPos;
 let zPos;
-let shotPoisonBullet = false;
+let shotPoisonBullet = false; // Used to hide the weapon upgrade tooltip
+let activatedShield = false; // Used to hide the shield tooltip
 
 /** ENEMIES */
 let alienArray = [];
@@ -288,7 +289,8 @@ let pausedTransmissionTwo = false;
 
 /** MISC */
 let displayedControls = false;
-let requestId; // Needed to clear interval when an enemy is poisoned
+let requestId;
+let poisonTimerId; // Needed to clear the weapon upgrade timeout in order for its cooldown to be a consistent 15 seconds
 
 function gameLoop() {
 
@@ -2621,7 +2623,7 @@ function drawPaper() {
 
 function drawNotePoles() {
     let woodTexture = loadTexture("textures/texture_totem_wood.png");
-    let normalMap = loadTexture("textures/exture_totem_wood_normal.png");
+    let normalMap = loadTexture("textures/texture_totem_wood_normal.png");
 
     let poleGeometry = new THREE.CylinderBufferGeometry(1, 1, 8, 32);
     let poleMaterial = new THREE.MeshStandardMaterial( {color: "#706d71", map: woodTexture, normalMap: normalMap} );
@@ -3300,7 +3302,7 @@ function levelTwoBoundingBox() {
         }
     }
     else if(boxArr[5]) { // In box five
-        hideTooltip();
+        hideTooltip(); // Hide the shield tooltip if it is still visible
 
         cameraType = "fp"; // Lock the player into first person to avoid visual glitches when loading the new model
 
@@ -3647,7 +3649,7 @@ function puzzleThreeBoundingBox() {
     }
 
     if(boxArr[1]) { // In box one
-        if(xPos > 462.5 && xPos < 497.5 && zPos > -416.5 && zPos < -403.5) {
+        if(xPos > 462.5 && xPos < 497.5 && zPos > -416.5 && zPos < -403.5 && controls.getObject().position.y >= 10) {
             onPlatform = true;
             inHole = false;
         }
@@ -3744,6 +3746,11 @@ function levelFourBoundingBox() {
     let boxTwoLeft = 440;
     let boxTwoRight = 520;
     let boxTwoTop = boxOneBottom;
+
+    if(!shotPoisonBullet) { // Hide the weapon upgrade tooltip if it is still visible once the player enters the boss fight
+        shotPoisonBullet = true;
+        hideTooltip();
+    }
 
     if(!updatedAlienRange) { // Increase alien's range in the final boss fight
         updatedAlienRange = true;
@@ -4154,16 +4161,16 @@ function damageAlien(alien, intersect, type) {
 
             if(alien.currentHealth > 0) {
                 let ticks = 0;
-                let timerId;
+                let intervalId; // Needed to clear interval when an enemy is poisoned
 
-                timerId = setInterval(() => {
+                intervalId = setInterval(() => {
                     if(player.currentHealth <= 0) { // Poison stops ticking if player dies
-                        clearInterval(timerId);
+                        clearInterval(intervalId);
                         return;
                     }
                     ticks++;
 
-                    alien.currentHealth -= 10;
+                    alien.currentHealth -= 17; // Take 17 damage every tick (1 hit + 3 ticks is > 100 health lost)
                     if(alien.currentHealth <= 0) {
                         poisonTick.style.filter = "brightness(0) saturate(100%) invert(11%) sepia(96%) saturate(6875%) hue-rotate(0deg) brightness(91%) contrast(126%)";
                     }
@@ -4191,8 +4198,8 @@ function damageAlien(alien, intersect, type) {
                             }
                         }
 
-                        if(timerId) {
-                            clearInterval(timerId);
+                        if(intervalId) {
+                            clearInterval(intervalId);
                         }   
                     }
                 }, 1000);
@@ -4239,7 +4246,7 @@ function damageBoss(type) {
             timerId = setInterval(() => {
                 ticks++;
 
-                boss.currentHealth -= 10;
+                boss.currentHealth -= 17;
                 bossHealthBar.setAttribute("style", "width: " + boss.currentHealth / 33.33 + "%");
                 if(boss.currentHealth <= 0) {
                     poisonTick.style.filter = "brightness(0) saturate(100%) invert(11%) sepia(96%) saturate(6875%) hue-rotate(0deg) brightness(91%) contrast(126%)";
@@ -4868,18 +4875,23 @@ function playEndCutScene(event) {
         endCutscene.style.display = "block";
 
         skipButton.style.visibility = "visible";
-    
+
         endCutscene.onended = function() {
             endCutscene.remove();
             skipButton.style.visibility = "hidden";
-
+    
             setTimeout(() => {
                 creditsCutScene.play();
                 creditsCutScene.style.visibility = "visible";
                 creditsCutScene.style.display = "block";
-
+    
                 skipButton.param = "credits";
-                skipButton.style.visibility = "hidden";
+                skipButton.style.visibility = "visible";
+
+                creditsCutScene.onended = function() {
+                    creditsCutScene.remove();
+                    location.reload();
+                };
             }, 3000);
         }
     }, 5000);
@@ -5338,6 +5350,8 @@ function restartCheckpoint() {
     healthNumber.innerHTML = player.currentHealth;
     healthbarWidth = 10.25;
     healthbarTrailingWidth = healthbarWidth;
+
+    clearTimeout(poisonTimerId);
 
     if(player.shield.hasShield) {
         player.shield.shieldValue = 100;
@@ -5993,7 +6007,7 @@ function initControls() {
 
                 cameraType = "fp";
                 crosshair.style.top = "50.625%";
-                crosshair.style.transform = "translate(-50%, -50.625%)"; 
+                crosshair.style.transform = "translate(-50%, -50.625%)";
                 break;
             case 113:   // F2
                 if(inPuzzleTwo && !finishedPuzzleTwo) return;
@@ -6010,8 +6024,8 @@ function initControls() {
                 if(player.movingBackward) {
                     updatePlayerAnimation(player.animations.walkAnim);
                 }
-                crosshair.style.top = "56.625%";
-                crosshair.style.transform = "translate(-50%, -56.625%)";                 
+                // crosshair.style.top = "56.625%";
+                // crosshair.style.transform = "translate(-50%, -56.625%)";            
                 break;
             case 114:   // F3
                 if(inPuzzleTwo && !finishedPuzzleTwo) return;
@@ -6092,6 +6106,11 @@ function initControls() {
                 break;
             case 70:    // F
                 if(player.shield.hasShield && !player.shield.shieldEnabled && player.shield.shieldValue == 100) {
+                    if(!activatedShield) { // Hide the shield tooltip after the player uses the shield for the first time
+                        activatedShield = true;
+                        hideTooltip();
+                    }
+
                     player.shield.shieldEnabled = true;
                     audioCollection.shieldActive.play();
                     shieldDisplay.style.visibility = "visible";
@@ -6213,7 +6232,7 @@ function initSkybox() {
         let texture = loadTexture(skyboxURLs[i]);
         material.push(new THREE.MeshBasicMaterial( {
             color: "white",
-            side: THREE.DoubleSide,
+            side: THREE.BackSide,
             map: texture
         } ));
     }
@@ -6337,7 +6356,7 @@ function initWeaponModel(gltf) {
 
     player.weapon.model.scale.set(0.75, 0.75, -0.75);
     player.weapon.model.rotation.y = Math.random() * 2*Math.PI;
-    player.weapon.model.position.set(0, Math.random() + 1, -745); // Random height between 1 and 2
+    player.weapon.model.position.set(0, Math.random() + 1, -745); // Random height between 1 and 2 (used when gun is on the ground)
     player.weapon.model.direction = Math.floor(Math.random() * 2) == 0 ? "down" : "up";
 
     scene.add(player.weapon.model);    
@@ -6370,12 +6389,13 @@ function initWeaponModel(gltf) {
                     weaponUpgradeBar.style.width = "0%";
                     player.weaponUpgrade.onCooldown = true;
 
-                    setTimeout(() => { // Allow player to use poisoned bullet every 15 seconds
+                    poisonTimerId = setTimeout(() => { // Allow player to use poisoned bullet every 15 seconds
                         if(controls.isLocked && player.weaponUpgrade.onCooldown) { // Only play audio if the game is not paused and the upgrade is on cooldown
                             audioCollection.weaponUpgradeReady.play();
                         }
                         weaponUpgradeBar.style.width = "8.25%";
                         player.weaponUpgrade.onCooldown = false;
+                        console.log("READY");
                     }, 15000);
                 }
                 else if(player.weaponUpgrade.hasWeaponUpgrade) { // If the player has the weapon upgrade but it's on cooldown
@@ -6507,6 +6527,15 @@ function createPlayerBullet(type) {
 
     player.weapon.recoil.reachedBottom = false;
     player.weapon.recoil.reachedTop = false;
+
+    if(cameraType == "fp"){
+        player.weapon.bulletStart.position.set(0, -0.5, -1);  
+    }
+    else {
+        player.weapon.bulletStart.position.set(0, 4.5, -2.5);  
+    }
+
+    console.log(player.weapon.bulletStart.position.z);
 
     let cylinderGeometry = new THREE.CylinderBufferGeometry(0.05, 0.05, 5);
     cylinderGeometry.rotateX(-Math.PI/2);
@@ -6767,16 +6796,20 @@ function menu() {
                 creditsCutScene.play();
                 creditsCutScene.style.visibility = "visible";
                 creditsCutScene.style.display = "block";
+                skipButton.style.visibility = "visible";
+                skipButton.param = "credits";
                 break;
             case "leaveHeart":
                 leaveHeartCutScene.remove();
                 creditsCutScene.play();
                 creditsCutScene.style.visibility = "visible";
                 creditsCutScene.style.display = "block";
+                skipButton.style.visibility = "visible";
+                skipButton.param = "credits";
                 break;
             case "credits":
                 creditsCutScene.remove();
-                creditsCutScene.reload();
+                location.reload();
                 break;
         }        
     })
