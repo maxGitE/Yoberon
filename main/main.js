@@ -103,6 +103,7 @@ let ambientLight;
 let pointLight;
 let puzzleSpotLight;
 let alienLight;
+let speakerLight;
 
 /** AUDIO */
 let listener;
@@ -216,6 +217,7 @@ let crate;
 let book;
 let donutOne;
 let donutTwo;
+let speakers;
 
 /** PUZZLE 2 */
 let removedLevelTwoAliens = false
@@ -673,6 +675,9 @@ function showClue(name) {
 /********** PUZZLE TWO START **********/
 function levelTwoPuzzle() {
     if(!finishedPuzzleTwo) {
+        if(!inPuzzleTwo) {
+            // loadModel("models/environment/speakers.glb", "speakers");
+        }
         inPuzzleTwo = true;
         shieldDisplay.style.visibility = "hidden";
 
@@ -2700,6 +2705,9 @@ function drawHoles() {
     scene.add(holeOne);
     scene.add(holeTwo);
     // scene.add(baseHoleTwo);
+    hole.rotation.set(-Math.PI/2, 0, 0);
+    hole.position.set(460, 0.1, -860);
+    hole.add(audioCollection.hole);
 
     platform = new THREE.Mesh(new THREE.BoxBufferGeometry(30, 2, 12), new THREE.MeshLambertMaterial( {map: loadTexture("textures/texture_platform.jpg") }));
     platform.position.set(480, 3, -410);
@@ -2863,6 +2871,30 @@ function initScroll(gltf) {
     noteCollidableMeshlist.push(scroll.children[2]);
 
     barrelsAndScroll.add(scroll);
+}
+
+function drawSpeakers() {
+    speakers = new THREE.Object3D();
+
+    loadModel("models/environment/speaker.glb", "speakers");
+
+    speakers.position.set(460, 0, -1060);
+    speakers.scale.set(2, 2, 2);
+    scene.add(speakers);
+}
+
+function initSpeakers(gltf) {
+    let speaker1 = gltf.scene;
+    let speaker2 = speaker1.clone();
+
+    speaker1.position.set(-15, 0, 0);
+    speaker1.rotation.set(0, Math.PI/6, 0);
+
+    speaker2.position.set(15, 0, 0);
+    speaker2.rotation.set(0, -Math.PI/6, 0);
+
+    speakers.add(speaker1);
+    speakers.add(speaker2);
 }
 
 /** Changes which bounding boxes to load depending on what the current level is */
@@ -3484,16 +3516,6 @@ function levelThreeBoundingBox() {
             inHole = true;
         }
 
-        if(controls.getObject().position.y <= -240) {
-            player.currentHealth = 0;
-            audioCollection.playerDeath.play();
-            playerDeath.classList.add("fadein");
-            playerDeath.style.visibility = "visible";
-            setTimeout(() => audioCollection.deathAudio.play(), 500);
-            setTimeout(() => deathBlock.style.display = "block", 3000);
-            controls.unlock();
-        }
-
         if(zPos < boxOneTop) { // Place top boundary
             controls.getObject().position.z = boxOneTop;
         }
@@ -3524,29 +3546,6 @@ function levelThreeBoundingBox() {
         }
     }
     else if(boxArr[3]) { // In box three
-        if(controls.getObject().position.y <= 8 && controls.getObject().position.z <= -549 && controls.getObject().position.z >= -551 && !tripwireTwoActivated) {
-            tripwireTwoActivated = true;
-            scene.remove(tripwireTwo);
-
-            audioCollection.tripwireActivated.play();
-            setTimeout(() => {
-                audioCollection.tripwireBuzz.play();
-                audioCollection.playerInjured.play();
-                player.currentHealth -= 50;
-                updatePlayerHealth();
-
-                if(player.currentHealth <= 0) {
-                    player.currentHealth = 0;
-                    audioCollection.playerDeath.play();
-                    playerDeath.classList.add("fadein");
-                    playerDeath.style.visibility = "visible";
-                    setTimeout(() => audioCollection.deathAudio.play(), 500);
-                    controls.unlock();
-                }
-            }, 200);
-
-        }
-
         if(xPos < boxThreeLeft + boundaryFactor) { // Place left boundary
             controls.getObject().position.x = boxThreeLeft + boundaryFactor;
         }
@@ -4975,9 +4974,6 @@ function loadModel(url, key) {
                 break;
             case "scroll":
                 initScroll(gltf);
-                break;
-            case "hover_platform":
-                initHoverPlatform(gltf);
                 break;               
             case "pinetree":
                 initPineTree(gltf);
@@ -5251,30 +5247,6 @@ function loadAudio(url, key) {
         case "shield_ready":
             audioCollection.shieldReady = new THREE.Audio(listener);
             configureAudio(url, audioCollection.shieldReady, false, 0.4, false);
-            break;
-        case "alien_transmission_one":
-            audioCollection.transmissionOne = new THREE.Audio(listener);
-            configureAudio(url, audioCollection.transmissionOne, false, 0.75, false);
-            break;
-        case "alien_transmission_two":
-            audioCollection.transmissionTwo = new THREE.Audio(listener);
-            configureAudio(url, audioCollection.transmissionTwo, false, 0.75, false);
-            break;
-        case "tripwire_activated":
-            audioCollection.tripwireActivated = new THREE.Audio(listener);
-            configureAudio(url, audioCollection.tripwireActivated, false, 0.5, false);
-            break;
-        case "tripwire_buzz":
-            audioCollection.tripwireBuzz = new THREE.Audio(listener);
-            configureAudio(url, audioCollection.tripwireBuzz, false, 0.75, false);
-            break;
-        case "heart":
-            audioCollection.heartAudio = new THREE.PositionalAudio(listener);
-            audioLoader.load(url, function(buffer) {
-                audioCollection.heartAudio.setBuffer(buffer);
-                audioCollection.heartAudio.setLoop(true);
-                audioCollection.heartAudio.setRefDistance(25);
-            });
             break;
     }
 }
@@ -5741,6 +5713,19 @@ function initLights() {
     /** Lights on the aliens */
     alienLight = new THREE.PointLight("white", 1);
     alienLight.distance = 30;
+
+    /** Lights on the speakers */
+    speakerLight = new THREE.PointLight("white", 1);
+    let speakerLight2 = speakerLight.clone();
+
+    speakerLight.distance = 30;
+    speakerLight.position.set(445, 5, -1060);
+
+    speakerLight2.distance = 30;
+    speakerLight2.position.set(475, 5, -1060);
+
+    scene.add(speakerLight);
+    scene.add(speakerLight2);
 }
 
 function initControls() {
@@ -6646,6 +6631,7 @@ function initAudio() {
     loadAudio("audio/boss/boss_footstep.wav", "boss_footstep");
     loadAudio("audio/boss/boss_death.wav", "boss_death");
     loadAudio("audio/environment/tree_fall.wav", "tree_fall");
+    loadAudio("audio/environment/black_hole.wav", "hole");
 
     /** HEART */
     loadAudio("audio/environment/heart/heart.wav", "heart");
@@ -6682,7 +6668,6 @@ function initWorld() {
     drawHoles();
     drawCrateAndBook();
     drawBarrelsAndScroll();
-    drawTripwires();
 
     // boundingBoxVis();
 }

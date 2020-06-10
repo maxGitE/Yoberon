@@ -37,6 +37,7 @@ class AudioCollection {
         this._tripwireActivated;
         this._tripwireBuzz;
         this._heartAudio;
+        this._hole;
     }
 
     get wildlife() {
@@ -345,5 +346,13 @@ class AudioCollection {
 
     set heartAudio(audio) {
         this._heartAudio = audio;
+    }
+
+    get hole() {
+        return this._hole;
+    }
+
+    set hole(audio) {
+        this._hole = audio;
     }
 }
