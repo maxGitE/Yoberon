@@ -2626,7 +2626,7 @@ function drawPaper() {
 
 function drawNotePoles() {
     let woodTexture = loadTexture("textures/texture_totem_wood.png");
-    let normalMap = loadTexture("textures/exture_totem_wood_normal.png");
+    let normalMap = loadTexture("textures/texture_totem_wood_normal.png");
 
     let poleGeometry = new THREE.CylinderBufferGeometry(1, 1, 8, 32);
     let poleMaterial = new THREE.MeshStandardMaterial( {color: "#706d71", map: woodTexture, normalMap: normalMap} );
@@ -2695,20 +2695,19 @@ function drawHoles() {
     holeOne = new THREE.Mesh(holeOneGeometry, holeMaterial.clone()); 
     holeOne.rotation.x = -Math.PI/2;
     holeOne.position.set(460, 0.1, -860);
+    holeOne.add(audioCollection.hole);
 
     holeTwo = new THREE.Mesh(holeTwoGeometry, holeMaterial.clone()); 
     holeTwo.rotation.x = -Math.PI/2;
-    holeTwo.position.set(480, 0.1, -420);
+    holeTwo.position.set(470, 0.1, -410);
+    holeTwo.add(audioCollection.hole2);
 
     scene.add(holeOne);
     scene.add(holeTwo);
     // scene.add(baseHoleTwo);
-    hole.rotation.set(-Math.PI/2, 0, 0);
-    hole.position.set(460, 0.1, -860);
-    hole.add(audioCollection.hole);
 
-    platform = new THREE.Mesh(new THREE.BoxBufferGeometry(30, 2, 12), new THREE.MeshLambertMaterial( {map: loadTexture("textures/texture_platform.jpg") }));
-    platform.position.set(480, 3, -410);
+    platform = new THREE.Mesh(new THREE.BoxBufferGeometry(24, 2, 12), new THREE.MeshLambertMaterial( {map: loadTexture("textures/texture_platform.jpg") }));
+    platform.position.set(470, 3, -410);
 
     scene.add(platform);
 
@@ -3509,6 +3508,9 @@ function levelThreeBoundingBox() {
     }
 
     if(boxArr[1]) { // In box one
+        if(!audioCollection.hole.isPlaying) {
+            audioCollection.hole.play();
+        }
         /** Hole in the ground */
         if(zPos > -870 && zPos < -850 && xPos > 445 && xPos < 475 && controls.getObject().position.y == 8) {
             inHole = true;
@@ -3527,6 +3529,9 @@ function levelThreeBoundingBox() {
     }
     else if(boxArr[2]) { // In box two
         handleNotes();
+        if(audioCollection.hole.isPlaying) {
+            audioCollection.hole.stop();
+        }
 
         if(zPos > boxTwoBottom - boundaryFactor) { // Place bottom boundary except at box three overlap
             if(xPos > boxThreeRight)
@@ -3552,6 +3557,10 @@ function levelThreeBoundingBox() {
         }
     }
     else if(boxArr[4]) { // In box four
+        if(!audioCollection.hole2.isPlaying) {
+            audioCollection.hole2.play();
+        }
+
         if(zPos > boxFourBottom - boundaryFactor) { // Place bottom boundary
             controls.getObject().position.z = boxFourBottom - boundaryFactor;
         }
@@ -3627,12 +3636,12 @@ function puzzleThreeBoundingBox() {
     // Boundary values for the respective box divisions
     let boxOneBottom = -370;
     let boxOneLeft = 430;
-    let boxOneRight = 530;
+    let boxOneRight = 510;
     let boxOneTop = -450;
 
     let boxTwoBottom = -340;
-    let boxTwoLeft = 465;
-    let boxTwoRight = 495;
+    let boxTwoLeft = 455;
+    let boxTwoRight = 485;
     let boxTwoTop = -370;
 
     let puzzleCompleted = true;
@@ -3646,7 +3655,7 @@ function puzzleThreeBoundingBox() {
     }
 
     if(boxArr[1]) { // In box one
-        if(xPos > 462.5 && xPos < 497.5 && zPos > -416.5 && zPos < -403.5) {
+        if(xPos > 455.5 && xPos < 484.5 && zPos > -416.5 && zPos < -403.5) {
             onPlatform = true;
             inHole = false;
         }
@@ -3776,6 +3785,10 @@ function levelFourBoundingBox() {
         //     disposedLevelThreeAliens = true;
         // }
 
+        if(audioCollection.hole2.isPlaying) {
+            audioCollection.hole2.stop();
+        }
+        
         setCheckPoint();
         handleHealthPacks();
 
@@ -4850,6 +4863,8 @@ function playEndCutScene(event) {
     endgameFadeIn.classList.add("fadein");
     endgameFadeIn.style.visibility = "visible";
 
+    openFullscreen();
+
     setTimeout(() => { // Play the ending cutscene 2 seconds after the fade in has finished
         switch(decision) {
             case "takeHeart":
@@ -4861,7 +4876,7 @@ function playEndCutScene(event) {
                 skipButton.param = "leaveHeart";
                 break;
         }
-    
+
         endCutscene.play();
         endCutscene.style.visibility = "visible";
         endCutscene.style.display = "block";
@@ -4962,7 +4977,10 @@ function loadModel(url, key) {
                 break;
             case "scroll":
                 initScroll(gltf);
-                break;               
+                break;
+            case "speakers":
+                initSpeakers(gltf);
+                break;              
             case "pinetree":
                 initPineTree(gltf);
                 break;
@@ -5235,6 +5253,46 @@ function loadAudio(url, key) {
         case "shield_ready":
             audioCollection.shieldReady = new THREE.Audio(listener);
             configureAudio(url, audioCollection.shieldReady, false, 0.4, false);
+            break;
+        case "alien_transmission_one":
+            audioCollection.transmissionOne = new THREE.Audio(listener);
+            configureAudio(url, audioCollection.transmissionOne, false, 0.75, false);
+            break;
+        case "alien_transmission_two":
+            audioCollection.transmissionTwo = new THREE.Audio(listener);
+            configureAudio(url, audioCollection.transmissionTwo, false, 0.75, false);
+            break;
+        case "tripwire_activated":
+            audioCollection.tripwireActivated = new THREE.Audio(listener);
+            configureAudio(url, audioCollection.tripwireActivated, false, 0.5, false);
+            break;
+        case "tripwire_buzz":
+            audioCollection.tripwireBuzz = new THREE.Audio(listener);
+            configureAudio(url, audioCollection.tripwireBuzz, false, 0.75, false);
+            break;
+        case "heart":
+            audioCollection.heartAudio = new THREE.PositionalAudio(listener);
+            audioLoader.load(url, function(buffer) {
+                audioCollection.heartAudio.setBuffer(buffer);
+                audioCollection.heartAudio.setLoop(true);
+                audioCollection.heartAudio.setRefDistance(25);
+            });
+            break;
+        case "hole":
+            audioCollection.hole = new THREE.PositionalAudio(listener);
+            audioLoader.load(url, function(buffer) {
+                audioCollection.hole.setBuffer(buffer);
+                audioCollection.hole.setLoop(true);
+                audioCollection.hole.setRefDistance(25);
+            });
+            break;
+        case "hole2":
+            audioCollection.hole2 = new THREE.PositionalAudio(listener);
+            audioLoader.load(url, function(buffer) {
+                audioCollection.hole2.setBuffer(buffer);
+                audioCollection.hole2.setLoop(true);
+                audioCollection.hole2.setRefDistance(25);
+            });
             break;
     }
 }
@@ -5623,6 +5681,30 @@ function alienInRangeOfPlayer(alien) {
 function bossInRangeOfPlayer() {
     return boss.model.position.clone().distanceTo(player.playerModel.position.clone()) < boss.range;
 }
+
+function openFullscreen() {
+    if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+    } else if (document.documentElement.mozRequestFullScreen) { /* Firefox */
+        document.documentElement.mozRequestFullScreen();
+    } else if (document.documentElement.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+        document.documentElement.webkitRequestFullscreen();
+    } else if (document.documentElement.msRequestFullscreen) { /* IE/Edge */
+        document.documentElement.msRequestFullscreen();
+    }
+}
+
+function closeFullscreen() {
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    } else if (document.mozCancelFullScreen) {
+      document.mozCancelFullScreen();
+    } else if (document.webkitExitFullscreen) {
+      document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) {
+      document.msExitFullscreen();
+    }
+  }
 
 function onResize() {
     canvas.width = window.innerWidth;
@@ -6213,6 +6295,7 @@ function initLoadingManager() {
     loadingInfo.style.visibility = "visible";
 
     function onLoad() {
+        closeFullscreen();
         loadingInfo.style.display = "none";
         loadingSymbol.style.display = "none";
         wakeUp.style.visibility = "visible";
@@ -6603,6 +6686,7 @@ function initAudio() {
     loadAudio("audio/boss/boss_death.wav", "boss_death");
     loadAudio("audio/environment/tree_fall.wav", "tree_fall");
     loadAudio("audio/environment/black_hole.wav", "hole");
+    loadAudio("audio/environment/black_hole.wav", "hole2");
 
     /** HEART */
     loadAudio("audio/environment/heart/heart.wav", "heart");
@@ -6639,6 +6723,7 @@ function initWorld() {
     drawHoles();
     drawCrateAndBook();
     drawBarrelsAndScroll();
+    drawSpeakers();
 
     // boundingBoxVis();
 }
@@ -6721,7 +6806,7 @@ function playMenuCinematic() {
     menuCinematic.style.display = "block";
 }
 
-function menu() {
+function menu() {      
     initMenuAudio();
     playMenuCinematic();
 
@@ -6780,6 +6865,8 @@ function menu() {
 
         menuCinematic.remove();
 
+        openFullscreen();
+        
         introCutScene.play();
         introCutScene.style.visibility = "visible";
         introCutScene.style.display = "block";
@@ -6789,7 +6876,7 @@ function menu() {
         skipButton.style.visibility = "hidden";
         introCutScene.remove();
         loadingSymbol.style.display = "block";
-
+        
         setTimeout(() => {
             init();
         }, 1000);
