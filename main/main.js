@@ -387,7 +387,7 @@ function gameLoop() {
                     }
                 }
             }
-            else {      
+            else if(controls.getObject().position.y < 5) {      
                 updatePlayerAnimation(player.animations.fallAnim);
                 if(!screamPlayed) {
                     audioCollection.scream.play();
@@ -6600,7 +6600,6 @@ function initControls() {
         player.velocityY = 0;
         player.velocityZ = 0;
 
-        console.log(firstUnlock);
         if(!firstUnlock) {
             document.addEventListener("keydown", onKeyDown);            
         }
@@ -6679,6 +6678,13 @@ function initControls() {
         if(!firstUnlock) {
             firstUnlock = true;
         }
+
+        /** Initiate keyup events for all movement keys to stop movement occurring while paused */
+        document.dispatchEvent(new KeyboardEvent('keyup', {keyCode: 87}));
+        document.dispatchEvent(new KeyboardEvent('keyup', {keyCode: 65}));
+        document.dispatchEvent(new KeyboardEvent('keyup', {keyCode: 83}));
+        document.dispatchEvent(new KeyboardEvent('keyup', {keyCode: 68}));
+
         cancelAnimationFrame(requestId);
         document.removeEventListener("keydown", onKeyDown);
 
