@@ -35,10 +35,6 @@ video {
     pointer-events: none;
 }
 
-#skip {
-    z-index: 1;
-}
-
 .unselectable {
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -129,10 +125,9 @@ button:active {
     position: fixed;
     top: 0;
     right: 0;
-    width: 3%;
-    height: 3%;
     font-size: 18px;
     visibility: hidden;
+    z-index: 1;
 }
 
 .fadeout {
@@ -370,8 +365,6 @@ button:active {
 
 #weapon-upgrade-outline {
     position: fixed;    
-    bottom: 1.5%;
-    right: 4.2%;
     width: 8.5%;
     height: 3%;
     border: 3px solid #034e08;
@@ -379,9 +372,7 @@ button:active {
 }
 
 #weapon-upgrade-bar {
-    position: fixed;            
-    bottom: 2.02%;
-    right: 4.5%;
+    position: fixed;  
     width: 8.25%;
     height: 2.5%;
     background-color: #04870d;
@@ -799,6 +790,21 @@ img {
     #paper {        
         font-size: 70px;
     }
+
+    #skip {        
+        width: 5%;
+        height: 5%;
+    }
+
+    #weapon-upgrade-outline { 
+        bottom: 2%;
+        right: 1.5%;
+    }
+    
+    #weapon-upgrade-bar {         
+        bottom: 2.7%;
+        right: 1.8%;
+    }
 }
 
 /* Screen widths 1441px and above */
@@ -865,6 +871,21 @@ img {
 
     #paper {        
         font-size: 80px;
+    }
+
+    #skip {        
+        width: 4%;
+        height: 4%;
+    }
+
+    #weapon-upgrade-outline { 
+        bottom: 1.3%;
+        right: 1.5%;
+    }
+    
+    #weapon-upgrade-bar {         
+        bottom: 1.95%;
+        right: 1.8%;
     }
 }
 
@@ -933,6 +954,21 @@ img {
     #paper {        
         font-size: 100px;
     }
+
+    #skip {        
+        width: 3%;
+        height: 3%;
+    }
+
+    #weapon-upgrade-outline { 
+        bottom: 1.5%;
+        right: 1.5%;
+    }
+    
+    #weapon-upgrade-bar {         
+        bottom: 2.04%;
+        right: 1.75%;
+    }
 }
 
 /* Screen widths 1921px and above (2K) */
@@ -999,6 +1035,21 @@ img {
 
     #paper {        
         font-size: 120px;
+    }
+
+    #skip {        
+        width: 2.5%;
+        height: 2.5%;
+    }
+
+    #weapon-upgrade-outline { 
+        bottom: 1.5%;
+        right: 1%;
+    }
+    
+    #weapon-upgrade-bar {         
+        bottom: 2.04%;
+        right: 1.25%;
     }
 }
 
@@ -1069,5 +1120,20 @@ img {
     #paper {
         padding-top: 50px;        
         font-size: 150px;
+    }
+
+    #skip {        
+        width: 1.5%;
+        height: 2%;
+    }
+
+    #weapon-upgrade-outline { 
+        bottom: 2%;
+        right: 1%;
+    }
+    
+    #weapon-upgrade-bar {         
+        bottom: 2.6%;
+        right: 1.2%;
     }
 }

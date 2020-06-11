@@ -38,6 +38,15 @@ class AudioCollection {
         this._tripwireBuzz;
         this._heartAudio;
         this._hole;
+        this._scream;
+        this._chickenDance;
+        this._gangnamStyle;
+        this._macarenaDance;
+        this._ymcaDance;
+        this._losePuzzle;
+        this._correct;
+        this._winPuzzle;
+        this._recordScratch;
     }
 
     get wildlife() {
@@ -354,5 +363,77 @@ class AudioCollection {
 
     set hole(audio) {
         this._hole = audio;
+    }
+
+    get scream() {
+        return this._scream;
+    }
+
+    set scream(audio) {
+        this._scream = audio;
+    }
+
+    get chickenDance() {
+        return this._chickenDance;
+    }
+
+    set chickenDance(audio) {
+        this._chickenDance = audio;
+    }
+
+    get gangnamStyle() {
+        return this._gangnamStyle;
+    }
+
+    set gangnamStyle(audio) {
+        this._gangnamStyle = audio;
+    }
+
+    get macarenaDance() {
+        return this._macarenaDance;
+    }
+
+    set macarenaDance(audio) {
+        this._macarenaDance = audio;
+    }
+
+    get ymcaDance() {
+        return this._ymcaDance;
+    }
+
+    set ymcaDance(audio) {
+        this._ymcaDance = audio;
+    }
+
+    get losePuzzle() {
+        return this._losePuzzle;
+    }
+
+    set losePuzzle(audio) {
+        this._losePuzzle = audio;
+    }
+
+    get correct() {
+        return this._correct;
+    }
+
+    set correct(audio) {
+        this._correct = audio;
+    }
+
+    get winPuzzle() {
+        return this._winPuzzle;
+    }
+
+    set winPuzzle(audio) {
+        this._winPuzzle = audio;
+    }
+
+    get recordScratch() {
+        return this._recordScratch;
+    }
+
+    set recordScratch(audio) {
+        this._recordScratch = audio;
     }
 }

@@ -246,6 +246,8 @@ let holeTwo;
 let platform;
 let onPlatform = false;
 let pausedHoleAudio = false;
+let cratesAndScroll;
+let screamPlayed = false;
 
 /** LEVEL 4 */
 let bossFightStarted = false;
@@ -294,6 +296,7 @@ let pausedTransmissionTwo = false;
 let displayedControls = false;
 let requestId;
 let poisonTimerId; // Needed to clear the weapon upgrade timeout in order for its cooldown to be a consistent 15 seconds
+let firstUnlock = false;
 
 function gameLoop() {
 
@@ -377,6 +380,10 @@ function gameLoop() {
             }
             else {      
                 updatePlayerAnimation(player.animations.fallAnim);
+                if(!screamPlayed) {
+                    audioCollection.scream.play();
+                    screamPlayed = true;
+                }                
             }
 
             player.playerModel.position.x = controls.getObject().position.x;
@@ -489,6 +496,9 @@ function handleNotes() {
         else if(intersects[0].object.name == "noteThree") { // Note three
             interactableObject = "noteThree";
         }
+        else if(intersects[0].object.name == "noteFour") { // Note four
+            interactableObject = "noteFour";
+        }
     }
     else {
         interact.style.visibility = "hidden";
@@ -515,6 +525,13 @@ function showNote(name) {
             scrollPaper.style.visibility = "visible";
             scrollTitle.innerHTML = "1846 - Yoberon Chronicles";
             alienScroll.innerHTML = "Since the dawn of time, the heart has powered Yoberon and allowed life to flourish. It must remain untouched, or total destruction shall ensue.";
+            englishScroll.innerHTML = alienScroll.innerHTML;
+            break;
+
+        case "noteFour":
+            scrollPaper.style.visibility = "visible";
+            scrollTitle.innerHTML = "1851 - Yoberon Chronicles";
+            alienScroll.innerHTML = "The heart is sought after by many in the galaxy for its tremendous power. If harnessed, it can provide unlimited fuel to whatever the user desires.";
             englishScroll.innerHTML = alienScroll.innerHTML;
             break;
     }
@@ -1507,7 +1524,7 @@ function initPineTrees(gltf) {
     let treeGeometry = pinetree.children[0].geometry;
     let treeMaterial = pinetree.children[0].material;
 
-    let numInstances = 4173;
+    let numInstances = 4218;
 
     let cluster = new THREE.InstancedMesh(treeGeometry, treeMaterial, numInstances);
     let tempCluster = new THREE.Object3D();
@@ -1630,8 +1647,8 @@ function initPineTrees(gltf) {
         else if(i > 551 && i < 590) { // Box one top
             clusterX = i * -4 + 2273; // Math.random() * 150 - 85; // x positions between -85 and 65
             clusterZ = Math.random() * 15 - 575; // z positions between -560 and -575
-        }
-        else if(i >= 590 && i < 710) { // Left side of puzzle one and level 2 box one ******* LEVEL TWO START *******
+        }// ******* LEVEL TWO START *******
+        else if(i >= 590 && i < 710) { // Left side of puzzle one and level 2 box one 
             if(i < 630) { // First row
                 clusterX = Math.random() * 10 - 45; // x positions between -35 and -45
             }
@@ -1717,13 +1734,13 @@ function initPineTrees(gltf) {
         }
         else if(i >= 1070 && i < 1190) { // Box three left
             if(i < 1110) { // First row
-                clusterX = Math.random() * 10 - 280; // x positions between -270 and -280
+                clusterX = Math.random() * 10 - 290; // x positions between -280 and -290
             }
             else if(i >= 1110 && i < 1150) { // Second row
-                clusterX = Math.random() * 10 - 300; // x positions between -290 and -300
+                clusterX = Math.random() * 10 - 310; // x positions between -300 and -310
             }
             else { // Third row
-                clusterX = Math.random() * 10 - 320; // x positions between -310 and -320
+                clusterX = Math.random() * 10 - 330; // x positions between -320 and -330
             }
 
             if(i < 1150) {
@@ -1735,13 +1752,13 @@ function initPineTrees(gltf) {
         }
         else if(i >= 1190 && i < 1430) { // Box four bottom
             if(i < 1270) { // First row
-                clusterZ = Math.random() * 10 - 1100; // z positions between -1090 and -1100
+                clusterZ = Math.random() * 10 - 1090; // z positions between -1080 and -1090
             }
             else if(i >= 1270 && i < 1350) { // Second row
-                clusterZ = Math.random() * 10 - 1080; // z positions between -1070 and -1080
+                clusterZ = Math.random() * 10 - 1070; // z positions between -1060 and -1070
             }
             else { // Third row
-                clusterZ = Math.random() * 10 - 1060; // z positions between -1050 and -1060
+                clusterZ = Math.random() * 10 - 1050; // z positions between -1040 and -1050
             }
 
             if(i < 1350) {
@@ -1753,13 +1770,13 @@ function initPineTrees(gltf) {
         }
         else if(i >= 1430 && i < 1700) { // Box four top
             if(i < 1520) { // First row
-                clusterZ = Math.random() * 10 - 1190; // z positions between -1180 and -1190
+                clusterZ = Math.random() * 10 - 1200; // z positions between -1190 and -1200
             }
             else if(i >= 1520 && i < 1610) { // Second row
-                clusterZ = Math.random() * 10 - 1210; // z positions between -1200 and -1210
+                clusterZ = Math.random() * 10 - 1220; // z positions between -1210 and -1220
             }
             else { // Third row
-                clusterZ = Math.random() * 10 - 1230; // z positions between -1220 and -1230
+                clusterZ = Math.random() * 10 - 1240; // z positions between -1230 and -1240
             }
 
             if(i < 1610) {
@@ -1768,8 +1785,8 @@ function initPineTrees(gltf) {
             else {
                 clusterX = i * -9 + 15010;
             }
-        }
-        else if(i >= 1700 && i < 1820) { // Box four right + second puzzle right + first part of level 3 box one right ******* LEVEL 3 START *******
+        } // ******* LEVEL 3 START *******
+        else if(i >= 1700 && i < 1820) { // Box four right + second puzzle right + first part of level 3 box one right 
             if(i < 1740) { // First row
                 clusterX = Math.random() * 10 + 500; // x positions between 500 and 510
             }
@@ -1892,8 +1909,8 @@ function initPineTrees(gltf) {
             else {
                 clusterX = i * -12.5 + 27600;
             }
-        }
-        else if(i == 2164) { // Puzzle two entrance left ******* PUZZLE TWO EXTRA TREES START *******
+        } // ******* PUZZLE TWO EXTRA TREES START *******
+        else if(i == 2164) { // Puzzle two entrance left 
             clusterX = 425;
             clusterZ = -1085;
         }
@@ -1921,10 +1938,10 @@ function initPineTrees(gltf) {
             clusterX = 495;
             clusterZ = -955;
         }
-        else if(i == 2171) { // Puzzle two exit right ******* PUZZLE TWO EXTRA TREES END *******
+        else if(i == 2171) { // Puzzle two exit right 
             clusterX = 495;
             clusterZ = -955;
-        }
+        } // ******* PUZZLE TWO EXTRA TREES END *******
         else if(i > 2171 && i < 2261) { // Box two bottom
             if(i < 2201) { // First row
                 clusterZ = Math.random() * 10 - 600; // z positions between -590 and -600
@@ -1990,17 +2007,17 @@ function initPineTrees(gltf) {
             else { // Second row
                 clusterZ = Math.random() * 10 - 355; // z positions between -345 and -355
             }
-            clusterX = Math.random() * 255 + 200; // x positions between 200 and 455
+            clusterX = Math.random() * 245 + 200; // x positions between 200 and 445
         }
         else if(i >= 2530 && i < 2680) { // Box four top
             if(i < 2580) { // First row
-                clusterZ = Math.random() * 10 - 460; // z positions between -450 and -460
+                clusterZ = Math.random() * 10 - 470; // z positions between -460 and -470
             }
             else if(i >= 2580 && i < 2630) { // Second row
-                clusterZ = Math.random() * 10 - 480; // z positions between -470 and -480
+                clusterZ = Math.random() * 10 - 490; // z positions between -480 and -490
             }
             else { // Third row
-                clusterZ = Math.random() * 10 - 500; // z positions between -490 and -500
+                clusterZ = Math.random() * 10 - 510; // z positions between -500 and -510
             }
 
             if(i < 2630) {
@@ -2009,16 +2026,16 @@ function initPineTrees(gltf) {
             else {
                 clusterX = i * -5 + 13700;
             }
-        }
-        else if(i >= 2680 && i < 2710) { // Puzzle three right ******* PUZZLE THREE START *******
+        } // ******* PUZZLE THREE START *******
+        else if(i >= 2680 && i < 2710) { // Puzzle three right 
             if(i < 2690) { // First row
-                clusterX = Math.random() * 10 + 510; // x positions between 510 and 520
+                clusterX = Math.random() * 10 + 520; // x positions between 520 and 530
             }
             else if(i >= 2690 && i < 2700) { // Second row
-                clusterX = Math.random() * 10 + 530; // x positions between 530 and 540
+                clusterX = Math.random() * 10 + 540; // x positions between 540 and 550
             }
             else { // Third row
-                clusterX = Math.random() * 10 + 550; // x positions between 550 and 560
+                clusterX = Math.random() * 10 + 560; // x positions between 560 and 570
             }
 
             if(i < 2700) {
@@ -2027,15 +2044,15 @@ function initPineTrees(gltf) {
             else {
                 clusterZ = i * -10 + 26640;
             }
-        }
-        else if(i >= 2710 && i < 2790) { // Level 4 top ******* LEVEL FOUR START *******
+        } // ******* LEVEL FOUR START *******
+        else if(i >= 2710 && i < 2790) { // Level 4 top 
             if(i < 2750) { // First row
                 clusterZ = Math.random() * 10 - 365; // z positions between -365 and -375
             }
             else { // Second row
                 clusterZ = Math.random() * 10 - 355; // z positions between -345 and -355
             }
-            clusterX = Math.random() * 165 + 485; // x positions between 485 and 650
+            clusterX = Math.random() * 155 + 495; // x positions between 495 and 650
         }
         else if(i >= 2790 && i < 3030) { // Level 4 right
             if(i < 2870) { // First row
@@ -2108,8 +2125,8 @@ function initPineTrees(gltf) {
             else {
                 clusterX = i * -3.5 + 12795;
             }
-        }
-        else if(i == 3510) { // Puzzle three entrance top ******* PUZZLE THREE EXTRA TREES START *******
+        } // ******* PUZZLE THREE EXTRA TREES START *******
+        else if(i == 3510) { // Puzzle three entrance top 
             clusterX = 415;
             clusterZ = -435;
         }
@@ -2121,10 +2138,10 @@ function initPineTrees(gltf) {
             clusterX = 415;
             clusterZ = -375;
         }
-        else if(i == 3513) { // Puzzle three entrance bottom ******* PUZZLE THREE EXTRA TREES END *******
+        else if(i == 3513) { // Puzzle three entrance bottom 
             clusterX = 415;
             clusterZ = -385;
-        }
+        } // ******* PUZZLE THREE EXTRA TREES END *******
         else if(i > 3513 && i < 3753) { // Level 4 box two right
             if(i < 3593) { // First row
                 clusterX = Math.random() * 10 + 520; // x positions between 520 and 530
@@ -2177,6 +2194,24 @@ function initPineTrees(gltf) {
             }
             else {
                 clusterX = i * -1.5 + 6689.5;
+            }
+        } // ******* FILLER TREES START *******
+        else if(i >= 4173 && i < 4218) { // Level 1 box two bottom
+            if(i < 4188) { // First row
+                clusterZ = Math.random() * 10 - 415; // z positions between -415 and -405
+            }
+            else if(i >= 4188 && i < 4203) { // Second row
+                clusterZ = Math.random() * 10 - 395; // z positions between -395 and -385
+            }
+            else { // Third row
+                clusterZ = Math.random() * 10 - 375; // z positions between -375 and -365
+            }
+
+            if(i < 4203) {
+                clusterX = Math.random() * 90 + 40; // x positions between 40 and 130
+            }
+            else {
+                clusterX = i * -6 + 25348;
             }
         }
 
@@ -2280,26 +2315,55 @@ function initBroadLeaf(gltf) {
     let broadleaf_three = broadleaf_one.clone();
     let broadleaf_four = broadleaf_one.clone();
     let broadleaf_five = broadleaf_one.clone();
+    let broadleaf_six = broadleaf_one.clone();
+    let broadleaf_seven = broadleaf_one.clone();
+    let broadleaf_eight = broadleaf_one.clone();
+    let broadleaf_nine = broadleaf_one.clone();
+    let broadleaf_ten = broadleaf_one.clone();
 
     broadleaf_one.scale.set(50, 50, 50);
     broadleaf_two.scale.set(50, 50, 50);
     broadleaf_three.scale.set(80, 80, 80);
     broadleaf_four.scale.set(60, 60, 60);
     broadleaf_five.scale.set(40, 40, 40);
+    broadleaf_six.scale.set(50, 50, 50);
+    broadleaf_seven.scale.set(50, 50, 50);
+    broadleaf_eight.scale.set(50, 50, 50);
+    broadleaf_nine.scale.set(50, 50, 50);
+    broadleaf_ten.scale.set(50, 50, 50);
 
     broadleaf_one.position.set(-100, 0, -50);
     broadleaf_two.position.set(100, 0, -300);
     broadleaf_three.position.set(120, 0, 100);
     broadleaf_four.position.set(-120, 0, -600);
     broadleaf_five.position.set(0, -20, -1200);
+    broadleaf_six.position.set(-330, 0, -920);
+    broadleaf_seven.position.set(300, 0, -1260);
+    broadleaf_eight.position.set(650, 0, -790);
+    broadleaf_nine.position.set(700, 0, -50);
+    broadleaf_ten.position.set(570, 0, -400);
 
+    broadleaf_one.rotation.y = Math.random() * 2*Math.PI;
+    broadleaf_two.rotation.y = Math.random() * 2*Math.PI;
+    broadleaf_three.rotation.y = Math.random() * 2*Math.PI;
+    broadleaf_four.rotation.y = Math.random() * 2*Math.PI;
     broadleaf_five.rotation.set(Math.PI/2, 0, 0);
+    broadleaf_six.rotation.y = Math.random() * 2*Math.PI;
+    broadleaf_seven.rotation.y = Math.random() * 2*Math.PI;
+    broadleaf_eight.rotation.y = Math.random() * 2*Math.PI;
+    broadleaf_nine.rotation.y = Math.random() * 2*Math.PI;
+    broadleaf_ten.rotation.y = Math.random() * 2*Math.PI;
     
     broadLeafGroup.add(broadleaf_one);
     broadLeafGroup.add(broadleaf_two);
     broadLeafGroup.add(broadleaf_three);
     broadLeafGroup.add(broadleaf_four);
     broadLeafGroup.add(broadleaf_five);
+    broadLeafGroup.add(broadleaf_six);
+    broadLeafGroup.add(broadleaf_seven);
+    broadLeafGroup.add(broadleaf_eight);
+    broadLeafGroup.add(broadleaf_nine);
+    broadLeafGroup.add(broadleaf_ten);
 
     broadLeafGroup.matrixAutoUpdate = false;
 
@@ -3169,8 +3233,8 @@ function drawCrateAndBook() {
 
     loadModel("models/environment/crate.glb", "crate");
     loadModel("models/environment/book.glb", "book");
-    //loadModel("models/environment/donutOne.glb", "donutOne");
-    //loadModel("models/environment/donutTwo.glb", "donutTwo");
+    loadModel("models/environment/donutOne.glb", "donutOne");
+    loadModel("models/environment/donutTwo.glb", "donutTwo");
 
     crateAndBook.scale.set(4, 4, 4);
     crateAndBook.position.set(-160, 0, -925);
@@ -3180,6 +3244,21 @@ function drawCrateAndBook() {
 function initCrate(gltf) {
     crate = gltf.scene;
     crateAndBook.add(crate);
+
+    let crate2 = crate.clone();
+    let crate3 = crate.clone();
+    let crate4 = crate.clone();
+
+    crate2.rotation.y = Math.PI/6;
+    
+    crate3.position.set(1.2, 0, 0);
+
+    crate4.rotation.y = 4 * Math.PI/9;
+    crate4.position.set(0.8, 1, -0.2);
+
+    cratesAndScroll.add(crate2);
+    cratesAndScroll.add(crate3);
+    cratesAndScroll.add(crate4);
 }
 
 function initBook(gltf) {
@@ -3219,30 +3298,6 @@ function drawBarrelsAndScroll() {
     barrelsAndScroll.position.set(460, 0, -620);
     barrelsAndScroll.rotation.y = Math.PI;
     scene.add(barrelsAndScroll);
-}
-
-function drawTripwires() {
-    let material = new THREE.LineBasicMaterial( {color: "white"} );
-
-    let tripwireOnePoints = [];
-    tripwireOnePoints.push(new THREE.Vector3(-55, 3, -300));
-    tripwireOnePoints.push(new THREE.Vector3(55, 3, -300));
-
-    let tripwireTwoPoints = [];
-    tripwireTwoPoints.push(new THREE.Vector3(185, 3, -550));
-    tripwireTwoPoints.push(new THREE.Vector3(295, 3, -550));
-
-    let tripwireOneGeometry = new THREE.BufferGeometry().setFromPoints(tripwireOnePoints);
-    let tripwireTwoGeometry = new THREE.BufferGeometry().setFromPoints(tripwireTwoPoints);
-
-    tripwireOne = new THREE.Line(tripwireOneGeometry, material.clone());
-    tripwireTwo = new THREE.Line(tripwireTwoGeometry, material.clone());
-
-    tripwireOne.matrixAutoUpdate = false;
-    tripwireTwo.matrixAutoUpdate = false;
-    
-    scene.add(tripwireOne);
-    scene.add(tripwireTwo);
 }
 
 function initBarrel(gltf) {
@@ -3297,6 +3352,8 @@ function initOpenBarrel(gltf) {
 
 function initScroll(gltf) {
     let scroll = gltf.scene;
+    let scroll2 = scroll.clone();
+
     scroll.scale.set(0.7, 0.7, 0.7);
     scroll.rotation.set(-Math.PI/18, Math.PI/2, 0);
     scroll.position.set(0, 4.4, 0.8);
@@ -3305,6 +3362,48 @@ function initScroll(gltf) {
     noteCollidableMeshlist.push(scroll.children[2]);
 
     barrelsAndScroll.add(scroll);
+
+    
+    scroll2.scale.set(0.2, 0.2, 0.2);
+    scroll2.rotation.set(0, Math.PI/6, -Math.PI/18);
+    scroll2.position.set(-0.4, 1, 0.2);
+    
+    scroll2.children[2].name = "noteFour";
+    noteCollidableMeshlist.push(scroll2.children[2]);
+
+    cratesAndScroll.add(scroll2);
+}
+
+function drawCratesAndScroll() {
+    cratesAndScroll = new THREE.Object3D();
+    cratesAndScroll.scale.set(3, 3, 3);
+    cratesAndScroll.position.set(380, 0, -390);
+    cratesAndScroll.rotation.y = -Math.PI/2;
+    scene.add(cratesAndScroll);
+}
+
+function drawTripwires() {
+    let material = new THREE.LineBasicMaterial( {color: "white"} );
+
+    let tripwireOnePoints = [];
+    tripwireOnePoints.push(new THREE.Vector3(-55, 3, -300));
+    tripwireOnePoints.push(new THREE.Vector3(55, 3, -300));
+
+    let tripwireTwoPoints = [];
+    tripwireTwoPoints.push(new THREE.Vector3(185, 3, -550));
+    tripwireTwoPoints.push(new THREE.Vector3(295, 3, -550));
+
+    let tripwireOneGeometry = new THREE.BufferGeometry().setFromPoints(tripwireOnePoints);
+    let tripwireTwoGeometry = new THREE.BufferGeometry().setFromPoints(tripwireTwoPoints);
+
+    tripwireOne = new THREE.Line(tripwireOneGeometry, material.clone());
+    tripwireTwo = new THREE.Line(tripwireTwoGeometry, material.clone());
+
+    tripwireOne.matrixAutoUpdate = false;
+    tripwireTwo.matrixAutoUpdate = false;
+    
+    scene.add(tripwireOne);
+    scene.add(tripwireTwo);
 }
 
 function drawSpeakers() {
@@ -3321,10 +3420,10 @@ function initSpeakers(gltf) {
     let speaker1 = gltf.scene;
     let speaker2 = speaker1.clone();
 
-    speaker1.position.set(-15, 0, 0);
+    speaker1.position.set(-10, 0, 0);
     speaker1.rotation.set(0, Math.PI/6, 0);
 
-    speaker2.position.set(15, 0, 0);
+    speaker2.position.set(10, 0, 0);
     speaker2.rotation.set(0, -Math.PI/6, 0);
 
     speakers.add(speaker1);
@@ -3954,7 +4053,7 @@ function levelThreeBoundingBox() {
 
         if(controls.getObject().position.y <= -240) {
             player.currentHealth = 0;
-            audioCollection.playerDeath.play();
+            // audioCollection.playerDeath.play();
             playerDeath.classList.add("fadein");
             playerDeath.style.visibility = "visible";
             setTimeout(() => audioCollection.deathAudio.play(), 500);
@@ -4026,6 +4125,8 @@ function levelThreeBoundingBox() {
         }
     }
     else if(boxArr[4]) { // In box four
+        handleNotes();
+
         if(!audioCollection.hole2.isPlaying) {
             audioCollection.hole2.play();
         }
@@ -4113,8 +4214,6 @@ function puzzleThreeBoundingBox() {
     let boxTwoRight = 485;
     let boxTwoTop = -370;
 
-    let puzzleCompleted = true;
-
     // Check which box the player is in at any point in time
     if(xPos > boxOneLeft && xPos < boxOneRight && zPos < boxOneBottom && zPos > boxOneTop) {
         setBox(1, 3.5);
@@ -4147,7 +4246,7 @@ function puzzleThreeBoundingBox() {
         else {
             if(controls.getObject().position.y <= -240) {
                 player.currentHealth = 0;
-                audioCollection.playerDeath.play();
+                // audioCollection.playerDeath.play();
                 playerDeath.classList.add("fadein");
                 playerDeath.style.visibility = "visible";
                 setTimeout(() => audioCollection.deathAudio.play(), 500);
@@ -4156,12 +4255,8 @@ function puzzleThreeBoundingBox() {
             }
         }
 
-        if(zPos > boxOneBottom - boundaryFactor) { // Place bottom boundary
-            if(puzzleCompleted) { // Allow player through the path only after the puzzle is completed
-                if(xPos < boxTwoLeft || xPos > boxTwoRight)
-                    controls.getObject().position.z = boxOneBottom - boundaryFactor;
-            }
-            else {
+        if(zPos > boxOneBottom - boundaryFactor) { // Place bottom boundary except at exit
+            if(xPos < boxTwoLeft || xPos > boxTwoRight) {
                 controls.getObject().position.z = boxOneBottom - boundaryFactor;
             }
         }
@@ -4179,7 +4274,7 @@ function puzzleThreeBoundingBox() {
     else if(boxArr[2]) { // In box two
         if(controls.getObject().position.y <= -240) {
             player.currentHealth = 0;
-            audioCollection.playerDeath.play();
+            // audioCollection.playerDeath.play();
             playerDeath.classList.add("fadein");
             playerDeath.style.visibility = "visible";
             setTimeout(() => audioCollection.deathAudio.play(), 500);
@@ -5773,6 +5868,10 @@ function loadAudio(url, key) {
                 audioCollection.hole2.setRefDistance(25);
             });
             break;
+        case "scream":
+            audioCollection.scream = new THREE.Audio(listener);
+            configureAudio(url, audioCollection.scream, false, 0.4, false);
+            break;
     }
 }
 
@@ -5865,6 +5964,7 @@ function restartCheckpoint() {
 
     inHole = false;
     onPlatform = false;
+    screamPlayed = false;
 
     controls.lock();
 
@@ -6198,6 +6298,8 @@ function onResize() {
     camera.updateProjectionMatrix();
     thirdPersonCamera.aspect = canvas.width / canvas.height;
     thirdPersonCamera.updateProjectionMatrix();
+    puzzleTwoCamera.aspect = canvas.width / canvas.height;
+    puzzleTwoCamera.updateProjectionMatrix();
 
     renderer.setSize(canvas.width, canvas.height);
 }
@@ -6338,10 +6440,16 @@ function initControls() {
         player.velocityY = 0;
         player.velocityZ = 0;
 
-        setTimeout(() => {
-            gameLoop();
-            document.addEventListener("keydown", onKeyDown);
-        }, 1);
+        console.log(firstUnlock);
+        if(!firstUnlock) {
+            document.addEventListener("keydown", onKeyDown);            
+        }
+        else {
+            setTimeout(() => {
+                gameLoop();
+                document.addEventListener("keydown", onKeyDown);
+            }, 1);
+        }
 
         controls.isLocked = true;
         lockingClick = false;
@@ -6403,6 +6511,9 @@ function initControls() {
     }
 
     function unlock() {
+        if(!firstUnlock) {
+            firstUnlock = true;
+        }
         cancelAnimationFrame(requestId);
         document.removeEventListener("keydown", onKeyDown);
 
@@ -6637,6 +6748,10 @@ function initControls() {
                             audioCollection.paper.play();
                             showNote("noteThree");
                             break;   
+                        case "noteFour":
+                            audioCollection.paper.play();
+                            showNote("noteFour");
+                            break;  
                         case "healthpack":
                             healthPackPickup();
                             break;    
@@ -6795,6 +6910,7 @@ function initLoadingManager() {
         wakeUp.style.visibility = "visible";
         renderer.compile(scene, camera);
         initControls();
+        gameLoop();
     }
 
     function onProgress(url, itemsLoaded, itemsTotal) {
@@ -7188,6 +7304,7 @@ function initAudio() {
     loadAudio("audio/environment/tree_fall.wav", "tree_fall");
     loadAudio("audio/environment/black_hole.wav", "hole");
     loadAudio("audio/environment/black_hole.wav", "hole2");
+    loadAudio("audio/character/scream.ogg", "scream");
 
     /** HEART */
     loadAudio("audio/environment/heart/heart.wav", "heart");
@@ -7224,6 +7341,7 @@ function initWorld() {
     drawHoles();
     drawCrateAndBook();
     drawBarrelsAndScroll();
+    drawCratesAndScroll();
     drawSpeakers();
     drawTripwires();
 
