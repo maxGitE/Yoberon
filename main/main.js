@@ -5,11 +5,11 @@ import Stats from 'https://cdn.rawgit.com/mrdoob/stats.js/master/src/Stats.js';
 let stats = new Stats();
 stats.showPanel(0);
 
-let rendererStats = new THREEx.RendererStats();
-rendererStats.domElement.style.position	= 'fixed'
-rendererStats.domElement.style.right = '0px'
-rendererStats.domElement.style.bottom = '0px'
-document.body.appendChild(rendererStats.domElement);
+// let rendererStats = new THREEx.RendererStats();
+// rendererStats.domElement.style.position	= 'fixed'
+// rendererStats.domElement.style.right = '0px'
+// rendererStats.domElement.style.bottom = '0px'
+// document.body.appendChild(rendererStats.domElement);
 
 const title = document.getElementById("title");
 const menuBlock = document.getElementById("menu");
@@ -245,6 +245,7 @@ let barrelsAndScroll;
 let holeTwo;
 let platform;
 let onPlatform = false;
+let pausedHoleAudio = false;
 
 /** LEVEL 4 */
 let bossFightStarted = false;
@@ -1500,7 +1501,7 @@ function instantiateUnits(gltf, units, meshName) {
     }
 }
 
-function initPineTree(gltf) {
+function initPineTrees(gltf) {
     let pinetree = gltf.scene;
 
     let treeGeometry = pinetree.children[0].geometry;
@@ -1520,42 +1521,60 @@ function initPineTree(gltf) {
         /******* LEVEL 1 START *******/
         if(i < 180) { // Left rows
             if(i < 60) { // First row
-                clusterX = Math.random() * 10 - 55; // x positions between -45 and -55
+                clusterX = Math.random() * 10 - 45; // x positions between -45 and -35
             }
             else if(i >= 60 && i < 120) { // Second row
-                clusterX = Math.random() * 10 - 75; // x positions between -65 and -75
+                clusterX = Math.random() * 10 - 65; // x positions between -65 and -55
             }
             else { // Third row
-                clusterX = Math.random() * 10 - 95; // x positions between -85 and -95
+                clusterX = Math.random() * 10 - 85; // x positions between -85 and -75
             }
-            clusterZ = Math.random() * 600 - 550; // z positions between 50 and -550  
+
+            if(i < 120) {
+                clusterZ = Math.random() * 600 - 550; // z positions between 50 and -550  
+            }
+            else {
+                clusterZ = i * -10 + 1250; // Make third row in set positions
+            }
         }
         else if(i >= 180 && i < 220) { // Back rows
             if(i < 190) { // First row
-                clusterZ = Math.random() * 10 + 40; // z positions between 40 and 50
+                clusterZ = Math.random() * 10 + 25; // z positions between 25 and 35
             }
             else if(i >= 190 && i < 200) { // Second row
-                clusterZ = Math.random() * 10 + 60; // z positions between 60 and 70
+                clusterZ = Math.random() * 10 + 45; // z positions between 45 and 55
             }
             else if(i >= 200 && i < 210){ // Third row
-                clusterZ = Math.random() * 10 + 80; // z positions between 80 and 90
+                clusterZ = Math.random() * 10 + 65; // z positions between 65 and 75
             }
             else { // Fourth row
-                clusterZ = Math.random() * 10 + 90; // z positions between 90 and 100
+                clusterZ = Math.random() * 10 + 85; // z positions between 85 and 95
             }
-            clusterX = Math.random() * 130 - 65; // x positions between -65 and 65  
+
+            if(i < 190) {
+                clusterX = i * -13 + 2405; // Make first row in set positions
+            }
+            else {
+                clusterX = Math.random() * 130 - 65; // x positions between -65 and 65  
+            }
         }
         else if(i >= 220 && i < 340) { // Right rows
             if(i < 260) { // First row
-                clusterX = Math.random() * 10 + 45; // x positions between 45 and 55
+                clusterX = Math.random() * 10 + 35; // x positions between 35 and 45
             }
             else if(i >= 260 && i < 300) { // Second row
-                clusterX = Math.random() * 10 + 65; // x positions between 65 and 75
+                clusterX = Math.random() * 10 + 55; // x positions between 55 and 65
             }
             else { // Third row
-                clusterX = Math.random() * 10 + 85; // x positions between 85 and 95
+                clusterX = Math.random() * 10 + 75; // x positions between 75 and 85
             }
-            clusterZ = Math.random() * 450 - 400; // z positions between 50 and -400
+            
+            if(i < 300) {
+                clusterZ = Math.random() * 450 - 400; // z positions between 50 and -400
+            }
+            else {
+                clusterZ = i * -10 + 3050; // Make third row in set positions
+            }
         }
         else if(i >= 340 && i < 430) { // Secret path right
             if(i < 370) { // First row
@@ -1567,36 +1586,49 @@ function initPineTree(gltf) {
             else { // Third row
                 clusterX = Math.random() * 10 + 185; // x positions between 175 and 185
             }
-            clusterZ = Math.random() * 300 - 650; // z positions between -350 and -650 
+
+            if(i < 400) {
+                clusterZ = Math.random() * 300 - 650; // z positions between -350 and -650
+            }
+            else {
+                clusterZ = i * -10 + 3650; // Make third row in set positions
+            }
         }
         else if(i >= 430 && i < 520) { // Secret path top
             if(i < 460) { // First row
-                clusterZ = Math.random() * 10 - 645; // z positions between -635 and -645
+                clusterZ = Math.random() * 10 - 640; // z positions between -630 and -640
             }
             else if(i >= 460 && i < 490) { // Second row
-                clusterZ = Math.random() * 10 - 675; // z positions between -665 and -675
+                clusterZ = Math.random() * 10 - 660; // z positions between -650 and -660
             }
             else { // Third row
-                clusterZ = Math.random() * 10 - 705; // z positions between -695 and -705
+                clusterZ = Math.random() * 10 - 680; // z positions between -670 and -680
             }
-            clusterX = Math.random() * 90 + 40; // x positions between 40 and 130
+
+            if(i < 490) {
+                clusterX = Math.random() * 90 + 40; // x positions between 40 and 130
+            }
+            else {
+                clusterX = i * -3 + 1610; // Make third row in set positions
+            }
         }
         else if(i >= 520 && i < 550) { // Secret path left
             if(i < 550) { // First row
                 clusterX = Math.random() * 5 + 45; // x positions between 40 and 45
             }
-            clusterZ = Math.random() * 105 - 575; // z positions between -470 and -575
+
+            clusterZ = i * -3.5 + 1350; // Make row in set positions
         }
-        else if(i == 550) { // Left side of secret path entrance
+        else if(i == 550) { // Right side of secret path entrance
             clusterX = 50;
             clusterZ = -400;
         }
-        else if(i == 551) { // Right side of secret path entrance
+        else if(i == 551) { // Left side of secret path entrance
             clusterX = 50;
             clusterZ = -470;
         }
         else if(i > 551 && i < 590) { // Box one top
-            clusterX = Math.random() * 150 - 85; // x positions between -85 and 65
+            clusterX = i * -4 + 2273; // Math.random() * 150 - 85; // x positions between -85 and 65
             clusterZ = Math.random() * 15 - 575; // z positions between -560 and -575
         }
         else if(i >= 590 && i < 710) { // Left side of puzzle one and level 2 box one ******* LEVEL TWO START *******
@@ -1991,17 +2023,19 @@ function initPineTree(gltf) {
             clusterX = Math.random() * 80 + 440; // x positions between 440 and 520
         }
 
-        scalingFactor = 0.4;//Math.random() * 0.1 + 0.5;
+        scalingFactor = Math.random() * 0.4 + 0.3;
         rotationFactor = Math.random() * 2*Math.PI; // Set rotation to between 0 and 2*PI
 
         tempCluster.scale.set(scalingFactor, scalingFactor, scalingFactor);
         tempCluster.rotation.set(-Math.PI/2, 0, rotationFactor);
-        tempCluster.position.set(clusterX, 20, clusterZ);
+        tempCluster.position.set(clusterX, scalingFactor * 50, clusterZ);
         
         tempCluster.updateMatrix();
     
         cluster.setMatrixAt(i, tempCluster.matrix);
     }
+
+    cluster.matrixAutoUpdate = false;
     scene.add(cluster);
 }
 
@@ -2109,6 +2143,8 @@ function initBroadLeaf(gltf) {
     broadLeafGroup.add(broadleaf_three);
     broadLeafGroup.add(broadleaf_four);
     broadLeafGroup.add(broadleaf_five);
+
+    broadLeafGroup.matrixAutoUpdate = false;
 
     scene.add(broadLeafGroup);
 }
@@ -2290,6 +2326,10 @@ function initBushOne(gltf) {
         leafCluster.setMatrixAt(i, tempCluster.matrix);             
         barkCluster.setMatrixAt(i, tempCluster.matrix);
     }
+
+    leafCluster.matrixAutoUpdate = false;
+    barkCluster.matrixAutoUpdate = false;
+
     scene.add(leafCluster);
     scene.add(barkCluster);
 }
@@ -2302,14 +2342,15 @@ function initBushTwo(gltf) {
     let barkGeometry = bush.children[0].children[1].geometry;
     let barkMaterial = bush.children[0].children[1].material;
 
-    let leafCluster = new THREE.InstancedMesh(leafGeometry, leafMaterial, 280);
-    let barkCluster = new THREE.InstancedMesh(barkGeometry, barkMaterial, 280);
+    let leafCluster = new THREE.InstancedMesh(leafGeometry, leafMaterial, 780);
+    let barkCluster = new THREE.InstancedMesh(barkGeometry, barkMaterial, 780);
     let tempCluster = new THREE.Object3D();
 
     let clusterX;
     let clusterZ;
 
-    for(let i = 0; i < 280; i++) {
+    for(let i = 0; i < 780; i++) {
+        /******* LEVEL 1 START *******/
         if(i < 60) { // Left row
             clusterX = Math.random() * 15 - 35; // x positions between -20 and -35
             clusterZ = Math.random() * 570 - 550; // z positions between 30 and -550
@@ -2346,6 +2387,135 @@ function initBushTwo(gltf) {
             clusterX = Math.random() * 10 + 60; // x positions between 60 and 70
             clusterZ = Math.random() * 130 - 580; // z positions between -450 and -580
         }
+        else if(i >= 280 && i < 300) { // Left row box one /******* LEVEL 2 START *******/
+            clusterX = Math.random() * 15 - 35; // x positions between -20 and -35
+            clusterZ = Math.random() * 185 - 900; // z positions between -715 and -900
+        }
+        else if(i >= 300 && i < 330) { // Right row box one / two
+            clusterX = Math.random() * 15 + 20; // x positions between 20 and 35
+            clusterZ = Math.random() * 265 - 980; // z positions between -715 and -980
+        }
+        else if(i >= 330 && i < 350) { // Top row box two
+            clusterX = Math.random() * 240 - 200; // x positions between -200 and 40
+            clusterZ = Math.random() * 15 - 985; // z positions between -970 and -985
+        }
+        else if(i >= 350 && i < 380) { // Bottom row box two / three
+            clusterX = Math.random() * 240 - 280; // x positions between -280 and -40
+            clusterZ = Math.random() * 15 - 905; // z positions between -890 and -905
+        }
+        else if(i >= 380 && i < 410) { // Left row box three / four
+            clusterX = Math.random() * 15 - 285; // x positions between -285 and -270
+            clusterZ = Math.random() * 280 - 1180; // z positions between -900 and -1180
+        }
+        else if(i >= 410 && i < 440) { // Right row box three
+            clusterX = Math.random() * 15 - 205; // x positions between -205 and -190
+            clusterZ = Math.random() * 120 - 1100; // z positions between -980 and -1100
+        }
+        else if(i >= 440 && i < 500) { // Top row box four
+            clusterX = Math.random() * 780 - 280; // x positions between -280 and 500
+            clusterZ = Math.random() * 15 - 1185; // z positions between -1185 and -1170
+        }
+        else if(i >= 500 && i < 540) { // Bottom row box four
+            clusterX = Math.random() * 645 - 200; // x positions between -200 and 445
+            clusterZ = Math.random() * 15 - 1105; // z positions between -1105 and -1090
+        }
+        else if(i >= 540 && i < 545) { // Right row box four
+            clusterX = Math.random() * 15 + 490; // x positions between 490 and 505 
+            clusterZ = Math.random() * 80 - 1180; // z positions between -1180 and -1100
+        }
+        else if(i >= 280 && i < 300) { // Left row box one /******* LEVEL 2 START *******/
+            clusterX = Math.random() * 15 - 35; // x positions between -20 and -35
+            clusterZ = Math.random() * 185 - 900; // z positions between -715 and -900
+        }
+        else if(i >= 300 && i < 330) { // Right row box one / two
+            clusterX = Math.random() * 15 + 20; // x positions between 20 and 35
+            clusterZ = Math.random() * 265 - 980; // z positions between -715 and -980
+        }
+        else if(i >= 330 && i < 350) { // Top row box two
+            clusterX = Math.random() * 240 - 200; // x positions between -200 and 40
+            clusterZ = Math.random() * 15 - 985; // z positions between -970 and -985
+        }
+        else if(i >= 350 && i < 380) { // Bottom row box two / three
+            clusterX = Math.random() * 240 - 280; // x positions between -280 and -40
+            clusterZ = Math.random() * 15 - 905; // z positions between -890 and -905
+        }
+        else if(i >= 380 && i < 410) { // Left row box three / four
+            clusterX = Math.random() * 15 - 285; // x positions between -285 and -270
+            clusterZ = Math.random() * 280 - 1180; // z positions between -900 and -1180
+        }
+        else if(i >= 410 && i < 440) { // Right row box three
+            clusterX = Math.random() * 15 - 205; // x positions between -205 and -190
+            clusterZ = Math.random() * 120 - 1100; // z positions between -980 and -1100
+        }
+        else if(i >= 440 && i < 500) { // Top row box four
+            clusterX = Math.random() * 780 - 280; // x positions between -280 and 500
+            clusterZ = Math.random() * 15 - 1185; // z positions between -1185 and -1170
+        }
+        else if(i >= 500 && i < 540) { // Bottom row box four
+            clusterX = Math.random() * 645 - 200; // x positions between -200 and 445
+            clusterZ = Math.random() * 15 - 1105; // z positions between -1105 and -1090
+        }
+        else if(i >= 540 && i < 545) { // Right row box four
+            clusterX = Math.random() * 15 + 490; // x positions between 490 and 505 
+            clusterZ = Math.random() * 80 - 1180; // z positions between -1180 and -1100
+        }
+        else if(i >= 545 && i < 575) { // Left row box one /******* LEVEL 2 START *******/
+            clusterX = Math.random() * 15 + 415; // x positions between 415 and 430 
+            clusterZ = Math.random() * 250 - 940; // z positions between -940 and -690
+        }
+        else if(i >= 575 && i < 615) { // Right row box one / two
+            clusterX = Math.random() * 15 + 490; // x positions between 490 and 505 
+            clusterZ = Math.random() * 340 - 940; // z positions between -940 and -600
+        }
+        else if(i >= 615 && i < 625) { // Top row box six / seven (secret path)
+            clusterX = Math.random() * 100 + 500; // x positions between 500 and 600 
+            clusterZ = Math.random() * 15 - 845; // z positions between -845 and -830
+        }
+        else if(i >= 625 && i < 630) { // Bottom row box six (secret path)
+            clusterX = Math.random() * 50 + 500; // x positions between 500 and 550 
+            clusterZ = Math.random() * 15 - 820; // z positions between -805 and -820
+        }
+        else if(i >= 630 && i < 645) { // Right row box seven (secret path)
+            clusterX = Math.random() * 15 + 590; // x positions between 605 and 590 
+            clusterZ = Math.random() * 100 - 840; // z positions between -840 and -740
+        }
+        else if(i >= 645 && i < 650) { // Left row box seven (secret path)
+            clusterX = Math.random() * 15 + 545; // x positions between 545 and 560 
+            clusterZ = Math.random() * 40 - 810; // z positions between -810 and -770
+        }
+        else if(i >= 650 && i < 655) { // Top row box eight (secret path)
+            clusterX = Math.random() * 50 + 500; // x positions between 500 and 550  
+            clusterZ = Math.random() * 15 - 775; // z positions between -775 and -760
+        }
+        else if(i >= 655 && i < 660) { // Bottom row box eight (secret path)
+            clusterX = Math.random() * 100 + 500; // x positions between 500 and 600 
+            clusterZ = Math.random() * 40 - 745; // z positions between -745 and -730
+        }
+        else if(i >= 660 && i < 680) { // Top row box two / three
+            clusterX = Math.random() * 220 + 200; // x positions between 200 and 420
+            clusterZ = Math.random() * 15 - 685; // z positions between -685 and -670
+        }
+        else if(i >= 680 && i < 700) { // Bottom row box two
+            clusterX = Math.random() * 220 + 280; // x positions between 280 and 500
+            clusterZ = Math.random() * 15 - 610; // z positions between -610 and -595
+        }
+        else if(i >= 700 && i < 730) { // Left row box three
+            clusterX = Math.random() * 15 + 195; // x positions between 195 and 210
+            clusterZ = Math.random() * 310 - 680; // z positions between -680 and -370
+        }
+        else if(i >= 730 && i < 745) { // Right row box three
+            clusterX = Math.random() * 15 + 270; // x positions between 270 and 285
+            clusterZ = Math.random() * 150 - 600; // z positions between -600 and -450
+        }
+        else if(i >= 745 && i < 760) { // Top row box four
+            clusterX = Math.random() * 120 + 280; // x positions between 280 and 400
+            clusterZ = Math.random() * 15 - 455; // z positions between -455 and -440
+        }
+        else if(i >= 760 && i < 780) { // Bottom row box three / four
+            clusterX = Math.random() * 200 + 200; // x positions between 200 and 400
+            clusterZ = Math.random() * 15 - 380; // z positions between -380 and -365
+        }
+
         let scalingFactor = Math.random() * 1 + 1; // set scale to between 1 and 2
         let rotationFactor = Math.random() * Math.PI/2; // set rotation to between 0 and PI/2
 
@@ -2358,6 +2528,10 @@ function initBushTwo(gltf) {
         leafCluster.setMatrixAt(i, tempCluster.matrix);             
         barkCluster.setMatrixAt(i, tempCluster.matrix);
     }
+
+    leafCluster.matrixAutoUpdate = false;
+    barkCluster.matrixAutoUpdate = false;
+
     scene.add(leafCluster);
     scene.add(barkCluster);
 }
@@ -2370,14 +2544,14 @@ function initBushThree(gltf) {
     let barkGeometry = bush.children[0].children[0].geometry;
     let barkMaterial = bush.children[0].children[0].material;
 
-    let leafCluster = new THREE.InstancedMesh(leafGeometry, leafMaterial, 280);  
-    let barkCluster = new THREE.InstancedMesh(barkGeometry, barkMaterial, 280);  
+    let leafCluster = new THREE.InstancedMesh(leafGeometry, leafMaterial, 780);  
+    let barkCluster = new THREE.InstancedMesh(barkGeometry, barkMaterial, 780);  
     let tempCluster = new THREE.Object3D();
 
     let clusterX;
     let clusterZ;
 
-    for(let i = 0; i < 280; i++) {
+    for(let i = 0; i < 780; i++) {
         if(i < 60) { // Left row
             clusterX = Math.random() * 15 - 35; // x positions between -20 and -35
             clusterZ = Math.random() * 570 - 550; // z positions between 30 and -550
@@ -2413,6 +2587,98 @@ function initBushThree(gltf) {
         else if(i >= 240 && i < 280) { // Secret path left
             clusterX = Math.random() * 10 + 60; // x positions between 60 and 70
             clusterZ = Math.random() * 130 - 580; // z positions between -450 and -580
+        }
+        else if(i >= 280 && i < 300) { // Left row box one /******* LEVEL 2 START *******/
+            clusterX = Math.random() * 15 - 35; // x positions between -20 and -35
+            clusterZ = Math.random() * 185 - 900; // z positions between -715 and -900
+        }
+        else if(i >= 300 && i < 330) { // Right row box one / two
+            clusterX = Math.random() * 15 + 20; // x positions between 20 and 35
+            clusterZ = Math.random() * 265 - 980; // z positions between -715 and -980
+        }
+        else if(i >= 330 && i < 350) { // Top row box two
+            clusterX = Math.random() * 240 - 200; // x positions between -200 and 40
+            clusterZ = Math.random() * 15 - 985; // z positions between -970 and -985
+        }
+        else if(i >= 350 && i < 380) { // Bottom row box two / three
+            clusterX = Math.random() * 240 - 280; // x positions between -280 and -40
+            clusterZ = Math.random() * 15 - 905; // z positions between -890 and -905
+        }
+        else if(i >= 380 && i < 410) { // Left row box three / four
+            clusterX = Math.random() * 15 - 285; // x positions between -285 and -270
+            clusterZ = Math.random() * 280 - 1180; // z positions between -900 and -1180
+        }
+        else if(i >= 410 && i < 440) { // Right row box three
+            clusterX = Math.random() * 15 - 205; // x positions between -205 and -190
+            clusterZ = Math.random() * 120 - 1100; // z positions between -980 and -1100
+        }
+        else if(i >= 440 && i < 500) { // Top row box four
+            clusterX = Math.random() * 780 - 280; // x positions between -280 and 500
+            clusterZ = Math.random() * 15 - 1185; // z positions between -1185 and -1170
+        }
+        else if(i >= 500 && i < 540) { // Bottom row box four
+            clusterX = Math.random() * 645 - 200; // x positions between -200 and 445
+            clusterZ = Math.random() * 15 - 1105; // z positions between -1105 and -1090
+        }
+        else if(i >= 540 && i < 545) { // Right row box four
+            clusterX = Math.random() * 15 + 490; // x positions between 490 and 505 
+            clusterZ = Math.random() * 80 - 1180; // z positions between -1180 and -1100
+        }
+        else if(i >= 545 && i < 575) { // Left row box one /******* LEVEL 2 START *******/
+            clusterX = Math.random() * 15 + 415; // x positions between 415 and 430 
+            clusterZ = Math.random() * 250 - 940; // z positions between -940 and -690
+        }
+        else if(i >= 575 && i < 615) { // Right row box one / two
+            clusterX = Math.random() * 15 + 490; // x positions between 490 and 505 
+            clusterZ = Math.random() * 340 - 940; // z positions between -940 and -600
+        }
+        else if(i >= 615 && i < 625) { // Top row box six / seven (secret path)
+            clusterX = Math.random() * 100 + 500; // x positions between 500 and 600 
+            clusterZ = Math.random() * 15 - 845; // z positions between -845 and -830
+        }
+        else if(i >= 625 && i < 630) { // Bottom row box six (secret path)
+            clusterX = Math.random() * 50 + 500; // x positions between 500 and 550 
+            clusterZ = Math.random() * 15 - 820; // z positions between -805 and -820
+        }
+        else if(i >= 630 && i < 645) { // Right row box seven (secret path)
+            clusterX = Math.random() * 15 + 590; // x positions between 605 and 590 
+            clusterZ = Math.random() * 100 - 840; // z positions between -840 and -740
+        }
+        else if(i >= 645 && i < 650) { // Left row box seven (secret path)
+            clusterX = Math.random() * 15 + 545; // x positions between 545 and 560 
+            clusterZ = Math.random() * 40 - 810; // z positions between -810 and -770
+        }
+        else if(i >= 650 && i < 655) { // Top row box eight (secret path)
+            clusterX = Math.random() * 50 + 500; // x positions between 500 and 550  
+            clusterZ = Math.random() * 15 - 775; // z positions between -775 and -760
+        }
+        else if(i >= 655 && i < 660) { // Bottom row box eight (secret path)
+            clusterX = Math.random() * 100 + 500; // x positions between 500 and 600 
+            clusterZ = Math.random() * 40 - 745; // z positions between -745 and -730
+        }
+        else if(i >= 660 && i < 680) { // Top row box two / three
+            clusterX = Math.random() * 220 + 200; // x positions between 200 and 420
+            clusterZ = Math.random() * 15 - 685; // z positions between -685 and -670
+        }
+        else if(i >= 680 && i < 700) { // Bottom row box two
+            clusterX = Math.random() * 220 + 280; // x positions between 280 and 500
+            clusterZ = Math.random() * 15 - 610; // z positions between -610 and -595
+        }
+        else if(i >= 700 && i < 730) { // Left row box three
+            clusterX = Math.random() * 15 + 195; // x positions between 195 and 210
+            clusterZ = Math.random() * 310 - 680; // z positions between -680 and -370
+        }
+        else if(i >= 730 && i < 745) { // Right row box three
+            clusterX = Math.random() * 15 + 270; // x positions between 270 and 285
+            clusterZ = Math.random() * 150 - 600; // z positions between -600 and -450
+        }
+        else if(i >= 745 && i < 760) { // Top row box four
+            clusterX = Math.random() * 120 + 280; // x positions between 280 and 400
+            clusterZ = Math.random() * 15 - 455; // z positions between -455 and -440
+        }
+        else if(i >= 760 && i < 780) { // Bottom row box three / four
+            clusterX = Math.random() * 200 + 200; // x positions between 200 and 400
+            clusterZ = Math.random() * 15 - 380; // z positions between -380 and -365
         }
         
         let scalingFactor = Math.random() * 1 + 2; // set scale to between 2 and 3
@@ -2427,6 +2693,10 @@ function initBushThree(gltf) {
         leafCluster.setMatrixAt(i, tempCluster.matrix);  
         barkCluster.setMatrixAt(i, tempCluster.matrix);    
     }
+
+    leafCluster.matrixAutoUpdate = false;
+    barkCluster.matrixAutoUpdate = false;
+
     scene.add(leafCluster);
     scene.add(barkCluster);
 }
@@ -2483,6 +2753,8 @@ function drawGround() {
                                     }));
     ground.rotation.x = -Math.PI/2;
     ground.position.set(0, 0, -350);
+    ground.matrixAutoUpdate = false;
+    ground.updateMatrix();
     scene.add(ground);
 }
 
@@ -2500,6 +2772,9 @@ function drawRocks() {
 function drawStars() {
     starFieldA = new Starfield("black");
     starFieldB = new Starfield("white");
+
+    starFieldA.starField.matrixAutoUpdate = false;
+    starFieldB.starField.matrixAutoUpdate = false;
 
     scene.add(starFieldA.starField);
     scene.add(starFieldB.starField);
@@ -2806,6 +3081,9 @@ function drawTripwires() {
     tripwireOne = new THREE.Line(tripwireOneGeometry, material.clone());
     tripwireTwo = new THREE.Line(tripwireTwoGeometry, material.clone());
 
+    tripwireOne.matrixAutoUpdate = false;
+    tripwireTwo.matrixAutoUpdate = false;
+    
     scene.add(tripwireOne);
     scene.add(tripwireTwo);
 }
@@ -3031,7 +3309,6 @@ function levelOneBoundingBox() {
                 player.currentHealth -= 50;
                 updatePlayerHealth();
             }, 200);
-
         }
 
         if(zPos < boxTwoBottom + 20) { // Show level one tooltip
@@ -3518,6 +3795,16 @@ function levelThreeBoundingBox() {
             inHole = true;
         }
 
+        if(controls.getObject().position.y <= -240) {
+            player.currentHealth = 0;
+            audioCollection.playerDeath.play();
+            playerDeath.classList.add("fadein");
+            playerDeath.style.visibility = "visible";
+            setTimeout(() => audioCollection.deathAudio.play(), 500);
+            setTimeout(() => deathBlock.style.display = "block", 3000);
+            controls.unlock();
+        }
+
         if(zPos < boxOneTop) { // Place top boundary
             controls.getObject().position.z = boxOneTop;
         }
@@ -3551,6 +3838,29 @@ function levelThreeBoundingBox() {
         }
     }
     else if(boxArr[3]) { // In box three
+        /** Tripwire */
+        if(controls.getObject().position.y <= 8 && controls.getObject().position.z <= -549 && controls.getObject().position.z >= -551 && !tripwireTwoActivated) {
+            tripwireTwoActivated = true;
+            scene.remove(tripwireTwo);
+
+            audioCollection.tripwireActivated.play();
+            setTimeout(() => {
+                audioCollection.tripwireBuzz.play();
+                audioCollection.playerInjured.play();
+                player.currentHealth -= 50;
+                updatePlayerHealth();
+
+                if(player.currentHealth <= 0) {
+                    player.currentHealth = 0;
+                    audioCollection.playerDeath.play();
+                    playerDeath.classList.add("fadein");
+                    playerDeath.style.visibility = "visible";
+                    setTimeout(() => audioCollection.deathAudio.play(), 500);
+                    controls.unlock();
+                }
+            }, 200);
+        }
+
         if(xPos < boxThreeLeft + boundaryFactor) { // Place left boundary
             controls.getObject().position.x = boxThreeLeft + boundaryFactor;
         }
@@ -4242,7 +4552,7 @@ function damageAlien(alien, intersect, type) {
  */
 function damageBoss(type) {
     if(type == "normal") { // Normal shot
-        boss.currentHealth -= 1000;
+        boss.currentHealth -= 30;
         bossHealthBar.setAttribute("style", "width: " + boss.currentHealth / 33.33 + "%");
         crosshair.style.background = "url(hud/crosshairs/crosshair_hitmarker.svg)";
     }
@@ -4258,7 +4568,7 @@ function damageBoss(type) {
             timerId = setInterval(() => {
                 ticks++;
 
-                boss.currentHealth -= 17;
+                boss.currentHealth -= 10;
                 bossHealthBar.setAttribute("style", "width: " + boss.currentHealth / 33.33 + "%");
                 if(boss.currentHealth <= 0) {
                     poisonTick.style.filter = "brightness(0) saturate(100%) invert(11%) sepia(96%) saturate(6875%) hue-rotate(0deg) brightness(91%) contrast(126%)";
@@ -4994,7 +5304,7 @@ function loadModel(url, key) {
                 initSpeakers(gltf);
                 break;              
             case "pinetree":
-                initPineTree(gltf);
+                initPineTrees(gltf);
                 break;
             case "blocking_tree":
                 initBlockingTrees(gltf);
@@ -5396,6 +5706,9 @@ function restartCheckpoint() {
         player.weaponUpgrade.onCooldown = false;
     }
 
+    inHole = false;
+    onPlatform = false;
+
     controls.lock();
 
     switch(currentLevel) {
@@ -5739,7 +6052,9 @@ function initRenderer() {
 
     renderer = new THREE.WebGLRenderer( {
         canvas: canvas,
-        antialias: true
+        antialias: true,
+        powerPreference: "high-performance",
+        precision: "lowp"
     } );
     renderer.shadowMap.enabled = true;
     renderer.autoClear = false;
@@ -5766,8 +6081,8 @@ function initCameras() {
     camera.add(thirdPersonCamera);
 
     birdsEyeViewCamera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 1, 4000);
-    birdsEyeViewCamera.position.set(-15, 8, -20);
-    birdsEyeViewCamera.lookAt(0, 8, -20);
+    birdsEyeViewCamera.position.set(0, 100, 80);
+    birdsEyeViewCamera.lookAt(0, 0, 0);
     scene.add(birdsEyeViewCamera);
 
     puzzleTwoCamera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, 1, 4000);
@@ -5873,8 +6188,6 @@ function initControls() {
 
         controls.isLocked = true;
         lockingClick = false;
-        inHole = false;
-        onPlatform = false;
 
         if(!audioCollection.wildlife.isPlaying)
             audioCollection.wildlife.play();
@@ -5917,7 +6230,7 @@ function initControls() {
             }
             else {
                 audioCollection.transmissionTwo.play();
-                pausedTransmissionOne = false;
+                pausedTransmissionTwo = false;
             }
         }
 
@@ -6007,6 +6320,11 @@ function initControls() {
         if(audioCollection.heartAudio.isPlaying) {
             pausedHeartAudio = true;
             audioCollection.heartAudio.pause();
+        }
+
+        if(audioCollection.hole.isPlaying || audioCollection.hole2.isPlaying) {
+            audioCollection.hole.pause();
+            audioCollection.hole2.pause();
         }
     }
 
@@ -6108,8 +6426,8 @@ function initControls() {
                 currentLevel = 3;
                 break;
             case 89:    // Y
-                currentLevel = 2;
-                controls.getObject().position.set(460, 8, -1090);
+                currentLevel = 3;
+                controls.getObject().position.set(460, 8, -940);
                 camera.lookAt(460, 8, 1);
                 break;
             case 69:    // E
@@ -6303,7 +6621,7 @@ function initSkybox() {
             map: texture
         } ));
     }
-    skybox = new THREE.Mesh(new THREE.BoxGeometry(3000, 1000, 4000), material);
+    skybox = new THREE.Mesh(new THREE.BoxBufferGeometry(3000, 1000, 4000), material);
     skybox.position.y += 250;
     scene.add(skybox);
 }
@@ -6318,7 +6636,7 @@ function initLoadingManager() {
         loadingInfo.style.display = "none";
         loadingSymbol.style.display = "none";
         wakeUp.style.visibility = "visible";
-       // renderer.compile(scene, camera);
+        renderer.compile(scene, camera);
         initControls();
     }
 
@@ -6463,7 +6781,6 @@ function initWeaponModel(gltf) {
                         }
                         weaponUpgradeBar.style.width = "8.25%";
                         player.weaponUpgrade.onCooldown = false;
-                        console.log("READY");
                     }, 15000);
                 }
                 else if(player.weaponUpgrade.hasWeaponUpgrade) { // If the player has the weapon upgrade but it's on cooldown
@@ -6602,8 +6919,6 @@ function createPlayerBullet(type) {
     else {
         player.weapon.bulletStart.position.set(0, 4.5, -2.5);  
     }
-
-    console.log(player.weapon.bulletStart.position.z);
 
     let cylinderGeometry = new THREE.CylinderBufferGeometry(0.05, 0.05, 5);
     cylinderGeometry.rotateX(-Math.PI/2);
@@ -6753,13 +7068,14 @@ function initWorld() {
     drawCrateAndBook();
     drawBarrelsAndScroll();
     drawSpeakers();
+    drawTripwires();
 
     // boundingBoxVis();
 }
 
 function render() {
     stats.update();
-    rendererStats.update(renderer);
+    // rendererStats.update(renderer);
 
     renderer.setViewport(0, 0, canvas.width, canvas.height);
     renderer.setScissor(0, 0, canvas.width, canvas.height);
