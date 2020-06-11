@@ -14,6 +14,7 @@ stats.showPanel(0);
 const title = document.getElementById("title");
 const menuBlock = document.getElementById("menu");
 const keyControls = document.getElementById("controls");
+const textureQuality = document.getElementById("texture-quality");
 const controlsButtonMainMenu = document.getElementById("controls-button-mainmenu");
 const controlsButtonPauseMenu = document.getElementById("controls-button-pausemenu");
 const shadowsButton = document.getElementById("shadows");
@@ -108,6 +109,7 @@ let speakerLight;
 /** AUDIO */
 let listener;
 let audioCollection;
+let audioCollectionArray = [];
 let menuAudioSource; // Buffer source for the menu audio
 
 /** PLAYER MISC */
@@ -218,6 +220,7 @@ let book;
 let donutOne;
 let donutTwo;
 let speakers;
+let movedBlockingTreesLevelTwo = false;
 
 /** PUZZLE 2 */
 let removedLevelTwoAliens = false
@@ -248,6 +251,7 @@ let onPlatform = false;
 let pausedHoleAudio = false;
 let cratesAndScroll;
 let screamPlayed = false;
+let movedBlockingTreesLevelThree = false;
 
 /** LEVEL 4 */
 let bossFightStarted = false;
@@ -263,6 +267,8 @@ let intro = true;
 let bossAttacked = false;
 let bossWalking = false;
 let updatedAlienRange = false;
+let movedBlockingTreesLevelFour = false;
+let endGameBlockingTrees;
 
 /** HUD */
 let tooltipVisible = false;
@@ -283,7 +289,9 @@ let pickedUpHealthPacks = [];
 
 /** TREES */
 let blockingTrees;
-let playedTreeSinkAudio = false;
+let playedTreeAudio = false;
+let playedEndGameTreeAudio = false;
+let pausedTreeAudio = false;
 
 /** TRANSMISSIONS */
 let transmissionCount = 0;
@@ -293,6 +301,7 @@ let pausedTransmissionOne = false;
 let pausedTransmissionTwo = false;
 
 /** MISC */
+let textureQualityValue = "high";
 let displayedControls = false;
 let requestId;
 let poisonTimerId; // Needed to clear the weapon upgrade timeout in order for its cooldown to be a consistent 15 seconds
@@ -394,9 +403,9 @@ function gameLoop() {
                 if(controls.getObject().rotation.x * 180 / Math.PI > 12) {
                     controls.getObject().rotation.x = 12 * Math.PI / 180;
                 }
-                else if(controls.getObject().rotation.x * 180 / Math.PI < -28) {
-                    controls.getObject().rotation.x = -28 * Math.PI / 180;
-                }
+                // else if(controls.getObject().rotation.x * 180 / Math.PI < -70) {
+                //     controls.getObject().rotation.x = -70 * Math.PI / 180;
+                // }
 
                 controls.getObject().rotation.z = 0;
                 controls.getObject().rotation.order = "YXZ";
@@ -2235,38 +2244,70 @@ function initBlockingTrees(gltf) {
     let treeModel = gltf.scene.children[0];
 
     let treeOne = treeModel.clone();
-    treeOne.position.set(0, -8, 0);
-    treeOne.scale.set(Math.random() * 0.3 + 0.7, Math.random() * 0.3 + 0.7, Math.random() * 0.3 + 0.7);
-    treeOne.rotation.y = Math.random() * 2*Math.PI;
+    let treeOneScalingFactor = Math.random() * 0.4 + 0.3; // Scaling factor between 0.3 and 0.7
+    treeOne.position.set(0, treeOneScalingFactor * 50, 0);
+    treeOne.scale.set(treeOneScalingFactor, treeOneScalingFactor, treeOneScalingFactor);
+    treeOne.rotation.set(-Math.PI/2, 0, Math.random() * 2*Math.PI);
 
     let treeTwo = treeModel.clone();
-    treeTwo.position.set(15, -8, 0);
-    treeTwo.scale.set(Math.random() * 0.3 + 0.7, Math.random() * 0.3 + 0.7, Math.random() * 0.3 + 0.7);
-    treeTwo.rotation.y = Math.random() * 2*Math.PI;
+    let treeTwoScalingFactor = Math.random() * 0.4 + 0.3;
+    treeTwo.position.set(15, treeTwoScalingFactor * 50, 0);
+    treeTwo.scale.set(treeTwoScalingFactor, treeTwoScalingFactor, treeTwoScalingFactor);
+    treeTwo.rotation.set(-Math.PI/2, 0, Math.random() * 2*Math.PI);
 
     let treeThree = treeModel.clone();
-    treeThree.position.set(-15, -8, 0);
-    treeThree.scale.set(Math.random() * 0.3 + 0.7, Math.random() * 0.3 + 0.7, Math.random() * 0.3 + 0.7);
-    treeThree.rotation.y = Math.random() * 2*Math.PI;
+    let treeThreeScalingFactor = Math.random() * 0.4 + 0.3;
+    treeThree.position.set(-15, treeThreeScalingFactor * 50, 0);
+    treeThree.scale.set(treeThreeScalingFactor, treeThreeScalingFactor, treeThreeScalingFactor);
+    treeThree.rotation.set(-Math.PI/2, 0, Math.random() * 2*Math.PI);
 
     let treeFour = treeModel.clone();
-    treeFour.position.set(7, -8, 10);
-    treeFour.scale.set(Math.random() * 0.3 + 0.7, Math.random() * 0.3 + 0.7, Math.random() * 0.3 + 0.7);
-    treeFour.rotation.y = Math.random() * 2*Math.PI;
+    let treeFourScalingFactor = Math.random() * 0.4 + 0.3;
+    treeFour.position.set(7, treeFourScalingFactor * 50, 10);
+    treeFour.scale.set(treeFourScalingFactor, treeFourScalingFactor, treeFourScalingFactor);
+    treeFour.rotation.set(-Math.PI/2, 0, Math.random() * 2*Math.PI);
 
     let treeFive = treeModel.clone();
-    treeFive.position.set(-7, -8, 10);
-    treeFive.scale.set(Math.random() * 0.3 + 0.7, Math.random() * 0.3 + 0.7, Math.random() * 0.3 + 0.7);
-    treeFive.rotation.y = Math.random() * 2*Math.PI;
+    let treeFiveScalingFactor = Math.random() * 0.4 + 0.3;
+    treeFive.position.set(-7, treeFiveScalingFactor * 50, 10);
+    treeFive.scale.set(treeFiveScalingFactor, treeFiveScalingFactor, treeFiveScalingFactor);
+    treeFive.rotation.set(-Math.PI/2, 0, Math.random() * 2*Math.PI);
+
+    let treeSix = treeModel.clone();
+    let treeSixScalingFactor = Math.random() * 0.4 + 0.3;
+    treeSix.position.set(0, treeSixScalingFactor * 50, 0);
+    treeSix.scale.set(treeSixScalingFactor, treeSixScalingFactor, treeSixScalingFactor);
+    treeSix.rotation.set(-Math.PI/2, 0, Math.random() * 2*Math.PI);
+
+    let treeSeven = treeModel.clone();
+    let treeSevenScalingFactor = Math.random() * 0.4 + 0.3;
+    treeSeven.position.set(25, treeSevenScalingFactor * 50, 0);
+    treeSeven.scale.set(treeSevenScalingFactor, treeSevenScalingFactor, treeSevenScalingFactor);
+    treeSeven.rotation.set(-Math.PI/2, 0, Math.random() * 2*Math.PI);
+
+    let treeEight = treeModel.clone();
+    let treeEightScalingFactor = Math.random() * 0.4 + 0.3;
+    treeEight.position.set(-25, treeEightScalingFactor * 50, 0);
+    treeEight.scale.set(treeEightScalingFactor, treeEightScalingFactor, treeEightScalingFactor);
+    treeEight.rotation.set(-Math.PI/2, 0, Math.random() * 2*Math.PI);
 
     blockingTrees = new THREE.Object3D();
     blockingTrees.add(treeOne);
     blockingTrees.add(treeTwo);
     blockingTrees.add(treeThree);
-    blockingTrees.add(treeFour)
+    blockingTrees.add(treeFour);
     blockingTrees.add(treeFive);
+    blockingTrees.add(treeSix);
 
-    blockingTrees.position.set(480, 0, -20);
+    endGameBlockingTrees = blockingTrees.clone(); // Only 6 trees
+    endGameBlockingTrees.position.set(480, 0, -30);
+    scene.add(endGameBlockingTrees);
+
+    blockingTrees.add(treeSeven);
+    blockingTrees.add(treeEight);
+
+    blockingTrees.position.set(50, -90, -600); // The initial position is just before puzzle one //blockingTrees.position.set(480, 0, -20);
+    blockingTrees.rotation.y = Math.PI/2;
     scene.add(blockingTrees);
 }
 
@@ -2923,15 +2964,36 @@ function initBushThree(gltf) {
 }
 
 function drawTrees() {
-    loadModel("models/environment/trees/pinetree.glb", "pinetree");
-    loadModel("models/environment/trees/pinetree.glb", "blocking_tree");
-    loadModel("models/environment/trees/broadleaf.glb", "broadleaf");
+    if(textureQualityValue == "high") { // Load high quality models
+        loadModel("models/environment/trees/pinetree_high.glb", "pinetree");
+        loadModel("models/environment/trees/pinetree_high.glb", "blocking_tree");
+        loadModel("models/environment/trees/broadleaf_high.glb", "broadleaf");
+    }
+    else if(textureQualityValue == "medium") { // Load medium quality models
+        loadModel("models/environment/trees/pinetree_medium.glb", "pinetree");
+        loadModel("models/environment/trees/pinetree_medium.glb", "blocking_tree");
+        loadModel("models/environment/trees/broadleaf_medium.glb", "broadleaf");
+    }
+    else { // Load low quality models
+        loadModel("models/environment/trees/pinetree_low.glb", "pinetree");
+        loadModel("models/environment/trees/pinetree_low.glb", "blocking_tree");
+        loadModel("models/environment/trees/broadleaf_low.glb", "broadleaf");
+    }
 }
 
 function drawBushes() {
-    loadModel("models/environment/bushes/bush_one.glb", "bush_one");
-    loadModel("models/environment/bushes/bush_two.glb", "bush_two");
-    loadModel("models/environment/bushes/bush_three.glb", "bush_three");
+    if(textureQualityValue == "high") {
+        loadModel("models/environment/bushes/bush_two_high.glb", "bush_two");
+        loadModel("models/environment/bushes/bush_three_high.glb", "bush_three");
+    }
+    else if(textureQualityValue == "medium") {
+        loadModel("models/environment/bushes/bush_two_medium.glb", "bush_two");
+        loadModel("models/environment/bushes/bush_three_medium.glb", "bush_three");
+    }
+    else {
+        loadModel("models/environment/bushes/bush_two_low.glb", "bush_two");
+        loadModel("models/environment/bushes/bush_three_low.glb", "bush_three");
+    }
 }
 
 function drawGround() {
@@ -2963,7 +3025,16 @@ function drawGround() {
     // }
 
     let groundGeometry = new THREE.PlaneBufferGeometry(2000, 4000, 100, 100);
-    let groundTexture = loadTexture("textures/texture_path_outline.jpg");
+    let groundTexture;
+    if(textureQualityValue == "high") {
+        groundTexture = loadTexture("textures/texture_path_outline_high.jpg");
+    }
+    else if(textureQualityValue == "medium") {
+        groundTexture = loadTexture("textures/texture_path_outline_medium.jpg");
+    }
+    else {
+        groundTexture = loadTexture("textures/texture_path_outline_low.jpg");
+    }
     groundTexture.wrapS = THREE.RepeatWrapping;
     groundTexture.wrapT = THREE.RepeatWrapping;
     groundTexture.repeat.set(80, 160);
@@ -2980,14 +3051,21 @@ function drawGround() {
 }
 
 function drawRocks() {
-    loadModel("models/environment/rocks/rock_three_test.glb", "rock_three");
-    loadModel("models/environment/rocks/rock_four.glb", "rock_four");
-    loadModel("models/environment/rocks/rock_five.glb", "rock_five");
     loadModel("models/environment/rocks/rock_over_clue_one.glb", "rock_over_clue_one");
     loadModel("models/environment/rocks/rock_over_clue_two.glb", "rock_over_clue_two");
     loadModel("models/environment/rocks/rock_over_clue_three.glb", "rock_over_clue_three");
     loadModel("models/environment/rocks/rock_over_clue_four.glb", "rock_over_clue_four");
     loadModel("models/environment/rocks/letters_rock.glb", "letters_rock");
+
+    if(textureQualityValue == "high") {
+        loadModel("models/environment/rocks/boulder_high.glb", "rock_five");
+    }
+    else if(textureQualityValue == "medium") {
+        loadModel("models/environment/rocks/boulder_medium.glb", "rock_five");
+    }
+    else {
+        loadModel("models/environment/rocks/boulder_low.glb", "rock_five");
+    }
 }
 
 function drawStars() {
@@ -3204,7 +3282,18 @@ function drawHoles() {
     scene.add(holeTwo);
     // scene.add(baseHoleTwo);
 
-    platform = new THREE.Mesh(new THREE.BoxBufferGeometry(24, 2, 12), new THREE.MeshLambertMaterial( {map: loadTexture("textures/texture_platform.jpg") }));
+    let platformTexture;
+    if(textureQualityValue == "high") {
+        platformTexture = loadTexture("textures/texture_platform_high.jpg");
+    }
+    else if(textureQualityValue == "medium") {
+        platformTexture = loadTexture("textures/texture_platform_medium.jpg");
+    }
+    else {
+        platformTexture = loadTexture("textures/texture_platform_low.jpg");
+    }
+
+    platform = new THREE.Mesh(new THREE.BoxBufferGeometry(24, 2, 12), new THREE.MeshLambertMaterial( {map: platformTexture }));
     platform.position.set(470, 3, -410);
 
     scene.add(platform);
@@ -3300,6 +3389,30 @@ function drawBarrelsAndScroll() {
     scene.add(barrelsAndScroll);
 }
 
+function drawTripwires() {
+    let material = new THREE.LineBasicMaterial( {color: "#939999"} );
+
+    let tripwireOnePoints = [];
+    tripwireOnePoints.push(new THREE.Vector3(-70, 3, -300));
+    tripwireOnePoints.push(new THREE.Vector3(70, 3, -300));
+
+    let tripwireTwoPoints = [];
+    tripwireTwoPoints.push(new THREE.Vector3(170, 3, -550));
+    tripwireTwoPoints.push(new THREE.Vector3(310, 3, -550));
+
+    let tripwireOneGeometry = new THREE.BufferGeometry().setFromPoints(tripwireOnePoints);
+    let tripwireTwoGeometry = new THREE.BufferGeometry().setFromPoints(tripwireTwoPoints);
+
+    tripwireOne = new THREE.Line(tripwireOneGeometry, material.clone());
+    tripwireTwo = new THREE.Line(tripwireTwoGeometry, material.clone());
+
+    tripwireOne.matrixAutoUpdate = false;
+    tripwireTwo.matrixAutoUpdate = false;
+    
+    scene.add(tripwireOne);
+    scene.add(tripwireTwo);
+}
+
 function initBarrel(gltf) {
     let barrelOne = gltf.scene;
     barrelOne.scale.set(5, 5, 5);
@@ -3380,30 +3493,6 @@ function drawCratesAndScroll() {
     cratesAndScroll.position.set(380, 0, -390);
     cratesAndScroll.rotation.y = -Math.PI/2;
     scene.add(cratesAndScroll);
-}
-
-function drawTripwires() {
-    let material = new THREE.LineBasicMaterial( {color: "white"} );
-
-    let tripwireOnePoints = [];
-    tripwireOnePoints.push(new THREE.Vector3(-55, 3, -300));
-    tripwireOnePoints.push(new THREE.Vector3(55, 3, -300));
-
-    let tripwireTwoPoints = [];
-    tripwireTwoPoints.push(new THREE.Vector3(185, 3, -550));
-    tripwireTwoPoints.push(new THREE.Vector3(295, 3, -550));
-
-    let tripwireOneGeometry = new THREE.BufferGeometry().setFromPoints(tripwireOnePoints);
-    let tripwireTwoGeometry = new THREE.BufferGeometry().setFromPoints(tripwireTwoPoints);
-
-    tripwireOne = new THREE.Line(tripwireOneGeometry, material.clone());
-    tripwireTwo = new THREE.Line(tripwireTwoGeometry, material.clone());
-
-    tripwireOne.matrixAutoUpdate = false;
-    tripwireTwo.matrixAutoUpdate = false;
-    
-    scene.add(tripwireOne);
-    scene.add(tripwireTwo);
 }
 
 function drawSpeakers() {
@@ -3656,6 +3745,15 @@ function puzzleOneBoundingBox() {
              displayTooltip("The environment may contain useful information.");
         }
 
+        if(!playedTreeAudio) {
+            setTimeout(() =>  audioCollection.treeFall.play(), 500);
+            playedTreeAudio = true;
+        }
+
+        if(blockingTrees.position.y < 0) {
+            blockingTrees.position.y += 0.35;
+        }
+
         if(zPos > boxOneBottom - boundaryFactor) { // Place bottom boundary
             controls.getObject().position.z = boxOneBottom - boundaryFactor;
         }
@@ -3755,6 +3853,13 @@ function levelTwoBoundingBox() {
     }
 
     if(boxArr[1]) { // In box one
+        /** Reset position and orientation of blocking trees to the start of puzzle two */
+        if(playedTreeAudio) { // Will be true when the trees have emerged in puzzle one
+            blockingTrees.rotation.y = 0;
+            blockingTrees.position.set(460, -90, -1085);
+            playedTreeAudio = false;
+        }
+
         if(zPos > -745) {
             cameraType = "fp"; // Lock the player into first person to avoid visual glitches when loading the new model
         }
@@ -3928,6 +4033,15 @@ function puzzleTwoBoundingBox() {
     }
 
     if(boxArr[1]) { // In box one
+        if(!playedTreeAudio) {
+            setTimeout(() =>  audioCollection.treeFall.play(), 500);
+            playedTreeAudio = true;
+        }
+
+        if(blockingTrees.position.y < 0) {
+            blockingTrees.position.y += 0.35;
+        }
+
         if(zPos > boxOneBottom - boundaryFactor) { // Place bottom boundary
             if(puzzleCompleted) { // Allow player through the path only after the puzzle is completed
                 if(xPos < boxTwoLeft || xPos > boxTwoRight)
@@ -4043,6 +4157,25 @@ function levelThreeBoundingBox() {
     }
 
     if(boxArr[1]) { // In box one
+        if(!movedBlockingTreesLevelTwo) {
+            /** Reset position and orientation of blocking trees to the end of puzzle two */
+            if(playedTreeAudio) { // Will be true when the trees have emerged in puzzle one
+                blockingTrees.rotation.y = 0;
+                blockingTrees.position.set(460, -90, -955);
+                playedTreeAudio = false;
+            }
+            movedBlockingTreesLevelTwo = true;
+        }
+
+        if(!playedTreeAudio) {
+            setTimeout(() =>  audioCollection.treeFall.play(), 500);
+            playedTreeAudio = true;
+        }
+
+        if(blockingTrees.position.y < 0) {
+            blockingTrees.position.y += 0.35;
+        }
+
         if(!audioCollection.hole.isPlaying) {
             audioCollection.hole.play();
         }
@@ -4223,6 +4356,25 @@ function puzzleThreeBoundingBox() {
     }
 
     if(boxArr[1]) { // In box one
+        if(!movedBlockingTreesLevelThree) {
+            /** Reset position and orientation of blocking trees to the start of puzzle three */
+            if(playedTreeAudio) { // Will be true when the trees have emerged in puzzle two
+                blockingTrees.rotation.y = Math.PI/2;
+                blockingTrees.position.set(415, -90, -400);
+                playedTreeAudio = false;
+            }
+            movedBlockingTreesLevelThree = true;
+        }
+
+        if(!playedTreeAudio) {
+            setTimeout(() =>  audioCollection.treeFall.play(), 500);
+            playedTreeAudio = true;
+        }
+
+        if(blockingTrees.position.y < 0) {
+            blockingTrees.position.y += 0.35;
+        }
+
         if(xPos > 455.5 && xPos < 484.5 && zPos > -416.5 && zPos < -403.5 && controls.getObject().position.y >= 10) {
             onPlatform = true;
             inHole = false;
@@ -4230,18 +4382,6 @@ function puzzleThreeBoundingBox() {
         else if(!inHole) {
             onPlatform = false;
             inHole = true;
-            // setTimeout(() => {
-            //     if(inHole) {
-            //         player.currentHealth = 0;
-            //         audioCollection.playerDeath.play();
-            //         playerDeath.classList.add("fadein");
-            //         playerDeath.style.visibility = "visible";
-            //         setTimeout(() => audioCollection.deathAudio.play(), 500);
-            //         setTimeout(() => deathBlock.style.display = "block", 3000);
-            //         controls.unlock();
-            //     }
-            //     fellInSecondHole = false;
-            // }, 2500);
         }
         else {
             if(controls.getObject().position.y <= -240) {
@@ -4367,13 +4507,13 @@ function levelFourBoundingBox() {
         }
         else {
             if(bulletCollidableMeshList.length == 0) {
-                if(!playedTreeSinkAudio) {
-                    setTimeout(() =>  audioCollection.treeFall.play(), 1500);
-                    playedTreeSinkAudio = true;
+                if(!playedEndGameTreeAudio) {
+                    audioCollection.treeFall.play();
+                    playedEndGameTreeAudio = true;
                 }
 
-                if(blockingTrees.position.y > -100) {
-                    blockingTrees.position.y -= 0.1;
+                if(endGameBlockingTrees.position.y > -100) {
+                    endGameBlockingTrees.position.y -= 0.2;
                 }
 
                 if(!audioCollection.heartAudio.isPlaying) {
@@ -4386,12 +4526,31 @@ function levelFourBoundingBox() {
         setBox(2, 4);
         handleHeartInteraction();
 
-        if(blockingTrees.position.y > -100) {
-            blockingTrees.position.y -= 0.1;
+        if(endGameBlockingTrees.position.y > -100) {
+            endGameBlockingTrees.position.y -= 0.1;
         }
     }
 
-    if(boxArr[1]) { // In box one        
+    if(boxArr[1]) { // In box one 
+        if(!movedBlockingTreesLevelFour) {
+            /** Reset position and orientation of blocking trees to the end of puzzle three */
+            if(playedTreeAudio) { // Will be true when the trees have emerged in puzzle one
+                blockingTrees.rotation.y = 0;
+                blockingTrees.position.set(470, -90, -355);
+                playedTreeAudio = false;
+            }
+            movedBlockingTreesLevelFour = true;
+        }
+
+        if(!playedTreeAudio && !defeatedBoss) {
+            setTimeout(() =>  audioCollection.treeFall.play(), 500);
+            playedTreeAudio = true;
+        }
+
+        if(blockingTrees.position.y < 0) {
+            blockingTrees.position.y += 0.35;
+        }
+
         if(zPos > boxOneBottom - boundaryFactor) { // Place bottom boundary (except at box two overlap if the boss is defeated)
             if(bulletCollidableMeshList.length == 0 && defeatedBoss) {
                 if(xPos < (boxTwoLeft + 10) || xPos > (boxTwoRight - 10))
@@ -4553,7 +4712,7 @@ function updateBullets() {
 function updateAlienCombat() {
     alienArray.forEach(alien => {
         if(alienCanShoot(alien)) {
-            alien.model.lookAt(player.playerModel.position.clone());
+            alien.model.lookAt(player.playerModel.position.x, 0, player.playerModel.position.z);
             createAlienBullet(alien);
             updateAlienBullet(alien);
 
@@ -5991,7 +6150,8 @@ function restartCheckpoint() {
             controls.getObject().position.set(280, 8, -410);
             camera.lookAt(281, 8, -410);
             currentLevel = 3;
-            // respawnAliens();
+            blockingTrees.position.set(415, -90, -400);
+            movedBlockingTreesLevelThree = false;
             break;
         case 4:
             controls.getObject().position.set(480, 8, -335);
@@ -6123,7 +6283,7 @@ function spawnLevelFourAliens() {
  * Moves the boss towards the player if the boss is out of range, else handles the boss's attack.
  */
 function updateBossPosition() {
-    boss.model.lookAt(player.playerModel.position.clone());
+    boss.model.lookAt(player.playerModel.position.x, 0, player.playerModel.position.z);
 
     let direction = new THREE.Vector3();
     direction = player.playerModel.position.clone().sub(boss.model.position);
@@ -6134,7 +6294,7 @@ function updateBossPosition() {
             updateBossAnimation(boss.walkAnim);
             bossWalking = true;
         }
-        boss.model.position.add(direction.normalize().multiplyScalar(0.3)); // Move the boss towards the player
+        boss.model.position.add(direction.normalize().multiplyScalar(0.3)); // Move the boss towards the player 0.3
     }
     else if(!bossAttacked) {
         bossWalking = false;
@@ -6508,6 +6668,11 @@ function initControls() {
             pausedHeartAudio = false;
             audioCollection.heartAudio.play();
         }
+
+        if(pausedTreeAudio) {
+            pausedTreeAudio = false;
+            audioCollection.treeFall.play();
+        }
     }
 
     function unlock() {
@@ -6588,6 +6753,16 @@ function initControls() {
         if(audioCollection.heartAudio.isPlaying) {
             pausedHeartAudio = true;
             audioCollection.heartAudio.pause();
+        }
+
+        if(audioCollection.treeFall.isPlaying) {
+            if(player.currentHealth <= 0) {
+                audioCollection.treeFall.stop();
+            }
+            else {
+                pausedTreeAudio = true;
+                audioCollection.treeFall.pause();
+            }
         }
 
         if(audioCollection.hole.isPlaying || audioCollection.hole2.isPlaying) {
@@ -7430,6 +7605,23 @@ function menu() {
     initMenuAudio();
     playMenuCinematic();
 
+    /** Texture quality controls */
+    textureQuality.addEventListener("click", () => {
+        if(textureQualityValue == "high") {
+            textureQualityValue = "medium";
+            textureQuality.innerHTML = "TEXTURES: MEDIUM";
+        }
+        else if(textureQualityValue == "medium") {
+            textureQualityValue = "low";
+            textureQuality.innerHTML = "TEXTURES: LOW";
+        }
+        else {
+            textureQualityValue = "high";
+            textureQuality.innerHTML = "TEXTURES: HIGH";
+        }
+    });
+
+    /** Keyboard controls */
     controlsButtonMainMenu.addEventListener("click", () => {
         displayedControls = !displayedControls;
         if(displayedControls) {
@@ -7440,6 +7632,7 @@ function menu() {
         }
     });
 
+    /** Skip button functionality */
     skipButton.addEventListener("click", (event) => {
         skipButton.style.visibility = "hidden";
 
@@ -7473,8 +7666,8 @@ function menu() {
                 location.reload();
                 break;
         }        
-    })
-
+    });
+ 
     playButton.addEventListener("click", () => {
         menuAudioSource.stop();
         title.style.display = "none";
