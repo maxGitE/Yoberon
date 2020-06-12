@@ -6422,7 +6422,10 @@ function hideTooltip() {
 function alienInRangeOfPlayer(alien) {
     return alien.model.position.clone().distanceTo(player.playerModel.position.clone()) < alien.range;
 }
-
+/**
+ * Called by UpdateBossPosition when checking if the boss should attack the player.
+ * Returns true if the player is in range of the boss and false otherwise. 
+ */
 function bossInRangeOfPlayer() {
     return boss.model.position.clone().distanceTo(player.playerModel.position.clone()) < boss.range;
 }
@@ -6437,7 +6440,7 @@ function openFullscreen() {
     else if(document.documentElement.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
         document.documentElement.webkitRequestFullscreen();
     } 
-    else if(document.documentElement.msRequestFullscreen) { /* IE/Edge */
+    else if(document.documentElement.msRequestFullscreen) { /* IE / Edge */
         document.documentElement.msRequestFullscreen();
     }
 }
@@ -6457,6 +6460,10 @@ function closeFullscreen() {
     }
 }
 
+/**
+ * Called whenever the window is resized.
+ * Handles updating the aspect ratio and projection matrix of all cameras in the scene and resizes the output canvas.
+ */
 function onResize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -6525,6 +6532,7 @@ function initLights() {
     ambientLight = new THREE.AmbientLight("white", 0.15);
     scene.add(ambientLight);
 
+    /** Light attached to player */
     pointLight = new THREE.PointLight("white", 2);
     pointLight.distance = 40;
     camera.add(pointLight);
@@ -6551,7 +6559,12 @@ function initLights() {
     scene.add(speakerLight2);
 }
 
+/**
+ * Called by the onLoad property of the loading manager when it has finished loading all models in the scene.
+ * Adds event listeners for pointer lock controls and keyboard controls and handles all locking / unlocking logic.
+ */
 function initControls() {
+    /** Initialise the pointer lock controls and add the controls object to the scene */
     controls = new THREE.PointerLockControls(camera, renderer.domElement);
     scene.add(controls.getObject());
 
@@ -6639,10 +6652,6 @@ function initControls() {
         if(tooltipVisible) {
             tooltip.style.visibility = "visible";
         }
-        
-        if(currentLevel == 4 && !defeatedBoss) {
-            audioCollection.bossFightMusic.play();
-        }
 
         pauseBlock.style.display = "none";
         deathBlock.style.display = "none";
@@ -6663,6 +6672,10 @@ function initControls() {
                 audioCollection.transmissionTwo.play();
                 pausedTransmissionTwo = false;
             }
+        }
+
+        if(currentLevel == 4 && !defeatedBoss) {
+            audioCollection.bossFightMusic.play();
         }
 
         if(pausedRoarAudio) {
@@ -6718,10 +6731,6 @@ function initControls() {
 
         pauseSongs();
 
-        if(currentLevel == 4 && !defeatedBoss) {
-            audioCollection.bossFightMusic.pause();
-        }
-
         if(player.currentHealth > 0 && danceIncorrect < 2 && !defeatedBoss && !inHole) {
             pauseBlock.style.display = "block";
         }
@@ -6738,6 +6747,10 @@ function initControls() {
             else if(!inHole) {
                 pauseBlock.style.display = "block";
             }
+        }
+
+        if(currentLevel == 4 && !defeatedBoss) {
+            audioCollection.bossFightMusic.pause();
         }
 
         if(audioCollection.rockSink.isPlaying) {
@@ -6789,14 +6802,14 @@ function initControls() {
         event.preventDefault();
 
         switch(event.keyCode) {
-            case 87:    // W
+            case 87:    // W (move forwards)
                 if(inPuzzleTwo && !finishedPuzzleTwo) return;
                 
                 player.movingForward = true;
                 if(!player.movingLeft && !player.movingRight)
                     updatePlayerAnimation(player.animations.walkAnim);
                 break;
-            case 65:    // A
+            case 65:    // A (move left)
                 if(inPuzzleTwo && !finishedPuzzleTwo) return;
 
                 player.movingLeft = true;
@@ -6806,14 +6819,14 @@ function initControls() {
                 }
                 updatePlayerAnimation(player.animations.strafeLAnim);
                 break;
-            case 83:    // S
+            case 83:    // S (move backwards)
                 if(inPuzzleTwo && !finishedPuzzleTwo) return;
             
                 player.movingBackward = true;
                 if(!player.movingLeft && !player.movingRight)
                     updatePlayerAnimation(player.animations.backwardsAnim);
                 break;
-            case 68:    // D
+            case 68:    // D (move right)
                 if(inPuzzleTwo && !finishedPuzzleTwo) return;
 
                 player.movingRight = true;
@@ -6823,7 +6836,7 @@ function initControls() {
                 }
                 updatePlayerAnimation(player.animations.strafeRAnim);
                 break;
-            case 32:    // Space
+            case 32:    // Space (jump)
                 if(inPuzzleTwo && !finishedPuzzleTwo) return;
 
                 if(!player.jumping) {
@@ -6832,7 +6845,7 @@ function initControls() {
                     handleJumpAnimation();
                 }
                 break;
-            case 16:    // Shift
+            case 16:    // Shift (sprint)
                 if(inPuzzleTwo && !finishedPuzzleTwo) return;
 
                 if(!player.running) {
@@ -6843,14 +6856,14 @@ function initControls() {
                     }
                 }
                 break;
-            case 112:   // F1
+            case 112:   // F1 (first-person camera)
                 if(inPuzzleTwo && !finishedPuzzleTwo) return;
 
                 cameraType = "fp";
                 crosshair.style.top = "50.625%";
                 crosshair.style.transform = "translate(-50%, -50.625%)";
                 break;
-            case 113:   // F2
+            case 113:   // F2 (third-person camera)
                 if(inPuzzleTwo && !finishedPuzzleTwo) return;
 
                 cameraType = "tp";
@@ -6886,7 +6899,7 @@ function initControls() {
                 controls.getObject().position.set(460, 8, -930);
                 camera.lookAt(460, 8, 1);
                 break;
-            case 69:    // E
+            case 69:    // E (interact)
                 if(interact.style.visibility == "visible") {
                     switch(interactableObject) {
                         case "totem":
@@ -6949,7 +6962,7 @@ function initControls() {
                     }
                 }
                 break;
-            case 70:    // F
+            case 70:    // F (shield)
                 if(player.shield.hasShield && !player.shield.shieldEnabled && player.shield.shieldValue == 100) {
                     if(!activatedShield) { // Hide the shield tooltip after the player uses the shield for the first time
                         activatedShield = true;
@@ -7015,7 +7028,7 @@ function initControls() {
                 updatePlayerAnimation(player.animations.gangnamStyle);
                 checkDance();
                 break;
-            case 77:    // M (MINIMAP)
+            case 77:    // M (minimap)
                 minimapToggle = true;
                 break;
         }
@@ -7066,6 +7079,10 @@ function initControls() {
     }
 }
 
+/**
+ * Called by init.
+ * Initialises a new clock object to keep track of game loop time.
+ */
 function initTime() {
     clock = new Clock();
     clock.timeBefore = performance.now();
@@ -7086,6 +7103,11 @@ function initSkybox() {
     scene.add(skybox);
 }
 
+/**
+ * Called by init.
+ * Initialises a new loading manager that tracks and facilitates the progress of all loaders.
+ * The loading manager also performs the necessary actions in its onLoad property when all assets are finished loading.
+ */
 function initLoadingManager() {
     loadingManager = new THREE.LoadingManager(onLoad, onProgress);
 
@@ -7114,6 +7136,10 @@ function initLoaders() {
     cubeTextureLoader = new THREE.CubeTextureLoader(loadingManager);
 }
 
+/** 
+ * Called by init.
+ * Initialises a new player object and hitbox.
+ */
 function initPlayer() {
     player = new Player();
     player.hitbox = new Hitbox("player");
