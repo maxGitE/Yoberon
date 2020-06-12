@@ -386,7 +386,7 @@ function gameLoop() {
                     }
                 }
             }
-            else {      
+            else if(controls.getObject().position.y < 5) {      
                 updatePlayerAnimation(player.animations.fallAnim);
                 if(!screamPlayed) {
                     audioCollection.scream.play();
@@ -6428,28 +6428,34 @@ function bossInRangeOfPlayer() {
 }
 
 function openFullscreen() {
-    if (document.documentElement.requestFullscreen) {
+    if(document.documentElement.requestFullscreen) {
         document.documentElement.requestFullscreen();
-    } else if (document.documentElement.mozRequestFullScreen) { /* Firefox */
+    } 
+    else if(document.documentElement.mozRequestFullScreen) { /* Firefox */
         document.documentElement.mozRequestFullScreen();
-    } else if (document.documentElement.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+    } 
+    else if(document.documentElement.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
         document.documentElement.webkitRequestFullscreen();
-    } else if (document.documentElement.msRequestFullscreen) { /* IE/Edge */
+    } 
+    else if(document.documentElement.msRequestFullscreen) { /* IE/Edge */
         document.documentElement.msRequestFullscreen();
     }
 }
 
 function closeFullscreen() {
-    if (document.exitFullscreen) {
-      document.exitFullscreen();
-    } else if (document.mozCancelFullScreen) {
-      document.mozCancelFullScreen();
-    } else if (document.webkitExitFullscreen) {
-      document.webkitExitFullscreen();
-    } else if (document.msExitFullscreen) {
-      document.msExitFullscreen();
+    if(document.exitFullscreen) {
+        document.exitFullscreen();
+    } 
+    else if(document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+    } 
+    else if(document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+    } 
+    else if(document.msExitFullscreen) {
+        document.msExitFullscreen();
     }
-  }
+}
 
 function onResize() {
     canvas.width = window.innerWidth;
@@ -6601,7 +6607,6 @@ function initControls() {
         player.velocityY = 0;
         player.velocityZ = 0;
 
-        console.log(firstUnlock);
         if(!firstUnlock) {
             document.addEventListener("keydown", onKeyDown);            
         }
@@ -6680,6 +6685,13 @@ function initControls() {
         if(!firstUnlock) {
             firstUnlock = true;
         }
+
+        /** Initiate keyup events for all movement keys to stop movement occurring while paused */
+        document.dispatchEvent(new KeyboardEvent('keyup', {keyCode: 87}));
+        document.dispatchEvent(new KeyboardEvent('keyup', {keyCode: 65}));
+        document.dispatchEvent(new KeyboardEvent('keyup', {keyCode: 83}));
+        document.dispatchEvent(new KeyboardEvent('keyup', {keyCode: 68}));
+
         cancelAnimationFrame(requestId);
         document.removeEventListener("keydown", onKeyDown);
 
