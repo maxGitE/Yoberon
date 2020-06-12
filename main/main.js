@@ -6988,13 +6988,6 @@ function initAliens() {
     alien4 = new Alien();
     alien5 = new Alien();
     alien6 = new Alien();
-    // alien7 = new Alien();
-    // alien8 = new Alien();
-    // alien9 = new Alien();
-    // alien10 = new Alien();
-    // alien11 = new Alien();
-    // alien12 = new Alien();
-    // alien13 = new Alien();
 
     loadModel("models/characters/enemy/alien.min.mintexture.glb", "alien");
 }
