@@ -2331,6 +2331,12 @@ function initBlockingTrees(gltf) {
     scene.add(blockingTrees);
 }
 
+/**
+ * Called by loadModel function.
+ * Creates an Object3D containing a group of broadleaf trees.
+ * Positioned around the edges of the map.
+ * @param {object} gltf model loaded by gltf loader
+ */
 function initBroadLeaf(gltf) {
     let broadLeafGroup = new THREE.Object3D();
 
@@ -2394,77 +2400,7 @@ function initBroadLeaf(gltf) {
     scene.add(broadLeafGroup);
 }
 
-function initRockOne(gltf) {
-   
-}
-
-function initRockTwo(gltf) {
-    
-}
-
-function initRockThree(gltf) {
-    let rock_three = gltf.scene;
-
-    let rock_threeGeometry = rock_three.children[0].geometry;
-    let rock_threeMaterial = rock_three.children[0].material;
-    let numInstances = 100;
-
-    let cluster = new THREE.InstancedMesh(rock_threeGeometry, rock_threeMaterial, numInstances);
-    let tempCluster = new THREE.Object3D();
-
-    let clusterX;
-    let clusterZ;
-    let scalingFactor;
-    let rotationFactor;
-
-    for(let i = 0; i < numInstances; i++) {
-        clusterX = Math.random() * 400 - 200;
-        clusterZ = Math.random() * 800 - 700;
-        scalingFactor = Math.random() * 0.15 + 0.1;
-        rotationFactor = Math.random() * 2*Math.PI; // Set rotation between 0 and 2*PI
-
-        tempCluster.scale.set(scalingFactor, scalingFactor, scalingFactor);
-        tempCluster.rotation.set(0, rotationFactor, 0);
-        tempCluster.position.set(clusterX, 0, clusterZ);
-
-        tempCluster.updateMatrix();
-        cluster.setMatrixAt(i, tempCluster.matrix);
-    }
-    scene.add(cluster);
-}
-
-function initRockFour(gltf) {
-    let rock_four = gltf.scene;
-
-    let rock_fourGeometry = rock_four.children[0].geometry;
-    let rock_fourMaterial = rock_four.children[0].material;
-    let numInstances = 500;
-
-    let cluster = new THREE.InstancedMesh(rock_fourGeometry, rock_fourMaterial, numInstances);
-    let tempCluster = new THREE.Object3D();
-
-    let clusterX;
-    let clusterZ;
-    let scalingFactor;
-    let rotationFactor;
-
-    for(let i = 0; i < numInstances; i++) {
-        clusterX = Math.random() * 400 - 200; // x positions between -200 and 200
-        clusterZ = Math.random() * 800 - 700; // z positions between 100 and -700
-        scalingFactor = Math.random() * 0.0075 + 0.0025;
-        rotationFactor = Math.random() * 2*Math.PI; // Set rotation between 0 and 2*PI
-
-        tempCluster.scale.set(scalingFactor, scalingFactor, scalingFactor);
-        tempCluster.rotation.set(0, rotationFactor, 0);
-        tempCluster.position.set(clusterX, 0, clusterZ);
-
-        tempCluster.updateMatrix();
-        cluster.setMatrixAt(i, tempCluster.matrix);
-    }
-    scene.add(cluster);
-}
-
-function initRockFive(gltf) {
+function initBoulder(gltf) {
     boulder_one = gltf.scene; 
     boulder_one.scale.set(10, 15, 10);
     boulder_one.rotation.y = -Math.PI/2;
@@ -2963,13 +2899,13 @@ function drawRocks() {
     loadModel("models/environment/rocks/letters_rock.glb", "letters_rock");
 
     if(textureQuality == "high") {
-        loadModel("models/environment/rocks/boulder_high.glb", "rock_five");
+        loadModel("models/environment/rocks/boulder_high.glb", "boulder");
     }
     else if(textureQuality == "medium") {
-        loadModel("models/environment/rocks/boulder_medium.glb", "rock_five");
+        loadModel("models/environment/rocks/boulder_medium.glb", "boulder");
     }
     else {
-        loadModel("models/environment/rocks/boulder_low.glb", "rock_five");
+        loadModel("models/environment/rocks/boulder_low.glb", "boulder");
     }
 }
 
@@ -5610,20 +5546,8 @@ function loadModel(url, key) {
             case "broadleaf":
                 initBroadLeaf(gltf);
                 break;
-            case "rock_one":
-                initRockOne(gltf);
-                break;
-            case "rock_two":
-                initRockTwo(gltf);
-                break;
-            case "rock_three":
-                // initRockThree(gltf);
-                break;
-            case "rock_four":
-                // initRockFour(gltf);
-                break;
-            case "rock_five":
-                initRockFive(gltf);
+            case "boulder":
+                initBoulder(gltf);
                 break;
             case "rock_over_clue_one":
                 initRockOverClueOne(gltf);
