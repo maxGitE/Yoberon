@@ -1536,6 +1536,12 @@ function instantiateUnits(gltf, units, meshName) {
     }
 }
 
+/**
+ * Called by loadModel function.
+ * Creates an instanced mesh of all the pinetrees in the game.
+ * Positions the trees around the borders of the bounding box.
+ * @param {object} gltf model loaded by gltf loader
+ */
 function initPineTrees(gltf) {
     let pinetree = gltf.scene;
 
@@ -1681,7 +1687,7 @@ function initPineTrees(gltf) {
                 clusterZ = Math.random() * 315 - 900; // z positions between -585 and -900
             }
             else {
-                clusterZ = i * -8 + 4775; 
+                clusterZ = i * -8 + 4775; // Make third row in set positions
             }
         }
         else if(i >= 710 && i < 830) { // Right side of level 2 box one
@@ -1729,7 +1735,7 @@ function initPineTrees(gltf) {
                 clusterX = Math.random() * 260 - 300; // x positions between -40 and -300
             }
             else {
-                clusterX = i * -6.5 + 5875;
+                clusterX = i * -6.5 + 5875; // Make third row in set positions
             }
         }
         else if(i > 950 && i < 1070) { // Box two top
@@ -1747,7 +1753,7 @@ function initPineTrees(gltf) {
                 clusterX = Math.random() * 250 - 190; // x positions between 60 and -190
             }
             else {
-                clusterX = i * -6.25 + 6497.5;
+                clusterX = i * -6.25 + 6497.5; // Make third row in set positions
             }
         }
         else if(i >= 1070 && i < 1190) { // Box three left
@@ -1765,7 +1771,7 @@ function initPineTrees(gltf) {
                 clusterZ = Math.random() * 320 - 1210; // z positions between -890 and -1210
             }
             else {
-                clusterZ = i * -8 + 8310;
+                clusterZ = i * -8 + 8310; // Make third row in set positions
             }
         }
         else if(i >= 1190 && i < 1430) { // Box four bottom
@@ -1783,7 +1789,7 @@ function initPineTrees(gltf) {
                 clusterX = Math.random() * 615 - 190; // x positions between -190 and 425
             }
             else {
-                clusterX = i * -7.6875 + 10803.125;
+                clusterX = i * -7.6875 + 10803.125; // Make third row in set positions
             }
         }
         else if(i >= 1430 && i < 1700) { // Box four top
@@ -1801,7 +1807,7 @@ function initPineTrees(gltf) {
                 clusterX = Math.random() * 800 - 280; // x positions between -280 and 520
             }
             else {
-                clusterX = i * -9 + 15010;
+                clusterX = i * -9 + 15010; // Make third row in set positions
             }
         } // ******* LEVEL 3 START *******
         else if(i >= 1700 && i < 1820) { // Box four right + second puzzle right + first part of level 3 box one right 
@@ -1819,7 +1825,7 @@ function initPineTrees(gltf) {
                 clusterZ = Math.random() * 340 - 1190; // z positions between -850 and -1190
             }
             else {
-                clusterZ = i * -8.5 + 14280;
+                clusterZ = i * -8.5 + 14280; // Make third row in set positions
             }
         }
         else if(i >= 1820 && i < 2000) { // Second puzzle left + level 3 box one left
@@ -1837,7 +1843,7 @@ function initPineTrees(gltf) {
                 clusterZ = Math.random() * 400 - 1090; // z positions between -690 and -1090
             }
             else {
-                clusterZ = i * -7 + 12890;
+                clusterZ = i * -7 + 12890; // Make third row in set positions
             }
         }
         else if(i >= 2000 && i < 2090) { // Rest of level 3 box one right
@@ -1855,7 +1861,7 @@ function initPineTrees(gltf) {
                 clusterZ = Math.random() * 160 - 740; // z positions between -580 and -740
             }
             else {
-                clusterZ = i * -5.5 + 10750;
+                clusterZ = i * -5.5 + 10750; // Make third row in set positions
             }
         }
         else if(i >= 2090 && i < 2098) { // Secret path left
@@ -1865,13 +1871,12 @@ function initPineTrees(gltf) {
             else { // Second row
                 clusterX = Math.random() * 10 + 520; // x positions between 520 and 530
             }
-            // clusterZ = Math.random() * 20 - 800; // z positions between -780 and -800
             
             if(i < 2094) {
                 clusterZ = Math.random() * 20 - 800; // z positions between -780 and -800
             }
             else {
-                clusterZ = i * -6.7 + 13249.8;
+                clusterZ = i * -6.7 + 13249.8; // Make second row in set positions
             }
         }
         else if(i >= 2098 && i < 2122) { // Secret path top
@@ -1889,7 +1894,7 @@ function initPineTrees(gltf) {
                 clusterX = Math.random() * 60 + 560; // x positions between 560 and 620
             }
             else {
-                clusterX = i * -7.5 + 16475;
+                clusterX = i * -7.5 + 16475; // Make third row in set positions
             }
         }
         else if(i >= 2122 && i < 2152) { // Secret path right
@@ -1907,7 +1912,7 @@ function initPineTrees(gltf) {
                 clusterZ = Math.random() * 130 - 850; // z positions between -720 and -850
             }
             else {
-                clusterZ = i * -13 + 27126;
+                clusterZ = i * -13 + 27126; // Make third row in set positions
             }
         }
         else if(i >= 2152 && i < 2164) { // Secret path bottom
@@ -1925,7 +1930,7 @@ function initPineTrees(gltf) {
                 clusterX = Math.random() * 50 + 550; // x positions between 550 and 600
             }
             else {
-                clusterX = i * -12.5 + 27600;
+                clusterX = i * -12.5 + 27600; // Make third row in set positions
             }
         } // ******* PUZZLE TWO EXTRA TREES START *******
         else if(i == 2164) { // Puzzle two entrance left 
@@ -1941,7 +1946,7 @@ function initPineTrees(gltf) {
             clusterZ = -1085;
         }
         else if(i == 2167) { // Puzzle two entrance right
-            clusterX = 495;
+            clusterX = 505;
             clusterZ = -1085;
         }
         else if(i == 2168) { // Puzzle two exit left
@@ -1949,7 +1954,7 @@ function initPineTrees(gltf) {
             clusterZ = -955;
         }
         else if(i == 2169) { // Puzzle two exit left
-            clusterX = 425;
+            clusterX = 415;
             clusterZ = -955;
         }
         else if(i == 2170) { // Puzzle two exit right
@@ -1957,7 +1962,7 @@ function initPineTrees(gltf) {
             clusterZ = -955;
         }
         else if(i == 2171) { // Puzzle two exit right 
-            clusterX = 495;
+            clusterX = 505;
             clusterZ = -955;
         } // ******* PUZZLE TWO EXTRA TREES END *******
         else if(i > 2171 && i < 2261) { // Box two bottom
@@ -1975,7 +1980,7 @@ function initPineTrees(gltf) {
                 clusterX = Math.random() * 210 + 290; // x positions between 290 and 500
             }
             else {
-                clusterX = i * -7 + 16117;
+                clusterX = i * -7 + 16117; // Make third row in set positions
             }
         }
         else if(i >= 2261 && i < 2351) { // Box two top
@@ -1993,7 +1998,7 @@ function initPineTrees(gltf) {
                 clusterX = Math.random() * 230 + 180; // x positions between 180 and 410
             }
             else {
-                clusterX = i * -7.67 + 18212.07;
+                clusterX = i * -7.67 + 18212.07; // Make third row in set positions
             }
         }
         else if(i >= 2351 && i < 2390) { // Box three left
@@ -2015,7 +2020,7 @@ function initPineTrees(gltf) {
                 clusterZ = Math.random() * 130 - 590; // z positions between -460 and -590
             }
             else {
-                clusterZ = i * -6.5 + 15335;
+                clusterZ = i * -6.5 + 15335; // Make third row in set positions
             }
         }
         else if(i >= 2450 && i < 2530) { // Box four bottom
@@ -2042,7 +2047,7 @@ function initPineTrees(gltf) {
                 clusterX = Math.random() * 250 + 300; // x positions between 300 and 550
             }
             else {
-                clusterX = i * -5 + 13700;
+                clusterX = i * -5 + 13700; // Make third row in set positions
             }
         } // ******* PUZZLE THREE START *******
         else if(i >= 2680 && i < 2710) { // Puzzle three right 
@@ -2060,7 +2065,7 @@ function initPineTrees(gltf) {
                 clusterZ = Math.random() * 100 - 460; // z positions between -360 and -460
             }
             else {
-                clusterZ = i * -10 + 26640;
+                clusterZ = i * -10 + 26640; // Make third row in set positions
             }
         } // ******* LEVEL FOUR START *******
         else if(i >= 2710 && i < 2790) { // Level 4 top 
@@ -2087,7 +2092,7 @@ function initPineTrees(gltf) {
                 clusterZ = Math.random() * 340 - 360; // z positions between -20 and -360
             }
             else {
-                clusterZ = i * -4.25 + 12517.5
+                clusterZ = i * -4.25 + 12517.5 // Make third row in set positions
             }
         }
         else if(i >= 3030 && i < 3270) { // Level 4 left
@@ -2105,7 +2110,7 @@ function initPineTrees(gltf) {
                 clusterZ = Math.random() * 340 - 360; // z positions between -20 and -360
             }
             else {
-                clusterZ = i * -4.25 + 13537.5;
+                clusterZ = i * -4.25 + 13537.5; // Make third row in set positions
             }
         }
         else if(i >= 3270 && i < 3390) { // Level four bottom left
@@ -2123,7 +2128,7 @@ function initPineTrees(gltf) {
                 clusterX = Math.random() * 140 + 310; // x positions between 310 and 450
             }
             else {
-                clusterX = i * -3.5 + 12175;
+                clusterX = i * -3.5 + 12175; // Make third row in set positions
             }
         }
         else if(i >= 3390 && i < 3510) { // Level four bottom right
@@ -2141,7 +2146,7 @@ function initPineTrees(gltf) {
                 clusterX = Math.random() * 140 + 510; // x positions between 510 and 650
             }
             else {
-                clusterX = i * -3.5 + 12795;
+                clusterX = i * -3.5 + 12795; // Make third row in set positions
             }
         } // ******* PUZZLE THREE EXTRA TREES START *******
         else if(i == 3510) { // Puzzle three entrance top 
@@ -2175,7 +2180,7 @@ function initPineTrees(gltf) {
                 clusterZ = Math.random() * 140 + 20; // z positions between 20 and 160
             }
             else {
-                clusterZ = i * -1.75 + 6587.75;
+                clusterZ = i * -1.75 + 6587.75; // Make third row in set positions
             }
         }
         else if(i > 3753 && i < 3993) { // Level 4 box two left
@@ -2193,7 +2198,7 @@ function initPineTrees(gltf) {
                 clusterZ = Math.random() * 140 + 20; // z positions between 20 and 160
             }
             else {
-                clusterZ = i * -1.75 + 7007.75;
+                clusterZ = i * -1.75 + 7007.75; // Make third row in set positions
             }
         }
         else if(i >= 3993 && i < 4173) { // Level 4 box two bottom
@@ -2211,7 +2216,7 @@ function initPineTrees(gltf) {
                 clusterX = Math.random() * 90 + 430; // x positions between 430 and 520
             }
             else {
-                clusterX = i * -1.5 + 6689.5;
+                clusterX = i * -1.5 + 6689.5; // Make third row in set positions
             }
         } // ******* FILLER TREES START *******
         else if(i >= 4173 && i < 4218) { // Level 1 box two bottom
@@ -2229,11 +2234,11 @@ function initPineTrees(gltf) {
                 clusterX = Math.random() * 90 + 40; // x positions between 40 and 130
             }
             else {
-                clusterX = i * -6 + 25348;
+                clusterX = i * -6 + 25348; // Make third row in set positions
             }
         }
 
-        scalingFactor = Math.random() * 0.4 + 0.3;
+        scalingFactor = Math.random() * 0.4 + 0.3; // Set scale to between 0.3 and 0.7
         rotationFactor = Math.random() * 2*Math.PI; // Set rotation to between 0 and 2*PI
 
         tempCluster.scale.set(scalingFactor, scalingFactor, scalingFactor);
@@ -2249,6 +2254,12 @@ function initPineTrees(gltf) {
     scene.add(cluster);
 }
 
+/**
+ * Called by loadModel function.
+ * Creates an Object3D containing a group of pinetrees.
+ * Used to block openings where the player cannot pass through.
+ * @param {object} gltf model loaded by gltf loader
+ */
 function initBlockingTrees(gltf) {
     let treeModel = gltf.scene.children[0];
 
@@ -4972,7 +4983,7 @@ function damageAlien(alien, intersect, type) {
  */
 function damageBoss(type) {
     if(type == "normal") { // Normal shot
-        boss.currentHealth -= 30;
+        boss.currentHealth -= 300;
         bossHealthBar.setAttribute("style", "width: " + boss.currentHealth / 33.33 + "%");
         crosshair.style.background = "url(hud/crosshairs/crosshair_hitmarker.svg)";
     }
