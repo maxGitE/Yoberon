@@ -109,7 +109,6 @@ let speakerLight;
 /** AUDIO */
 let listener;
 let audioCollection;
-let audioCollectionArray = [];
 let menuAudioSource; // Buffer source for the menu audio
 
 /** PLAYER MISC */
@@ -130,7 +129,6 @@ let alien3;
 let alien4;
 let alien5;
 let alien6;
-let disposedLevelThreeAliens = false;
 let boss;
 
 /** BOUNTY HUNTER */
@@ -250,6 +248,8 @@ let holeTwo;
 let platform;
 let onPlatform = false;
 let pausedHoleAudio = false;
+let pausedHoleOne = false;
+let pausedHoleTwo = false;
 let cratesAndScroll;
 let screamPlayed = false;
 let movedBlockingTreesLevelThree = false;
@@ -2332,43 +2332,6 @@ function initBlockingTrees(gltf) {
 }
 
 function initBroadLeaf(gltf) {
-    // let broadleaf = gltf.scene;
-
-    // let shellBarkGeometry = broadleaf.children[0].children[0].geometry;
-    // let shellBarkMaterial = broadleaf.children[0].children[0].material;
-    // console.log(shellBarkGeometry);
-    // let branchGeometry = broadleaf.children[0].children[1].geometry;
-    // let branchMaterial = broadleaf.children[0].children[1].material;
-
-    // let leafGeometry = broadleaf.children[0].children[2].geometry;
-    // let leafMaterial = broadleaf.children[0].children[2].material;
-
-    // let barkGeometry = broadleaf.children[0].children[3].geometry;
-    // let barkMaterial = broadleaf.children[0].children[3].material;
-
-    // let shellCluster = new THREE.InstancedMesh(shellBarkGeometry, shellBarkMaterial, 4);
-    // let branchCluster = new THREE.InstancedMesh(branchGeometry, branchMaterial, 4);
-    // let leafCluster = new THREE.InstancedMesh(leafGeometry, leafMaterial, 4);
-    // let barkCluster = new THREE.InstancedMesh(barkGeometry, barkMaterial, 4);
-
-    // let tempCluster = new THREE.Object3D();
-
-    // for(let i = 0; i < 4; i++) {
-    //     tempCluster.scale.set(10, 10, 10);
-    //     tempCluster.position.set(0, 0, 0);
-
-    //     tempCluster.updateMatrix();
-        
-    //     shellCluster.setMatrixAt(i, tempCluster.matrix);
-    //     branchCluster.setMatrixAt(i, tempCluster.matrix);
-    //     leafCluster.setMatrixAt(i, tempCluster.matrix);
-    //     barkCluster.setMatrixAt(i, tempCluster.matrix);
-    // }
-    // scene.add(shellCluster);
-    // scene.add(branchCluster);
-    // scene.add(leafCluster);
-    // scene.add(barkCluster);
-
     let broadLeafGroup = new THREE.Object3D();
 
     let broadleaf_one = gltf.scene;
@@ -2566,57 +2529,6 @@ function initLettersRock(gltf) {
 }
 
 function initBushOne(gltf) {
-    let bush = gltf.scene;
-
-    let leafGeometry = bush.children[0].children[0].geometry;
-    let leafMaterial = bush.children[0].children[0].material;
-
-    let barkGeometry = bush.children[0].children[1].geometry;
-    let barkMaterial = bush.children[0].children[1].material;
-
-    let leafCluster = new THREE.InstancedMesh(leafGeometry, leafMaterial, 45);
-    let barkCluster = new THREE.InstancedMesh(barkGeometry, barkMaterial, 55);
-    let tempCluster = new THREE.Object3D();
-
-    let clusterX;
-    let clusterZ;
-    let scalingFactor;
-    let rotationFactor;
-
-    for(let i = 0; i < 45; i++) {
-        if(i < 20) { // Left row
-            clusterX = Math.random() * 15 - 35; // x positions between -20 and -35
-            clusterZ = Math.random() * 570 - 550; // z positions between 30 and -550
-        }
-        else if(i >= 20 && i < 40) { // Right row
-            clusterX = Math.random() * 15 + 20; // x positions between 20 and 35
-            clusterZ = Math.random() * 440 - 410; // z positions between 30 and -410
-        }
-        else if(i >= 40 && i < 45) { // Back row
-            clusterX = Math.random() * 70 - 35; // x positions between -35 and 35
-            clusterZ = Math.random() * 15 + 15; // z positions between 15 and 30
-        }
-        scalingFactor = Math.random() * 0.02 + 0.08; // set scale to between 0.08 and 0.1
-        rotationFactor = Math.random() * Math.PI/2; // set rotation to between 0 and PI/2
-
-        tempCluster.position.set(clusterX, -3, clusterZ);
-        tempCluster.scale.set(scalingFactor, scalingFactor, scalingFactor);
-        tempCluster.rotation.set(Math.PI/3, rotationFactor, 0);
-
-        tempCluster.updateMatrix();
-
-        leafCluster.setMatrixAt(i, tempCluster.matrix);             
-        barkCluster.setMatrixAt(i, tempCluster.matrix);
-    }
-
-    leafCluster.matrixAutoUpdate = false;
-    barkCluster.matrixAutoUpdate = false;
-
-    scene.add(leafCluster);
-    scene.add(barkCluster);
-}
-
-function initBushTwo(gltf) {
     let bush = gltf.scene;
     let leafGeometry = bush.children[0].children[0].geometry;
     let leafMaterial = bush.children[0].children[0].material;
@@ -2818,7 +2730,7 @@ function initBushTwo(gltf) {
     scene.add(barkCluster);
 }
 
-function initBushThree(gltf) {
+function initBushTwo(gltf) {
     let bush = gltf.scene;   
     let leafGeometry = bush.children[0].children[2].geometry;
     let leafMaterial = bush.children[0].children[2].material;
@@ -3003,47 +2915,20 @@ function drawTrees() {
 
 function drawBushes() {
     if(textureQuality == "high") {
+        loadModel("models/environment/bushes/bush_one_high.glb", "bush_one");
         loadModel("models/environment/bushes/bush_two_high.glb", "bush_two");
-        loadModel("models/environment/bushes/bush_three_high.glb", "bush_three");
     }
     else if(textureQuality == "medium") {
+        loadModel("models/environment/bushes/bush_one_medium.glb", "bush_one");
         loadModel("models/environment/bushes/bush_two_medium.glb", "bush_two");
-        loadModel("models/environment/bushes/bush_three_medium.glb", "bush_three");
     }
     else {
+        loadModel("models/environment/bushes/bush_one_low.glb", "bush_one");
         loadModel("models/environment/bushes/bush_two_low.glb", "bush_two");
-        loadModel("models/environment/bushes/bush_three_low.glb", "bush_three");
     }
 }
 
 function drawGround() {
-    // /** MOUNTAINS */
-    // let mountains = [];
-    // let mountainTexture = loadTexture("textures/mountain_texture.jpg");
-    // let mountainMaterial = new THREE.MeshLambertMaterial( {
-    //     color: "#5e503e",
-    //     side: THREE.DoubleSide,
-    //     map: mountainTexture
-    // } );
-    // let date = new Date();
-    // let perlinNoise = new Perlin("rnd" + date.getTime());
-
-    // /** LEFT SIDE MOUNTAINS */
-    // let mountainOneGeometry = new THREE.PlaneGeometry(280, 930, 100, 100);
-    // let mountainOne = new THREE.Mesh(mountainOneGeometry, mountainMaterial);
-    // mountains.push(mountainOne);
-
-    // for(let i = 0; i < mountains.length; i++) {
-
-    //     for(let j = 0; j < mountains[i].geometry.vertices.length; j++) {
-    //         let vertex = mountains[i].geometry.vertices[j];
-    //         vertex.z = perlinNoise.noise(vertex.x / 10, vertex.y / 10, 0) * 10;
-    //     }
-    //     mountains[i].rotation.x = -Math.PI/2;
-    //     mountains[i].position.y = -2;
-    //     scene.add(mountains[i]);
-    // }
-
     let groundGeometry = new THREE.PlaneBufferGeometry(2000, 4000, 100, 100);
     let groundTexture;
     if(textureQuality == "high") {
@@ -3116,6 +3001,7 @@ function drawTotems() {
     totemThree = new THREE.Mesh(totemGeometry, totemThreeMaterial);
     totemFour = new THREE.Mesh(totemGeometry, totemFourMaterial);
 
+    /** Add the totems to the list of objects that cast shadow */
     shadowObjects.push(totemOne);
     shadowObjects.push(totemTwo);
     shadowObjects.push(totemThree);
@@ -3130,6 +3016,7 @@ function drawTotems() {
     totemFour.position.set(16.5, 6, 0);
     totemFour.rotation.y = Math.random() * 2*Math.PI;
 
+    /** Used to handle interactable and selected / unselected logic in the first puzzle */
     totemOne.userData = {selected: false, animal: "eagle"};
     totemTwo.userData = {selected: false, animal: "frog"};
     totemThree.userData = {selected: false, animal: "lion"};
@@ -3168,6 +3055,7 @@ function drawTotems() {
     puzzleOneCollidableMeshlist.push(totemThree);
     puzzleOneCollidableMeshlist.push(totemFour);
 
+    /** Load the animal models on top of the totems */
     loadModel("models/totems/frog.glb", "frog");
     loadModel("models/totems/eagle.glb", "eagle");
     loadModel("models/totems/lion.glb", "lion");
@@ -4493,27 +4381,6 @@ function levelFourBoundingBox() {
     if(xPos > boxOneLeft && xPos < boxOneRight && zPos < boxOneBottom && zPos > boxOneTop) {
         setBox(1, 4);
 
-        // if(!disposedLevelThreeAliens) {
-        //     alienArray[4].model.traverse(child => {
-        //         if(child.isMesh) {
-        //             child.geometry.dispose();
-        //             child.material.dispose();
-        //         }
-        //     });
-
-        //     alienArray[5].model.traverse(child => {
-        //         if(child.isMesh) {
-        //             child.geometry.dispose();
-        //             child.material.dispose();
-        //         }
-        //     });
-
-        //     scene.remove(alienArray[4].model);
-        //     scene.remove(alienArray[5].model);
-    
-        //     disposedLevelThreeAliens = true;
-        // }
-
         if(audioCollection.hole2.isPlaying) {
             audioCollection.hole2.stop();
         }
@@ -5779,9 +5646,6 @@ function loadModel(url, key) {
             case "bush_two":
                 initBushTwo(gltf);
                 break;
-            case "bush_three":
-                initBushThree(gltf);
-                break;
             case "eagle":
                 eagle = gltf.scene.children[0];
                 eagle.scale.set(0.2, 0.2, 0.2);
@@ -6687,7 +6551,7 @@ function initControls() {
                 audioCollection.transmissionOne.play();
                 pausedTransmissionOne = false;
             }
-            else {
+            else if(pausedTransmissionTwo) {
                 audioCollection.transmissionTwo.play();
                 pausedTransmissionTwo = false;
             }
@@ -6710,6 +6574,19 @@ function initControls() {
         if(pausedTreeAudio) {
             pausedTreeAudio = false;
             audioCollection.treeFall.play();
+        }
+
+        if(pausedHoleAudio) {
+            pausedHoleAudio = false;
+
+            if(pausedHoleOne) {
+                audioCollection.hole.play();
+                pausedHoleOne = false;
+            }
+            else if(pausedHoleTwo) {
+                audioCollection.hole2.play();
+                pausedHoleTwo = false;
+            }
         }
     }
 
@@ -6813,8 +6690,16 @@ function initControls() {
         }
 
         if(audioCollection.hole.isPlaying || audioCollection.hole2.isPlaying) {
-            audioCollection.hole.pause();
-            audioCollection.hole2.pause();
+            pausedHoleAudio = true;
+
+            if(audioCollection.hole.isPlaying) {
+                audioCollection.hole.pause();
+                pausedHoleOne = true;
+            }
+            else {
+                audioCollection.hole2.pause();
+                pausedHoleTwo = true;
+            }
         }
     }
 
@@ -7159,7 +7044,7 @@ function initLoaders() {
 
 /** 
  * Called by init.
- * Initialises a new player object and hitbox.
+ * Initialises a new player object and hitbox and loads the appropriate model.
  */
 function initPlayer() {
     player = new Player();
@@ -7168,6 +7053,10 @@ function initPlayer() {
     loadModel("models/characters/player/playermodel.glb", "player");
 }
 
+/** 
+ * Called by init.
+ * Initialises 6 new alien objects and loads the appropriate model.
+ */
 function initAliens() {
     alien1 = new Alien();
     alien2 = new Alien();
@@ -7186,6 +7075,10 @@ function initAliens() {
     loadModel("models/characters/enemy/alien.min.mintexture.glb", "alien");
 }
 
+/** 
+ * Called by init.
+ * Initialises a new boss object and hitbox and loads the appropriate model.
+ */
 function initBoss() {
     boss = new Boss();
     boss.hitbox = new Hitbox("boss");
@@ -7234,6 +7127,10 @@ function loadReflectiveTexture(url) {
     return texture;
 }
 
+/** 
+ * Called by init.
+ * Initialises 4 new bounty hunter objects and loads the appropriate model.
+ */
 function initBountyHunter() {
     bountyHunter1 = new BountyHunter();
     bountyHunter2 = new BountyHunter();
@@ -7633,6 +7530,10 @@ function init() {
     initWorld();
 }
 
+/**
+ * Called by menu on window load.
+ * Sends an XML HttpRequest to allow the menu audio to play without user interaction.
+ */
 function initMenuAudio() {
     let audioContext = new (window.AudioContext || window.webkitAudioContext)();
     let xmlhr = new XMLHttpRequest();
@@ -7653,6 +7554,10 @@ function initMenuAudio() {
     xmlhr.send();
 }
 
+/**
+ * Called by menu on window load.
+ * Handles playing and looping the menu cinematic.
+ */
 function playMenuCinematic() {
     menuCinematic.play();
     menuCinematic.loop = true;
