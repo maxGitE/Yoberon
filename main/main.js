@@ -14,7 +14,7 @@ stats.showPanel(0);
 const title = document.getElementById("title");
 const menuBlock = document.getElementById("menu");
 const keyControls = document.getElementById("controls");
-const textureQuality = document.getElementById("texture-quality");
+const textures = document.getElementById("texture-quality");
 const controlsButtonMainMenu = document.getElementById("controls-button-mainmenu");
 const controlsButtonPauseMenu = document.getElementById("controls-button-pausemenu");
 const shadowsButton = document.getElementById("shadows");
@@ -295,20 +295,19 @@ let pausedTreeAudio = false;
 
 /** TRANSMISSIONS */
 let transmissionCount = 0;
-let playedInitialTransmission = false;
+let playedInitialTransmission = false; // Used to play a transmission in the first level sooner than a normal transmission timer 
 let pausedTransmissionAudio = false;
 let pausedTransmissionOne = false;
 let pausedTransmissionTwo = false;
 
 /** MISC */
-let textureQualityValue = "high";
-let displayedControls = false;
-let requestId;
+let textureQuality = "high"; // Used to control which models are loaded (high quality, medium quality or low quality)
+let displayedControls = false; // Used to hide / display keyboard controls
+let requestId; // Allows a request for a gameloop frame to be referenced
 let poisonTimerId; // Needed to clear the weapon upgrade timeout in order for its cooldown to be a consistent 15 seconds
-let firstUnlock = false;
+let firstUnlock = false; // Allows for a smooth transition from the wake up screen
 
 function gameLoop() {
-
     requestId = requestAnimationFrame(gameLoop);
 
     if(player.currentHealth > 0) {
@@ -480,12 +479,14 @@ function gameLoop() {
 
     render();
 }
+
 /**
  * Called when the player is in an area with notes.
  * Handles the raycasting logic to allow them to select the note and read it.
  * This function must be called in a bounding box check.
  */
 function handleNotes() {
+    /** Handle raycasting with the player's position as the origin of the ray and the direction they are looking as the direction of the ray */
     let cameraDirection = new THREE.Vector3();
     cameraDirection.normalize();
     controls.getDirection(cameraDirection);
@@ -2964,12 +2965,12 @@ function initBushThree(gltf) {
 }
 
 function drawTrees() {
-    if(textureQualityValue == "high") { // Load high quality models
+    if(textureQuality == "high") { // Load high quality models
         loadModel("models/environment/trees/pinetree_high.glb", "pinetree");
         loadModel("models/environment/trees/pinetree_high.glb", "blocking_tree");
         loadModel("models/environment/trees/broadleaf_high.glb", "broadleaf");
     }
-    else if(textureQualityValue == "medium") { // Load medium quality models
+    else if(textureQuality == "medium") { // Load medium quality models
         loadModel("models/environment/trees/pinetree_medium.glb", "pinetree");
         loadModel("models/environment/trees/pinetree_medium.glb", "blocking_tree");
         loadModel("models/environment/trees/broadleaf_medium.glb", "broadleaf");
@@ -2982,11 +2983,11 @@ function drawTrees() {
 }
 
 function drawBushes() {
-    if(textureQualityValue == "high") {
+    if(textureQuality == "high") {
         loadModel("models/environment/bushes/bush_two_high.glb", "bush_two");
         loadModel("models/environment/bushes/bush_three_high.glb", "bush_three");
     }
-    else if(textureQualityValue == "medium") {
+    else if(textureQuality == "medium") {
         loadModel("models/environment/bushes/bush_two_medium.glb", "bush_two");
         loadModel("models/environment/bushes/bush_three_medium.glb", "bush_three");
     }
@@ -3026,10 +3027,10 @@ function drawGround() {
 
     let groundGeometry = new THREE.PlaneBufferGeometry(2000, 4000, 100, 100);
     let groundTexture;
-    if(textureQualityValue == "high") {
+    if(textureQuality == "high") {
         groundTexture = loadTexture("textures/texture_path_outline_high.jpg");
     }
-    else if(textureQualityValue == "medium") {
+    else if(textureQuality == "medium") {
         groundTexture = loadTexture("textures/texture_path_outline_medium.jpg");
     }
     else {
@@ -3057,10 +3058,10 @@ function drawRocks() {
     loadModel("models/environment/rocks/rock_over_clue_four.glb", "rock_over_clue_four");
     loadModel("models/environment/rocks/letters_rock.glb", "letters_rock");
 
-    if(textureQualityValue == "high") {
+    if(textureQuality == "high") {
         loadModel("models/environment/rocks/boulder_high.glb", "rock_five");
     }
-    else if(textureQualityValue == "medium") {
+    else if(textureQuality == "medium") {
         loadModel("models/environment/rocks/boulder_medium.glb", "rock_five");
     }
     else {
@@ -3283,10 +3284,10 @@ function drawHoles() {
     // scene.add(baseHoleTwo);
 
     let platformTexture;
-    if(textureQualityValue == "high") {
+    if(textureQuality == "high") {
         platformTexture = loadTexture("textures/texture_platform_high.jpg");
     }
-    else if(textureQualityValue == "medium") {
+    else if(textureQuality == "medium") {
         platformTexture = loadTexture("textures/texture_platform_medium.jpg");
     }
     else {
@@ -7606,18 +7607,18 @@ function menu() {
     playMenuCinematic();
 
     /** Texture quality controls */
-    textureQuality.addEventListener("click", () => {
-        if(textureQualityValue == "high") {
-            textureQualityValue = "medium";
-            textureQuality.innerHTML = "TEXTURES: MEDIUM";
+    textures.addEventListener("click", () => {
+        if(textureQuality == "high") {
+            textureQuality = "medium";
+            textures.innerHTML = "TEXTURES: MEDIUM";
         }
-        else if(textureQualityValue == "medium") {
-            textureQualityValue = "low";
-            textureQuality.innerHTML = "TEXTURES: LOW";
+        else if(textureQuality == "medium") {
+            textureQuality = "low";
+            textures.innerHTML = "TEXTURES: LOW";
         }
         else {
-            textureQualityValue = "high";
-            textureQuality.innerHTML = "TEXTURES: HIGH";
+            textureQuality = "high";
+            textures.innerHTML = "TEXTURES: HIGH";
         }
     });
 
