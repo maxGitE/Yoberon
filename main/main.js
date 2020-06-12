@@ -138,6 +138,7 @@ let bountyArray = [];
 let bountyHunter1;
 let bountyHunter2;
 let bountyHunter3;
+let bountyHunter4;
 
 /** SHIP */
 let ship;
@@ -517,6 +518,11 @@ function handleNotes() {
     }
 }
 
+/**
+ * Called when the player interacts with a note.
+ * Shows the note with the relevant text.
+ * @param {string} name name of the note to be displayed
+ */
 function showNote(name) {
     switch(name) {
         case "noteOne":
@@ -1173,6 +1179,12 @@ function pauseSongs() {
 }
 /********** PUZZLE TWO END **********/
 
+/**
+ * Called by loadModel function.
+ * Positions the player model in the scene facing the negative z direction.
+ * Populates all player animations and enables the idle animation.
+ * @param {object} gltf model loaded by the gltf loader
+ */
 function initPlayerModel(gltf) {
     player.playerModel = gltf.scene;
     let animations = gltf.animations;
@@ -1226,6 +1238,12 @@ function initPlayerModel(gltf) {
     player.animations.currentAnimation = player.animations.idleAnim;
 }
 
+/**
+ * Called when the player picks up the gun in level two.
+ * Positions the player model with a gun in the scene facing the negative z direction.
+ * Populates all player animations with the gun and enables the idle animation.
+ * @param {object} gltf model loaded by the gltf loader
+ */
 function initPlayerGunModel(gltf) {
     player.playerModel = gltf.scene;
     let animations = gltf.animations;
@@ -1276,6 +1294,14 @@ function initPlayerGunModel(gltf) {
     player.animations.currentAnimation = player.animations.idleAnim;
 }
 
+/**
+ * Called by loadModel function.
+ * Positions the first five aliens in the scene and adds them to the alien array.
+ * Populates the relevant attributes for each alien which dictates where they
+ * can shoot from.
+ * Calls instantiateUnits function on the alien array.
+ * @param {object} gltf model loaded by the gltf loader
+ */
 function initAlienModels(gltf) {
     alien1.setPosition(-150, 0, -940);
     alien1.canShoot.level = 2;
@@ -1307,44 +1333,14 @@ function initAlienModels(gltf) {
     alien6.canShoot.box = 4;
     alienArray.push(alien6);
 
-    // alien7.setPosition(400, 0, -1150);
-    // alien7.canShoot.level = 2;
-    // alien7.canShoot.box = 4;
-    // alienArray.push(alien7);
-
-    // alien8.setPosition(400, 0, -1130);
-    // alien8.canShoot.level = 2;
-    // alien8.canShoot.box = 4;
-    // alienArray.push(alien8);
-
-    // alien9.setPosition(230, 0, -620);
-    // alien9.canShoot.level = 3;
-    // alien9.canShoot.box = 2;
-    // alienArray.push(alien9);
-
-    // alien10.setPosition(270, 0, -635);
-    // alien10.canShoot.level = 3;
-    // alien10.canShoot.box = 2;
-    // alienArray.push(alien10);
-
-    // alien11.setPosition(220, 0, -660);
-    // alien11.canShoot.level = 3;
-    // alien11.canShoot.box = 2;
-    // alienArray.push(alien11);
-
-    // alien12.setPosition(375, 0, -435);
-    // alien12.canShoot.level = 3;
-    // alien12.canShoot.box = 4;
-    // alienArray.push(alien12);
-
-    // alien13.setPosition(380, 0, -400);
-    // alien13.canShoot.level = 3;
-    // alien13.canShoot.box = 4;
-    // alienArray.push(alien13);
-
     instantiateUnits(gltf, alienArray, "Alien_(Armature)");  
 }
 
+/**
+ * Called by loadModel function.
+ * Positions the boss model in the scene and populates all animations for the boss.
+ * @param {object} gltf model loaded by the gltf loader
+ */
 function initBossModel(gltf) {
     boss.model = gltf.scene;
     let animations = gltf.animations;
@@ -1396,6 +1392,13 @@ function initBossModel(gltf) {
     boss.currentAnimation = boss.idleAnim;
 }
 
+/**
+ * Called by loadModel function.
+ * Positions the bounty hunter models in the scene and adds them to the bounty hunter array.
+ * Sets each of their respective death poses.
+ * Calls instantiatUnits function on the bounty hunter array.
+ * @param {object} gltf model loaded by the gltf loader
+ */
 function initBountyHunterModels(gltf) {
     bountyHunter1.setPosition(-10, 0, -15);
     bountyHunter1.setRotation(0, Math.PI, 0);
@@ -1409,6 +1412,11 @@ function initBountyHunterModels(gltf) {
     bountyHunter3.setPosition(10, 0, -20);
     bountyHunter3.defaultAnim = "Down";
     bountyArray.push(bountyHunter3);
+
+    bountyHunter4.setPosition(0, 0, -460);
+    bountyHunter4.setRotation(0, Math.PI/2, 0);
+    bountyHunter4.defaultAnim = "Side";
+    bountyArray.push(bountyHunter4);
     
     instantiateUnits(gltf, bountyArray, "vanguard_Mesh");
 }
@@ -6700,10 +6708,12 @@ function initControls() {
         }
 
         /** Initiate keyup events for all movement keys to stop movement occurring while paused */
-        document.dispatchEvent(new KeyboardEvent('keyup', {keyCode: 87}));
-        document.dispatchEvent(new KeyboardEvent('keyup', {keyCode: 65}));
-        document.dispatchEvent(new KeyboardEvent('keyup', {keyCode: 83}));
-        document.dispatchEvent(new KeyboardEvent('keyup', {keyCode: 68}));
+        document.dispatchEvent(new KeyboardEvent('keyup', {keyCode: 87})); // W
+        document.dispatchEvent(new KeyboardEvent('keyup', {keyCode: 65})); // A
+        document.dispatchEvent(new KeyboardEvent('keyup', {keyCode: 83})); // S
+        document.dispatchEvent(new KeyboardEvent('keyup', {keyCode: 68})); // D
+        document.dispatchEvent(new KeyboardEvent('keyup', {keyCode: 32})); // Space
+        document.dispatchEvent(new KeyboardEvent('keyup', {keyCode: 16})); // Shift
 
         cancelAnimationFrame(requestId);
         document.removeEventListener("keydown", onKeyDown);
@@ -7217,6 +7227,7 @@ function initBountyHunter() {
     bountyHunter1 = new BountyHunter();
     bountyHunter2 = new BountyHunter();
     bountyHunter3 = new BountyHunter();
+    bountyHunter4 = new BountyHunter();
     loadModel("models/characters/bountyhunter/bounty_hunter.glb", "bounty_hunter");
 }
 
