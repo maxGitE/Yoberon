@@ -576,16 +576,16 @@ function levelTwoRaycast() {
     let playerRaycaster = new THREE.Raycaster(controls.getObject().position, cameraDirection);
     let intersects = playerRaycaster.intersectObjects(levelTwoCollidableMeshlist, true);
 
-    if(intersects.length > 0) {
+    if(intersects.length > 0 && intersects[0].distance < 10) {
         interact.style.visibility = "visible";
         
-        if(intersects[0].object.name == "noteTwo" && intersects[0].distance < 10) { // Note two
+        if(intersects[0].object.name == "noteTwo") { // Note two
             interactableObject = "noteTwo"; 
         }
-        else if(intersects[0].object.name == "donutOne" && intersects[0].distance < 7) { // Donut one
+        else if(intersects[0].object.name == "donutOne") { // Donut one
             interactableObject = "donutOne";
         }
-        else if(intersects[0].object.name == "donutTwo" && intersects[0].distance < 7) { // Donut two
+        else if(intersects[0].object.name == "donutTwo") { // Donut two
             interactableObject = "donutTwo";
         }
     }
