@@ -223,7 +223,6 @@ let crateAndDonuts;
 let crate;
 let book;
 let donut;
-let donutTwo;
 let donutCollidableMeshlist = [];
 let selectedDonut;
 let speakers;
@@ -599,12 +598,7 @@ function eatDonut() {
     donutCollidableMeshlist.splice(indexToRemove, 1);
 
     /** Remove the selected donut from the collection */
-    if(selectedDonut.object.name == "donut") {
-        crateAndDonuts.remove(donut);
-    }
-    else {
-        crateAndDonuts.remove(donutTwo);
-    }
+    crateAndDonuts.remove(donut);
     
     if(audioCollection.burp.isPlaying) {
         audioCollection.burp.stop();
@@ -6264,33 +6258,33 @@ function bossInRangeOfPlayer() {
 }
 
 function openFullscreen() {
-    if(document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen();
-    } 
-    else if(document.documentElement.mozRequestFullScreen) { /* Firefox */
-        document.documentElement.mozRequestFullScreen();
-    } 
-    else if(document.documentElement.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
-        document.documentElement.webkitRequestFullscreen();
-    } 
-    else if(document.documentElement.msRequestFullscreen) { /* IE / Edge */
-        document.documentElement.msRequestFullscreen();
-    }
+    // if(document.documentElement.requestFullscreen) {
+    //     document.documentElement.requestFullscreen();
+    // } 
+    // else if(document.documentElement.mozRequestFullScreen) { /* Firefox */
+    //     document.documentElement.mozRequestFullScreen();
+    // } 
+    // else if(document.documentElement.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+    //     document.documentElement.webkitRequestFullscreen();
+    // } 
+    // else if(document.documentElement.msRequestFullscreen) { /* IE / Edge */
+    //     document.documentElement.msRequestFullscreen();
+    // }
 }
 
 function closeFullscreen() {
-    if(document.exitFullscreen) {
-        document.exitFullscreen();
-    } 
-    else if(document.mozCancelFullScreen) {
-        document.mozCancelFullScreen();
-    } 
-    else if(document.webkitExitFullscreen) {
-        document.webkitExitFullscreen();
-    } 
-    else if(document.msExitFullscreen) {
-        document.msExitFullscreen();
-    }
+    // if(document.exitFullscreen) {
+    //     document.exitFullscreen();
+    // } 
+    // else if(document.mozCancelFullScreen) {
+    //     document.mozCancelFullScreen();
+    // } 
+    // else if(document.webkitExitFullscreen) {
+    //     document.webkitExitFullscreen();
+    // } 
+    // else if(document.msExitFullscreen) {
+    //     document.msExitFullscreen();
+    // }
 }
 
 /**
