@@ -47,6 +47,7 @@ class AudioCollection {
         this._correct;
         this._winPuzzle;
         this._recordScratch;
+        this._burp;
     }
 
     get wildlife() {
@@ -435,5 +436,13 @@ class AudioCollection {
 
     set recordScratch(audio) {
         this._recordScratch = audio;
+    }
+
+    get burp() {
+        return this._burp;
+    }
+
+    set burp(audio) {
+        this._burp = audio;
     }
 }

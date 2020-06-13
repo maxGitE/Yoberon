@@ -81,9 +81,11 @@ const creditsCutScene = document.getElementById("credits-cutscene");
 window.onload = menu;
 
 /** BOUNDARY BOX GLOBALS */
-let boundaryFactor = 5; // Account for skipped frames and fucked behaviour with game loop
+/** Account for skipped frames and unexpected behaviour with game loop */
+let boundaryFactor = 5;
 let boxArr = new Array(9);
-let currentBox; // Check which box the player is in as a separate variable to handle combat interactions
+/** Check which box the player is in as a separate variable to handle combat interactions */
+let currentBox;
 
 /** SCENE GLOBALS */
 let canvas;
@@ -109,7 +111,8 @@ let speakerLight;
 /** AUDIO */
 let listener;
 let audioCollection;
-let menuAudioSource; // Buffer source for the menu audio
+/** Buffer source for the menu audio */
+let menuAudioSource;
 
 /** PLAYER MISC */
 let controls;
@@ -118,8 +121,10 @@ let player;
 let currentLevel = 1;
 let xPos;
 let zPos;
-let shotPoisonBullet = false; // Used to hide the weapon upgrade tooltip
-let activatedShield = false; // Used to hide the shield tooltip
+/** Used to hide the weapon upgrade tooltip */
+let shotPoisonBullet = false;
+/** Used to hide the shield tooltip */
+let activatedShield = false;
 
 /** ENEMIES */
 let alienArray = [];
@@ -218,6 +223,7 @@ let crate;
 let book;
 let donutOne;
 let donutTwo;
+let levelTwoCollidableMeshlist = [];
 let speakers;
 let movedBlockingTreesLevelTwo = false;
 
@@ -280,7 +286,8 @@ let checkpointDisplayed = false;
 let interactableObject;
 
 /** GUN */
-let lockingClick = true;
+/** Used to ensure that the gun does not fire when locking the controls */
+let lockingClick = true; 
 let bulletCollidableMeshList = [];
 
 /** HEALTH PACKS */
@@ -296,17 +303,23 @@ let pausedTreeAudio = false;
 
 /** TRANSMISSIONS */
 let transmissionCount = 0;
-let playedInitialTransmission = false; // Used to play a transmission in the first level sooner than a normal transmission timer 
+/** Used to play a transmission in the first level sooner than a normal transmission timer  */
+let playedInitialTransmission = false;
 let pausedTransmissionAudio = false;
 let pausedTransmissionOne = false;
 let pausedTransmissionTwo = false;
 
 /** MISC */
-let textureQuality = "high"; // Used to control which models are loaded (high quality, medium quality or low quality)
-let displayedControls = false; // Used to hide / display keyboard controls
-let requestId; // Allows a request for a gameloop frame to be referenced
-let poisonTimerId; // Needed to clear the weapon upgrade timeout in order for its cooldown to be a consistent 15 seconds
-let firstUnlock = false; // Allows for a smooth transition from the wake up screen
+/** Used to control which models are loaded (high quality, medium quality or low quality) */
+let textureQuality = "high";
+/** Used to hide / display keyboard controls */
+let displayedControls = false;
+/** Allows a request for a gameloop frame to be referenced */
+let requestId;
+/** Needed to clear the weapon upgrade timeout in order for its cooldown to be a consistent 15 seconds */
+let poisonTimerId;
+/** Allows for a smooth transition from the wake up screen */
+let firstUnlock = false;
 
 function gameLoop() {
     requestId = requestAnimationFrame(gameLoop);
@@ -501,9 +514,6 @@ function handleNotes() {
         if(intersects[0].object.name == "noteOne") { // Note one
             interactableObject = "noteOne";
         }
-        else if(intersects[0].object.name == "noteTwo") { // Note two
-            interactableObject = "noteTwo"; 
-        }
         else if(intersects[0].object.name == "noteThree") { // Note three
             interactableObject = "noteThree";
         }
@@ -550,6 +560,64 @@ function showNote(name) {
             alienScroll.innerHTML = "The heart is sought after by many in the galaxy for its tremendous power. If harnessed, it can provide unlimited fuel to whatever the user desires.";
             englishScroll.innerHTML = alienScroll.innerHTML;
             break;
+    }
+}
+
+/**
+ * Called when the player is in level two.
+ * Handles the raycasting logic to allow them to select the note and donuts.
+ * This function must be called in a bounding box check.
+ */
+function levelTwoRaycast() {
+    /** Handle raycasting with the player's position as the origin of the ray and the direction they are looking as the direction of the ray */
+    let cameraDirection = new THREE.Vector3();
+    cameraDirection.normalize();
+    controls.getDirection(cameraDirection);
+    let playerRaycaster = new THREE.Raycaster(controls.getObject().position, cameraDirection);
+    let intersects = playerRaycaster.intersectObjects(levelTwoCollidableMeshlist, true);
+
+    if(intersects.length > 0) {
+        interact.style.visibility = "visible";
+        
+        if(intersects[0].object.name == "noteTwo" && intersects[0].distance < 10) { // Note two
+            interactableObject = "noteTwo"; 
+        }
+        else if(intersects[0].object.name == "donutOne" && intersects[0].distance < 7) { // Donut one
+            interactableObject = "donutOne";
+        }
+        else if(intersects[0].object.name == "donutTwo" && intersects[0].distance < 7) { // Donut two
+            interactableObject = "donutTwo";
+        }
+    }
+    else {
+        interact.style.visibility = "hidden";
+        cluePaper.style.visibility = "hidden";
+    }
+}
+
+/** Allow the player to eat a donut */
+function eatDonut(name) {
+    /** Remove the selected donut from the collection */
+    switch (name) {
+        case "donutOne":
+            crateAndBook.remove(donutOne);
+            break;
+        case "donutTwo":
+            crateAndBook.remove(donutTwo);
+            break;
+    }
+
+    let indexToRemove = levelTwoCollidableMeshlist.findIndex(object => object.name == name); // Remove the selected donut from the collidable mesh list
+    levelTwoCollidableMeshlist.splice(indexToRemove, 1);
+    
+    if(audioCollection.burp.isPlaying) {
+        audioCollection.burp.stop();
+    }
+    audioCollection.burp.play();
+
+    if(player.currentHealth <= 90) {
+        player.currentHealth += 10;
+        updatePlayerHealth();
     }
 }
 
@@ -3176,7 +3244,14 @@ function drawCrateAndBook() {
 
 function initCrate(gltf) {
     crate = gltf.scene;
+    
+    let crate5 = crate.clone();
+    crate5.scale.set(0.6, 0.6, 0.6);
+    crate5.position.set(-1, 0, 0);
+    crate5.rotation.y = Math.PI/6;
+
     crateAndBook.add(crate);
+    crateAndBook.add(crate5);
 
     let crate2 = crate.clone();
     let crate3 = crate.clone();
@@ -3200,23 +3275,26 @@ function initBook(gltf) {
     book.position.set(0.2, 1.1, 0);
 
     book.name = "noteTwo";
-    noteCollidableMeshlist.push(book);
+    levelTwoCollidableMeshlist.push(book);
 
     crateAndBook.add(book);
 }
 
 function initDonutOne(gltf) {
-    donutOne = gltf.scene;
-    donutOne.position.set(-0.25, 1, -0.1);
+    donutOne = gltf.scene.children[0];
+    donutOne.position.set(-1.1, 0.625, -0.1);
     donutOne.scale.set(1.5, 1.5, 1.5);
-
+    donutOne.name = "donutOne";
+    levelTwoCollidableMeshlist.push(donutOne);
     crateAndBook.add(donutOne);
 }
 
 function initDonutTwo(gltf) {
-    donutTwo = gltf.scene;
-    donutTwo.position.set(-0.15, 1.025, 0.2);
+    donutTwo = gltf.scene.children[0];
+    donutTwo.position.set(-1, 0.625, 0.2);
     donutTwo.scale.set(1.5, 1.5, 1.5);
+    donutTwo.name = "donutTwo";
+    levelTwoCollidableMeshlist.push(donutTwo);
 
     crateAndBook.add(donutTwo);
 }
@@ -3733,7 +3811,7 @@ function levelTwoBoundingBox() {
     }
     else if(boxArr[2]) { // In box two
         hideTooltip();
-        handleNotes();
+        levelTwoRaycast();
 
         if(zPos > boxTwoBottom - boundaryFactor) { // Place bottom boundary except at box one overlap
             if(xPos < boxOneLeft)
@@ -4051,6 +4129,7 @@ function levelThreeBoundingBox() {
     }
     else if(boxArr[2]) { // In box two
         handleNotes();
+
         if(audioCollection.hole.isPlaying) {
             audioCollection.hole.stop();
         }
@@ -4114,6 +4193,9 @@ function levelThreeBoundingBox() {
         if(zPos < boxFourTop + boundaryFactor) { // Place top boundary except at box three overlap
             if(xPos > boxThreeRight)
                 controls.getObject().position.z = boxFourTop + boundaryFactor;
+        }
+        if(xPos < boxFourLeft + boundaryFactor) { // Place left boundary
+            controls.getObject().position.x = boxFourLeft + boundaryFactor;
         }
         if(xPos > boxFourRight - boundaryFactor) { // Place right boundary except at box five entrance
             if(zPos < boxFiveTop || zPos > boxFiveBottom)
@@ -4270,7 +4352,7 @@ function puzzleThreeBoundingBox() {
             inHole = false;
         }
         
-        if(zPos < boxTwoTop + boundaryFactor) {
+        if(zPos < boxTwoTop) {
             controls.getObject().position.z = boxTwoTop + boundaryFactor;
         }
         if(xPos < boxTwoLeft + boundaryFactor) { // Place left boundary
@@ -5839,6 +5921,10 @@ function loadAudio(url, key) {
             audioCollection.scream = new THREE.Audio(listener);
             configureAudio(url, audioCollection.scream, false, 0.4, false);
             break;
+        case "burp":
+            audioCollection.burp = new THREE.Audio(listener);
+            configureAudio(url, audioCollection.burp, false, 0.4, false);
+            break;
     }
 }
 
@@ -6402,6 +6488,7 @@ function initControls() {
                 keyControls.style.visibility = "hidden";
             }
         });
+        /** Button to toggle shadows on and off */
         shadowsButton.addEventListener("click", () => {
             pointLight.castShadow = !pointLight.castShadow;
             ground.receiveShadow = !ground.receiveShadow;
@@ -6440,8 +6527,9 @@ function initControls() {
         controls.isLocked = true;
         lockingClick = false;
 
-        if(!audioCollection.wildlife.isPlaying)
+        if(!audioCollection.wildlife.isPlaying) {
             audioCollection.wildlife.play();
+        }
         health.style.visibility = "visible";
         crosshair.style.visibility = "visible";
 
@@ -6686,6 +6774,20 @@ function initControls() {
                     }
                 }
                 break;
+            case 82:  // R
+                controls.getObject().position.set(0, 8, -720);
+                currentLevel = 2;
+                break;
+            case 84:  // T
+                controls.getObject().position.set(400, 8, -410);
+                camera.lookAt(475, 8, -790);
+                currentLevel = 3;
+                break;
+            case 89:    // Y
+                currentLevel = 3;
+                controls.getObject().position.set(460, 8, -930);
+                camera.lookAt(460, 8, 1);
+                break;
             case 112:   // F1 (first-person camera)
                 if(inPuzzleTwo && !finishedPuzzleTwo) return;
 
@@ -6707,27 +6809,7 @@ function initControls() {
                 }
                 if(player.movingBackward) {
                     updatePlayerAnimation(player.animations.walkAnim);
-                }
-                // crosshair.style.top = "56.625%";
-                // crosshair.style.transform = "translate(-50%, -56.625%)";            
-                break;
-            case 114:   // F3
-                if(inPuzzleTwo && !finishedPuzzleTwo) return;
-
-                cameraType = "bev"; break;
-            case 82:  // R
-                controls.getObject().position.set(0, 8, -720);
-                currentLevel = 2;
-                break;
-            case 84:  // T
-                controls.getObject().position.set(400, 8, -410);
-                camera.lookAt(475, 8, -790);
-                currentLevel = 3;
-                break;
-            case 89:    // Y
-                currentLevel = 3;
-                controls.getObject().position.set(460, 8, -930);
-                camera.lookAt(460, 8, 1);
+                }            
                 break;
             case 69:    // E (interact)
                 if(interact.style.visibility == "visible") {
@@ -6782,6 +6864,12 @@ function initControls() {
                         case "noteFour":
                             audioCollection.paper.play();
                             showNote("noteFour");
+                            break;
+                        case "donutOne":
+                            eatDonut("donutOne");
+                            break;  
+                        case "donutTwo":
+                            eatDonut("donutTwo");
                             break;  
                         case "healthpack":
                             healthPackPickup();
@@ -7355,6 +7443,7 @@ function initAudio() {
     loadAudio("audio/environment/black_hole.wav", "hole");
     loadAudio("audio/environment/black_hole.wav", "hole2");
     loadAudio("audio/character/scream.ogg", "scream");
+    loadAudio("audio/character/burp.wav", "burp");
 
     /** HEART */
     loadAudio("audio/environment/heart/heart.wav", "heart");
