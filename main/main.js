@@ -777,9 +777,6 @@ function showClue(name) {
 /********** PUZZLE TWO START **********/
 function levelTwoPuzzle() {
     if(!finishedPuzzleTwo) {
-        if(!inPuzzleTwo) {
-            // loadModel("models/environment/speakers.glb", "speakers");
-        }
         inPuzzleTwo = true;
         shieldDisplay.style.visibility = "hidden";
 
@@ -2476,6 +2473,42 @@ function initBoulder(gltf) {
     scene.add(boulder_one);
 }
 
+function initRocks(gltf, numInstances, min, max) {
+    let rock = gltf.scene;
+
+    let rockGeometry = rock.children[0].geometry;
+    let rockMaterial = rock.children[0].material;
+
+    let cluster = new THREE.InstancedMesh(rockGeometry, rockMaterial, numInstances);
+    let tempCluster = new THREE.Object3D();
+
+    let clusterX;
+    let clusterZ;
+    let scalingFactor;
+    let rotationFactor;
+
+    for(let i = 0; i < numInstances; i++) {
+        clusterX = Math.random() * 930 - 290; // x positions between -290 and 640
+        clusterZ = Math.random() * 1230 - 1190; // Z positions between -1190 and 40
+        // No rocks over the holes
+        if((clusterX >= 445 && clusterX < 475 && clusterZ <= -850 && clusterZ > -870) ||
+           (clusterX >= 430 && clusterX < 510 && clusterZ <= -370 && clusterZ > -450)) {
+            continue;
+        }
+        scalingFactor = Math.random() * (max - min) + min; // Scaling factor between [min,max)
+        rotationFactor = Math.random() * 2*Math.PI; // Set rotation between 0 and 2*PI
+
+        tempCluster.scale.set(scalingFactor, scalingFactor, scalingFactor);
+        tempCluster.rotation.set(0, rotationFactor, 0);
+        tempCluster.position.set(clusterX, 0, clusterZ);
+
+        tempCluster.updateMatrix();
+        cluster.setMatrixAt(i, tempCluster.matrix);
+    }
+
+    scene.add(cluster);
+}
+
 function initRockOverClueOne(gltf) {
     rockOverClueOne = gltf.scene.children[0];
 
@@ -2532,22 +2565,40 @@ function initLettersRock(gltf) {
     scene.add(lettersRock);
 }
 
-function initBushOne(gltf) {
+function initBushes(gltf, numInstances, min, max, type) {
     let bush = gltf.scene;
-    let leafGeometry = bush.children[0].children[0].geometry;
-    let leafMaterial = bush.children[0].children[0].material;
+    let leafGeometry;
+    let leafMaterial;
 
-    let barkGeometry = bush.children[0].children[1].geometry;
-    let barkMaterial = bush.children[0].children[1].material;
+    let barkGeometry;
+    let barkMaterial;
 
-    let leafCluster = new THREE.InstancedMesh(leafGeometry, leafMaterial, 780);
-    let barkCluster = new THREE.InstancedMesh(barkGeometry, barkMaterial, 780);
+    if(type == "bush_one") {
+        leafGeometry = bush.children[0].children[0].geometry;
+        leafMaterial = bush.children[0].children[0].material;
+    
+        barkGeometry = bush.children[0].children[1].geometry;
+        barkMaterial = bush.children[0].children[1].material;
+    }
+    else {
+        leafGeometry = bush.children[0].children[2].geometry;
+        leafMaterial = bush.children[0].children[2].material;
+
+        barkGeometry = bush.children[0].children[0].geometry;
+        barkMaterial = bush.children[0].children[0].material;
+    }
+
+    let leafCluster = new THREE.InstancedMesh(leafGeometry, leafMaterial, numInstances);
+    let barkCluster = new THREE.InstancedMesh(barkGeometry, barkMaterial, numInstances);
     let tempCluster = new THREE.Object3D();
 
     let clusterX;
     let clusterZ;
 
-    for(let i = 0; i < 780; i++) {
+    let scalingFactor;
+    let rotationFactor;
+
+    for(let i = 0; i < numInstances; i++) {
         /******* LEVEL 1 START *******/
         if(i < 60) { // Left row
             clusterX = Math.random() * 15 - 35; // x positions between -20 and -35
@@ -2657,7 +2708,7 @@ function initBushOne(gltf) {
             clusterX = Math.random() * 15 + 490; // x positions between 490 and 505 
             clusterZ = Math.random() * 80 - 1180; // z positions between -1180 and -1100
         }
-        else if(i >= 545 && i < 575) { // Left row box one /******* LEVEL 2 START *******/
+        else if(i >= 545 && i < 575) { // Left row box one /******* LEVEL 3 START *******/
             clusterX = Math.random() * 15 + 415; // x positions between 415 and 430 
             clusterZ = Math.random() * 250 - 940; // z positions between -940 and -690
         }
@@ -2713,9 +2764,46 @@ function initBushOne(gltf) {
             clusterX = Math.random() * 200 + 200; // x positions between 200 and 400
             clusterZ = Math.random() * 15 - 380; // z positions between -380 and -365
         }
-
-        let scalingFactor = Math.random() * 1 + 1; // set scale to between 1 and 2
-        let rotationFactor = Math.random() * Math.PI/2; // set rotation to between 0 and PI/2
+        else if(i >= 780 && i < 800) { // Top row left side /******* LEVEL 4 START *******/
+            clusterX = Math.random() * 125 + 330; // x positions between 330 and 455
+            clusterZ = Math.random() * 15 - 345; // z positions between -345 and -330
+        }
+        else if(i >= 800 && i < 840) { // Left row
+            clusterX = Math.random() * 15 + 325; // x positions between 325 and 340
+            clusterZ = Math.random() * 300 - 340; // z positions between -340 and -40
+        }
+        else if(i >= 840 && i < 855) { // Bottom row left side
+            clusterX = Math.random() * 110 + 330; // x positions between 330 and 440
+            clusterZ = Math.random() * 15 - 50; // z positions between -50 and -35
+        }
+        else if(i >= 855 && i < 870) { // Bottom row right side
+            clusterX = Math.random() * 110 + 520; // x positions between 520 and 630
+            clusterZ = Math.random() * 15 - 50; // z positions between -50 and -35
+        }
+        else if(i >= 870 && i < 910) { // Right row
+            clusterX = Math.random() * 15 + 620; // x positions between 620 and 635
+            clusterZ = Math.random() * 300 - 340; // z positions between -340 and -40
+        }
+        else if(i >= 910 && i < 930) { // Top row right side
+            clusterX = Math.random() * 145 + 485; // x positions between 485 and 630
+            clusterZ = Math.random() * 15 - 345; // z positions between -345 and -330
+        }
+        else if(i >= 930 && i < 960) { // Interior
+            clusterX = Math.random() * 300 + 330; // x positions between 330 and 630
+            clusterZ = Math.random() * 300 - 340; // z positions between -340 and -40
+        }
+        else if(i >= 960 && i < 965) { // Top row box one level one
+            clusterX = Math.random() * 70 - 35; // x positions between -35 and 35
+            clusterZ = Math.random() * 15 - 555; // z positions between -540 and -555
+        }
+        
+        if(i >= 930 && i < 960) {
+            scalingFactor = Math.random() * (max - min) + min * 0.35; // Smaller bushes in boss level interior
+        }
+        else {
+            scalingFactor = Math.random() * (max - min) + min; // set scale to between [min,max)
+        }
+        rotationFactor = Math.random() * Math.PI/2; // set rotation to between 0 and PI/2
 
         tempCluster.position.set(clusterX, 0, clusterZ);
         tempCluster.scale.set(scalingFactor, scalingFactor, scalingFactor);
@@ -2725,171 +2813,6 @@ function initBushOne(gltf) {
 
         leafCluster.setMatrixAt(i, tempCluster.matrix);             
         barkCluster.setMatrixAt(i, tempCluster.matrix);
-    }
-
-    leafCluster.matrixAutoUpdate = false;
-    barkCluster.matrixAutoUpdate = false;
-
-    scene.add(leafCluster);
-    scene.add(barkCluster);
-}
-
-function initBushTwo(gltf) {
-    let bush = gltf.scene;   
-    let leafGeometry = bush.children[0].children[2].geometry;
-    let leafMaterial = bush.children[0].children[2].material;
-
-    let barkGeometry = bush.children[0].children[0].geometry;
-    let barkMaterial = bush.children[0].children[0].material;
-
-    let leafCluster = new THREE.InstancedMesh(leafGeometry, leafMaterial, 780);  
-    let barkCluster = new THREE.InstancedMesh(barkGeometry, barkMaterial, 780);  
-    let tempCluster = new THREE.Object3D();
-
-    let clusterX;
-    let clusterZ;
-
-    for(let i = 0; i < 780; i++) {
-        if(i < 60) { // Left row
-            clusterX = Math.random() * 15 - 35; // x positions between -20 and -35
-            clusterZ = Math.random() * 570 - 550; // z positions between 30 and -550
-        }
-        else if(i >= 60 && i < 120) { // Right row before secret path
-            clusterX = Math.random() * 15 + 20; // x positions between 20 and 35
-            clusterZ = Math.random() * 450 - 420; // z positions between 30 and -420
-        }
-        else if(i >= 120 && i < 140) { // Right row after secret path
-            clusterX = Math.random() * 15 + 20; // x positions between 20 and 35
-            clusterZ = Math.random() * 100 - 550; // z positions between -450 and -550
-        }
-        else if(i >= 140 && i < 145) { // Back row
-            clusterX = Math.random() * 70 - 35; // x positions between -35 and 35
-            clusterZ = Math.random() * 15 + 15; // z positions between 15 and 30
-        }
-        else if(i >= 145 && i < 150) { // Secret path 
-            clusterX = Math.random() * 15 + 35; // x positions between 35 and 50
-            clusterZ = Math.random() * 30 - 450; // z positions between -420 and -450
-        }
-        else if(i >= 150 && i < 170) { // Secret path bottom
-            clusterX = Math.random() * 80 + 50; // x positions between 50 and 130
-            clusterZ = Math.random() * 15 - 425; // z positions between -410 and -425
-        }
-        else if(i >= 170 && i < 220) { // Secret path right
-            clusterX = Math.random() * 10 + 120; // x positions between 120 and 130
-            clusterZ = Math.random() * 195 - 615; // z positions between -420 and -615
-        }
-        else if(i >= 220 && i < 240) { // Secret path top
-            clusterX = Math.random() * 80 + 50; // x positions between 50 and 130
-            clusterZ = Math.random() * 15 - 620; // z positions between -605 and -620
-        }
-        else if(i >= 240 && i < 280) { // Secret path left
-            clusterX = Math.random() * 10 + 60; // x positions between 60 and 70
-            clusterZ = Math.random() * 130 - 580; // z positions between -450 and -580
-        }
-        else if(i >= 280 && i < 300) { // Left row box one /******* LEVEL 2 START *******/
-            clusterX = Math.random() * 15 - 35; // x positions between -20 and -35
-            clusterZ = Math.random() * 185 - 900; // z positions between -715 and -900
-        }
-        else if(i >= 300 && i < 330) { // Right row box one / two
-            clusterX = Math.random() * 15 + 20; // x positions between 20 and 35
-            clusterZ = Math.random() * 265 - 980; // z positions between -715 and -980
-        }
-        else if(i >= 330 && i < 350) { // Top row box two
-            clusterX = Math.random() * 240 - 200; // x positions between -200 and 40
-            clusterZ = Math.random() * 15 - 985; // z positions between -970 and -985
-        }
-        else if(i >= 350 && i < 380) { // Bottom row box two / three
-            clusterX = Math.random() * 240 - 280; // x positions between -280 and -40
-            clusterZ = Math.random() * 15 - 905; // z positions between -890 and -905
-        }
-        else if(i >= 380 && i < 410) { // Left row box three / four
-            clusterX = Math.random() * 15 - 285; // x positions between -285 and -270
-            clusterZ = Math.random() * 280 - 1180; // z positions between -900 and -1180
-        }
-        else if(i >= 410 && i < 440) { // Right row box three
-            clusterX = Math.random() * 15 - 205; // x positions between -205 and -190
-            clusterZ = Math.random() * 120 - 1100; // z positions between -980 and -1100
-        }
-        else if(i >= 440 && i < 500) { // Top row box four
-            clusterX = Math.random() * 780 - 280; // x positions between -280 and 500
-            clusterZ = Math.random() * 15 - 1185; // z positions between -1185 and -1170
-        }
-        else if(i >= 500 && i < 540) { // Bottom row box four
-            clusterX = Math.random() * 645 - 200; // x positions between -200 and 445
-            clusterZ = Math.random() * 15 - 1105; // z positions between -1105 and -1090
-        }
-        else if(i >= 540 && i < 545) { // Right row box four
-            clusterX = Math.random() * 15 + 490; // x positions between 490 and 505 
-            clusterZ = Math.random() * 80 - 1180; // z positions between -1180 and -1100
-        }
-        else if(i >= 545 && i < 575) { // Left row box one /******* LEVEL 2 START *******/
-            clusterX = Math.random() * 15 + 415; // x positions between 415 and 430 
-            clusterZ = Math.random() * 250 - 940; // z positions between -940 and -690
-        }
-        else if(i >= 575 && i < 615) { // Right row box one / two
-            clusterX = Math.random() * 15 + 490; // x positions between 490 and 505 
-            clusterZ = Math.random() * 340 - 940; // z positions between -940 and -600
-        }
-        else if(i >= 615 && i < 625) { // Top row box six / seven (secret path)
-            clusterX = Math.random() * 100 + 500; // x positions between 500 and 600 
-            clusterZ = Math.random() * 15 - 845; // z positions between -845 and -830
-        }
-        else if(i >= 625 && i < 630) { // Bottom row box six (secret path)
-            clusterX = Math.random() * 50 + 500; // x positions between 500 and 550 
-            clusterZ = Math.random() * 15 - 820; // z positions between -805 and -820
-        }
-        else if(i >= 630 && i < 645) { // Right row box seven (secret path)
-            clusterX = Math.random() * 15 + 590; // x positions between 605 and 590 
-            clusterZ = Math.random() * 100 - 840; // z positions between -840 and -740
-        }
-        else if(i >= 645 && i < 650) { // Left row box seven (secret path)
-            clusterX = Math.random() * 15 + 545; // x positions between 545 and 560 
-            clusterZ = Math.random() * 40 - 810; // z positions between -810 and -770
-        }
-        else if(i >= 650 && i < 655) { // Top row box eight (secret path)
-            clusterX = Math.random() * 50 + 500; // x positions between 500 and 550  
-            clusterZ = Math.random() * 15 - 775; // z positions between -775 and -760
-        }
-        else if(i >= 655 && i < 660) { // Bottom row box eight (secret path)
-            clusterX = Math.random() * 100 + 500; // x positions between 500 and 600 
-            clusterZ = Math.random() * 40 - 745; // z positions between -745 and -730
-        }
-        else if(i >= 660 && i < 680) { // Top row box two / three
-            clusterX = Math.random() * 220 + 200; // x positions between 200 and 420
-            clusterZ = Math.random() * 15 - 685; // z positions between -685 and -670
-        }
-        else if(i >= 680 && i < 700) { // Bottom row box two
-            clusterX = Math.random() * 220 + 280; // x positions between 280 and 500
-            clusterZ = Math.random() * 15 - 610; // z positions between -610 and -595
-        }
-        else if(i >= 700 && i < 730) { // Left row box three
-            clusterX = Math.random() * 15 + 195; // x positions between 195 and 210
-            clusterZ = Math.random() * 310 - 680; // z positions between -680 and -370
-        }
-        else if(i >= 730 && i < 745) { // Right row box three
-            clusterX = Math.random() * 15 + 270; // x positions between 270 and 285
-            clusterZ = Math.random() * 150 - 600; // z positions between -600 and -450
-        }
-        else if(i >= 745 && i < 760) { // Top row box four
-            clusterX = Math.random() * 120 + 280; // x positions between 280 and 400
-            clusterZ = Math.random() * 15 - 455; // z positions between -455 and -440
-        }
-        else if(i >= 760 && i < 780) { // Bottom row box three / four
-            clusterX = Math.random() * 200 + 200; // x positions between 200 and 400
-            clusterZ = Math.random() * 15 - 380; // z positions between -380 and -365
-        }
-        
-        let scalingFactor = Math.random() * 1 + 2; // set scale to between 2 and 3
-        let rotationFactor = Math.random() * Math.PI/2; // set rotation to between 0 and PI/2
-
-        tempCluster.position.set(clusterX, 0, clusterZ);
-        tempCluster.scale.set(scalingFactor, scalingFactor, scalingFactor);
-        tempCluster.rotation.set(0, rotationFactor, 0);
-
-        tempCluster.updateMatrix();
-
-        leafCluster.setMatrixAt(i, tempCluster.matrix);  
-        barkCluster.setMatrixAt(i, tempCluster.matrix);    
     }
 
     leafCluster.matrixAutoUpdate = false;
@@ -2968,12 +2891,18 @@ function drawRocks() {
 
     if(textureQuality == "high") {
         loadModel("models/environment/rocks/boulder_high.glb", "boulder");
+        loadModel("models/environment/rocks/rock_one_high.glb", "rock_one");
+        loadModel("models/environment/rocks/rock_two_high.glb", "rock_two");
     }
     else if(textureQuality == "medium") {
         loadModel("models/environment/rocks/boulder_medium.glb", "boulder");
+        loadModel("models/environment/rocks/rock_one_medium.glb", "rock_one");
+        loadModel("models/environment/rocks/rock_two_medium.glb", "rock_two");
     }
     else {
         loadModel("models/environment/rocks/boulder_low.glb", "boulder");
+        loadModel("models/environment/rocks/rock_one_low.glb", "rock_one");
+        loadModel("models/environment/rocks/rock_two_low.glb", "rock_two");
     }
 }
 
@@ -3211,22 +3140,28 @@ function drawHoles() {
     scene.add(platform);
 
     /** Black cylinder and cube mesh to fall through to hide the sky box and plane boundaries */
-    let cyclinderGeometry = new THREE.CylinderBufferGeometry(50, 50, 245, 8);
-    let cylinderMaterial = new THREE.MeshBasicMaterial( {color: "black", side: THREE.DoubleSide} );
+    let cyclinderGeometry = new THREE.CylinderBufferGeometry(75, 75, 275, 8);
+    let cylinderMaterial = new THREE.MeshBasicMaterial( {color: "black", side: THREE.BackSide} );
     let cyclinder = new THREE.Mesh(cyclinderGeometry, cylinderMaterial);
 
-    cyclinder.position.set(460, -125, -860);
+    cyclinder.position.set(460, -140, -860);
     scene.add(cyclinder);
 
-    let cube = new THREE.Mesh(new THREE.BoxBufferGeometry(180, 245, 180), new THREE.MeshBasicMaterial( {color: "black", side: THREE.DoubleSide} ));
-    cube.position.set(480, -125, -410);
+    let cube = new THREE.Mesh(new THREE.BoxBufferGeometry(200, 275, 200), new THREE.MeshBasicMaterial( {color: "black", side: THREE.BackSide} ));
+    cube.position.set(480, -140, -410);
     scene.add(cube);
 
     // Cover the base of the trees
-    let cubeCover = new THREE.Mesh(new THREE.PlaneBufferGeometry(180, 180), new THREE.MeshBasicMaterial( {color: "black", side: THREE.DoubleSide} )); 
-    cubeCover.rotation.x = -Math.PI/2;
-    cubeCover.position.set(480, -15, -410);
-    scene.add(cubeCover);
+    let coverBig = new THREE.Mesh(new THREE.PlaneBufferGeometry(200, 200), new THREE.MeshBasicMaterial( {color: "black", side: THREE.BackSide} )); 
+    let coverSmall = coverBig.clone();
+
+    coverSmall.rotation.x = -Math.PI/2;
+    coverSmall.position.set(460, -25, -860);
+    scene.add(coverSmall);
+
+    coverBig.rotation.x = -Math.PI/2;
+    coverBig.position.set(480, -70, -410);
+    scene.add(coverBig);
 }
 
 function drawCrateAndBook() {
@@ -5631,6 +5566,12 @@ function loadModel(url, key) {
             case "boulder":
                 initBoulder(gltf);
                 break;
+            case "rock_one":
+                initRocks(gltf, 200, 0.1, 0.25);
+                break;
+            case "rock_two":
+                initRocks(gltf, 300, 0.0025, 0.01);
+                break;
             case "rock_over_clue_one":
                 initRockOverClueOne(gltf);
                 break;
@@ -5647,10 +5588,10 @@ function loadModel(url, key) {
                 initLettersRock(gltf);
                 break;
             case "bush_one":
-                initBushOne(gltf);
+                initBushes(gltf, 965, 1, 2, "bush_one");
                 break;
             case "bush_two":
-                initBushTwo(gltf);
+                initBushes(gltf, 965, 2, 3, "bush_two");
                 break;
             case "eagle":
                 eagle = gltf.scene.children[0];
@@ -7017,7 +6958,7 @@ function initSkybox() {
         } ));
     }
     skybox = new THREE.Mesh(new THREE.BoxBufferGeometry(3000, 1000, 4000), material);
-    skybox.position.y += 250;
+    skybox.position.y += 200;
     scene.add(skybox);
 }
 
