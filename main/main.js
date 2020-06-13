@@ -219,11 +219,13 @@ let disposedTotems = false;
 let rightOfTree = false;
 let onTree = false;
 let crateAndBook;
+let crateAndDonuts;
 let crate;
 let book;
-let donutOne;
+let donut;
 let donutTwo;
-let levelTwoCollidableMeshlist = [];
+let donutCollidableMeshlist = [];
+let selectedDonut;
 let speakers;
 let movedBlockingTreesLevelTwo = false;
 
@@ -416,9 +418,9 @@ function gameLoop() {
                 if(controls.getObject().rotation.x * 180 / Math.PI > 12) {
                     controls.getObject().rotation.x = 12 * Math.PI / 180;
                 }
-                // else if(controls.getObject().rotation.x * 180 / Math.PI < -70) {
-                //     controls.getObject().rotation.x = -70 * Math.PI / 180;
-                // }
+                else if(controls.getObject().rotation.x * 180 / Math.PI < -70) {
+                    controls.getObject().rotation.x = -70 * Math.PI / 180;
+                }
 
                 controls.getObject().rotation.z = 0;
                 controls.getObject().rotation.order = "YXZ";
@@ -514,6 +516,9 @@ function handleNotes() {
         if(intersects[0].object.name == "noteOne") { // Note one
             interactableObject = "noteOne";
         }
+        else if(intersects[0].object.name == "noteTwo") { // Note two
+            interactableObject = "noteTwo";
+        }
         else if(intersects[0].object.name == "noteThree") { // Note three
             interactableObject = "noteThree";
         }
@@ -568,26 +573,19 @@ function showNote(name) {
  * Handles the raycasting logic to allow them to select the note and donuts.
  * This function must be called in a bounding box check.
  */
-function levelTwoRaycast() {
+function donutRaycast() {
     /** Handle raycasting with the player's position as the origin of the ray and the direction they are looking as the direction of the ray */
     let cameraDirection = new THREE.Vector3();
     cameraDirection.normalize();
     controls.getDirection(cameraDirection);
     let playerRaycaster = new THREE.Raycaster(controls.getObject().position, cameraDirection);
-    let intersects = playerRaycaster.intersectObjects(levelTwoCollidableMeshlist, true);
+    let intersects = playerRaycaster.intersectObjects(donutCollidableMeshlist, true);
 
-    if(intersects.length > 0) {
+    if(intersects.length > 0 && intersects[0].distance < 10) {
         interact.style.visibility = "visible";
         
-        if(intersects[0].object.name == "noteTwo" && intersects[0].distance < 10) { // Note two
-            interactableObject = "noteTwo"; 
-        }
-        else if(intersects[0].object.name == "donutOne" && intersects[0].distance < 7) { // Donut one
-            interactableObject = "donutOne";
-        }
-        else if(intersects[0].object.name == "donutTwo" && intersects[0].distance < 7) { // Donut two
-            interactableObject = "donutTwo";
-        }
+        interactableObject = "donut";
+        selectedDonut = intersects[0];
     }
     else {
         interact.style.visibility = "hidden";
@@ -596,19 +594,17 @@ function levelTwoRaycast() {
 }
 
 /** Allow the player to eat a donut */
-function eatDonut(name) {
-    /** Remove the selected donut from the collection */
-    switch (name) {
-        case "donutOne":
-            crateAndBook.remove(donutOne);
-            break;
-        case "donutTwo":
-            crateAndBook.remove(donutTwo);
-            break;
-    }
+function eatDonut() {
+    let indexToRemove = donutCollidableMeshlist.findIndex(item => item.id == selectedDonut.object.id); // Remove the selected donut from the collidable mesh list
+    donutCollidableMeshlist.splice(indexToRemove, 1);
 
-    let indexToRemove = levelTwoCollidableMeshlist.findIndex(object => object.name == name); // Remove the selected donut from the collidable mesh list
-    levelTwoCollidableMeshlist.splice(indexToRemove, 1);
+    /** Remove the selected donut from the collection */
+    if(selectedDonut.object.name == "donut") {
+        crateAndDonuts.remove(donut);
+    }
+    else {
+        crateAndDonuts.remove(donutTwo);
+    }
     
     if(audioCollection.burp.isPlaying) {
         audioCollection.burp.stop();
@@ -3164,13 +3160,28 @@ function drawHoles() {
     scene.add(coverBig);
 }
 
+function drawCrateAndDonuts() {
+    crateAndDonuts = new THREE.Object3D();
+
+    let donutChoice = Math.floor(Math.random() * 2);
+
+    if(donutChoice == 0) {
+        loadModel("models/environment/donutOne.glb", "donut");
+    }
+    else {
+        loadModel("models/environment/donutTwo.glb", "donut");
+    }
+    
+    crateAndDonuts.scale.set(3, 3, 3);
+    crateAndDonuts.position.set(-65, 0, -1120);
+    scene.add(crateAndDonuts);
+}
+
 function drawCrateAndBook() {
     crateAndBook = new THREE.Object3D();
 
     loadModel("models/environment/crate.glb", "crate");
     loadModel("models/environment/book.glb", "book");
-    loadModel("models/environment/donutOne.glb", "donutOne");
-    loadModel("models/environment/donutTwo.glb", "donutTwo");
 
     crateAndBook.scale.set(4, 4, 4);
     crateAndBook.position.set(-160, 0, -925);
@@ -3179,18 +3190,16 @@ function drawCrateAndBook() {
 
 function initCrate(gltf) {
     crate = gltf.scene;
-    
-    let crate5 = crate.clone();
-    crate5.scale.set(0.6, 0.6, 0.6);
-    crate5.position.set(-1, 0, 0);
-    crate5.rotation.y = Math.PI/6;
 
     crateAndBook.add(crate);
-    crateAndBook.add(crate5);
 
     let crate2 = crate.clone();
     let crate3 = crate.clone();
     let crate4 = crate.clone();
+
+    let crate5 = crate.clone();
+    crate5.rotation.y = Math.PI/6;
+    crateAndDonuts.add(crate5);
 
     crate2.rotation.y = Math.PI/6;
     
@@ -3210,28 +3219,20 @@ function initBook(gltf) {
     book.position.set(0.2, 1.1, 0);
 
     book.name = "noteTwo";
-    levelTwoCollidableMeshlist.push(book);
+    noteCollidableMeshlist.push(book);
 
     crateAndBook.add(book);
 }
 
-function initDonutOne(gltf) {
-    donutOne = gltf.scene.children[0];
-    donutOne.position.set(-1.1, 0.625, -0.1);
-    donutOne.scale.set(1.5, 1.5, 1.5);
-    donutOne.name = "donutOne";
-    levelTwoCollidableMeshlist.push(donutOne);
-    crateAndBook.add(donutOne);
-}
+function initDonut(gltf) {
+    donut = gltf.scene.children[0];
+    donut.position.set(-0.1, 1.025, -0.1);
+    donut.scale.set(1.5, 1.5, 1.5);
+    donut.name = "donut";
 
-function initDonutTwo(gltf) {
-    donutTwo = gltf.scene.children[0];
-    donutTwo.position.set(-1, 0.625, 0.2);
-    donutTwo.scale.set(1.5, 1.5, 1.5);
-    donutTwo.name = "donutTwo";
-    levelTwoCollidableMeshlist.push(donutTwo);
+    donutCollidableMeshlist.push(donut);
 
-    crateAndBook.add(donutTwo);
+    crateAndDonuts.add(donut);
 }
 
 function drawBarrelsAndScroll() {
@@ -3697,6 +3698,7 @@ function levelTwoBoundingBox() {
     }
     else if(xPos > boxTwoLeft && xPos < boxTwoRight && zPos < boxTwoBottom && zPos > boxTwoTop) {
         setBox(2, 2);
+        handleNotes();
     }
     else if(xPos > boxThreeLeft && xPos < boxThreeRight && zPos < boxThreeBottom && zPos > boxThreeTop) {
         setBox(3, 2);
@@ -3704,6 +3706,7 @@ function levelTwoBoundingBox() {
     }
     else if(xPos > boxFourLeft && xPos < boxFourRight && zPos < boxFourBottom && zPos > boxFourTop) {
         setBox(4, 2);
+        donutRaycast();
     }
     else if(xPos > boxFiveLeft && xPos < boxFiveRight && zPos < boxFiveBottom && zPos > boxFiveTop) {
         setBox(5, 2);
@@ -3746,7 +3749,6 @@ function levelTwoBoundingBox() {
     }
     else if(boxArr[2]) { // In box two
         hideTooltip();
-        levelTwoRaycast();
 
         if(zPos > boxTwoBottom - boundaryFactor) { // Place bottom boundary except at box one overlap
             if(xPos < boxOneLeft)
@@ -5536,11 +5538,8 @@ function loadModel(url, key) {
             case "book":
                 initBook(gltf);
                 break;
-            case "donutOne":
-                initDonutOne(gltf);
-                break;
-            case "donutTwo":
-                initDonutTwo(gltf);
+            case "donut":
+                initDonut(gltf);
                 break;
             case "barrel":
                 initBarrel(gltf);
@@ -6806,12 +6805,9 @@ function initControls() {
                             audioCollection.paper.play();
                             showNote("noteFour");
                             break;
-                        case "donutOne":
-                            eatDonut("donutOne");
-                            break;  
-                        case "donutTwo":
-                            eatDonut("donutTwo");
-                            break;  
+                        case "donut":
+                            eatDonut();
+                            break;
                         case "healthpack":
                             healthPackPickup();
                             break;    
@@ -7420,6 +7416,7 @@ function initWorld() {
     drawHealthPacks();
     drawHoles();
     drawCrateAndBook();
+    drawCrateAndDonuts();
     drawBarrelsAndScroll();
     drawCratesAndScroll();
     drawSpeakers();
