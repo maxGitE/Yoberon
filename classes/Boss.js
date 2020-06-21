@@ -3,6 +3,7 @@ class Boss {
         this._currentHealth = 1000;
         this._model = undefined;
         this._hitbox = undefined;
+        this._teleportCooldown = 100;
         this._currentAnimation = undefined;
         this._walkAnim = undefined;
         this._attackAnim = undefined;
@@ -23,6 +24,10 @@ class Boss {
 
     get hitbox() {
         return this._hitbox;
+    }
+    
+    get teleportCooldown() {
+        return this._teleportCooldown
     }
 
     get currentAnimation() {
@@ -67,6 +72,10 @@ class Boss {
 
     set hitbox(hitbox) {
         this._hitbox = hitbox;
+    }
+
+    set teleportCooldown(value) {
+        this._teleportCooldown = value;
     }
 
     set currentAnimation(animation) {

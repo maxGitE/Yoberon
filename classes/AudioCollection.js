@@ -48,6 +48,7 @@ class AudioCollection {
         this._winPuzzle;
         this._recordScratch;
         this._burp;
+        this._orbExplosion;
     }
 
     get wildlife() {
@@ -444,5 +445,13 @@ class AudioCollection {
 
     set burp(audio) {
         this._burp = audio;
+    }
+
+    get orbExplosion() {
+        return this._orbExplosion;
+    }
+
+    set orbExplosion(audio) {
+        this._orbExplosion = audio;
     }
 }

@@ -277,6 +277,22 @@ let bossWalking = false;
 let updatedAlienRange = false;
 let movedBlockingTreesLevelFour = false;
 let endGameBlockingTrees;
+let towerOne;
+let towerTwo;
+let towerThree;
+let towerFour;
+let orbOne = {mesh: undefined, active: true, statusMesh: undefined, health: 3};
+let orbTwo = {mesh: undefined, active: true, statusMesh: undefined, health: 3};
+let orbThree = {mesh: undefined, active: true, statusMesh: undefined, health: 3};
+let orbFour = {mesh: undefined, active: true, statusMesh: undefined, health: 3};
+let towerArray = [];
+let orbArray = [orbOne, orbTwo, orbThree, orbFour];
+let orbOneHealingRay;
+let orbTwoHealingRay;
+let orbThreeHealingRay;
+let orbFourHealingRay;
+let healingRayArray = [];
+let resetBossTowers = false;
 
 /** HUD */
 let tooltipVisible = false;
@@ -290,6 +306,7 @@ let interactableObject;
 /** Used to ensure that the gun does not fire when locking the controls */
 let lockingClick = true; 
 let bulletCollidableMeshList = [];
+let orbCollidableMeshList = [];
 
 /** HEALTH PACKS */
 let healthPackCollidableMeshList = [];
@@ -366,7 +383,6 @@ function gameLoop() {
 
             // Play footsteps audio if the player is moving
             playFootsteps();
-            
 
             minimapCamera.position.set(camera.position.x, 0, camera.position.z);
 
@@ -2990,6 +3006,174 @@ function drawTotems() {
     scene.add(totemCollection);
 }
 
+function drawTowers() { 
+    /** TOWERS */
+    let towerCollection = new THREE.Object3D();
+
+    let towerTexture = loadTexture("textures/texture_totem_wood.png");
+    let towerNormalMap = loadTexture("textures/texture_totem_wood_normal.png");
+
+    let towerGeometry = new THREE.CylinderBufferGeometry(4, 4, 50, 32);
+    let towerOneMaterial = new THREE.MeshStandardMaterial( {color: "#706d71", map: towerTexture, normalMap: towerNormalMap} );
+    let towerTwoMaterial = towerOneMaterial.clone();
+    let towerThreeMaterial = towerOneMaterial.clone();
+    let towerFourMaterial = towerOneMaterial.clone();
+
+    towerOne = new THREE.Mesh(towerGeometry, towerOneMaterial);
+    towerTwo = new THREE.Mesh(towerGeometry, towerTwoMaterial);
+    towerThree = new THREE.Mesh(towerGeometry, towerThreeMaterial);
+    towerFour = new THREE.Mesh(towerGeometry, towerFourMaterial);
+
+    /** Add the towers to the list of objects that cast shadow */
+    shadowObjects.push(towerOne);
+    shadowObjects.push(towerTwo);
+    shadowObjects.push(towerThree);
+    shadowObjects.push(towerFour);
+
+    towerOne.position.set(-100, 25, 100);
+    towerOne.rotation.y = Math.random() * 2*Math.PI;
+    towerTwo.position.set(100, 25, 100);
+    towerTwo.rotation.y = Math.random() * 2*Math.PI;
+    towerThree.position.set(-100, 25, -100);
+    towerThree.rotation.y = Math.random() * 2*Math.PI;
+    towerFour.position.set(100, 25, -100);
+    towerFour.rotation.y = Math.random() * 2*Math.PI;
+
+    /** ORBS */
+    let orbTexture = loadReflectiveTexture(skyboxURLs);
+
+    let orbGeometry = new THREE.SphereBufferGeometry(3, 64, 16);
+    let orbOneMaterial = new THREE.MeshBasicMaterial( {color: "white"} );
+    let orbTwoMaterial = orbOneMaterial.clone();
+    let orbThreeMaterial = orbOneMaterial.clone();
+    let orbFourMaterial = orbOneMaterial.clone();
+
+    orbOne.mesh = new THREE.Mesh(orbGeometry, orbOneMaterial);
+    orbOne.mesh.name = "orbOne";
+    orbTwo.mesh = new THREE.Mesh(orbGeometry, orbTwoMaterial);
+    orbTwo.mesh.name = "orbTwo";
+    orbThree.mesh = new THREE.Mesh(orbGeometry, orbThreeMaterial);
+    orbThree.mesh.name = "orbThree";
+    orbFour.mesh = new THREE.Mesh(orbGeometry, orbFourMaterial);
+    orbFour.mesh.name = "orbFour";
+
+    orbCollidableMeshList.push(orbOne.mesh);
+    orbCollidableMeshList.push(orbTwo.mesh);
+    orbCollidableMeshList.push(orbThree.mesh);
+    orbCollidableMeshList.push(orbFour.mesh);
+
+    /** Add the orbs to the list of objects that cast shadow */
+    shadowObjects.push(orbOne);
+    shadowObjects.push(orbTwo);
+    shadowObjects.push(orbThree);
+    shadowObjects.push(orbFour);
+
+    orbOne.mesh.position.set(-100, 55, 100);
+    orbOne.mesh.rotation.y = Math.random() * 2*Math.PI;
+    orbTwo.mesh.position.set(100, 55, 100);
+    orbTwo.mesh.rotation.y = Math.random() * 2*Math.PI;
+    orbThree.mesh.position.set(-100, 55, -100);
+    orbThree.mesh.rotation.y = Math.random() * 2*Math.PI;
+    orbFour.mesh.position.set(100, 55, -100);
+    orbFour.mesh.rotation.y = Math.random() * 2*Math.PI;
+
+    let orbStatusGeometry = new THREE.CylinderBufferGeometry(4.2, 4.2, 0.5, 32);
+    let orbStatusMaterial = new THREE.MeshBasicMaterial( {color: "#1ac3fd"} );
+
+    orbOne.statusMesh = new THREE.Mesh(orbStatusGeometry, orbStatusMaterial.clone());
+    orbTwo.statusMesh = new THREE.Mesh(orbStatusGeometry, orbStatusMaterial.clone());
+    orbThree.statusMesh = new THREE.Mesh(orbStatusGeometry, orbStatusMaterial.clone());
+    orbFour.statusMesh = new THREE.Mesh(orbStatusGeometry, orbStatusMaterial.clone());
+
+    orbOne.statusMesh.position.set(-100, 35, 100);
+    orbTwo.statusMesh.position.set(100, 35, 100);
+    orbThree.statusMesh.position.set(-100, 35, -100);
+    orbFour.statusMesh.position.set(100, 35, -100);
+
+    towerCollection.add(towerOne);
+    towerCollection.add(towerTwo);
+    towerCollection.add(towerThree);
+    towerCollection.add(towerFour);
+    towerCollection.add(orbOne.mesh);
+    towerCollection.add(orbTwo.mesh);
+    towerCollection.add(orbThree.mesh);
+    towerCollection.add(orbFour.mesh);
+    towerCollection.add(orbOne.statusMesh);
+    towerCollection.add(orbTwo.statusMesh);
+    towerCollection.add(orbThree.statusMesh);
+    towerCollection.add(orbFour.statusMesh);
+
+    towerCollection.position.set(480, 0, -190);
+    scene.add(towerCollection);
+
+    towerCollection.updateMatrixWorld();
+
+    let towerOnePosition = new THREE.Vector3();
+    towerOne.getWorldPosition(towerOnePosition);
+
+    let towerTwoPosition = new THREE.Vector3();
+    towerTwo.getWorldPosition(towerTwoPosition);
+
+    let towerThreePosition = new THREE.Vector3();
+    towerThree.getWorldPosition(towerThreePosition);
+
+    let towerFourPosition = new THREE.Vector3();
+    towerFour.getWorldPosition(towerFourPosition);
+
+    towerArray.push(towerOnePosition);
+    towerArray.push(towerTwoPosition);
+    towerArray.push(towerThreePosition);
+    towerArray.push(towerFourPosition);
+
+    let healingRayMaterial = new THREE.LineBasicMaterial( {color: "#1ac3fd", linewidth: 5} );
+
+    let orbOnePosition = new THREE.Vector3();
+    let orbOneHealingRayGeometry = new THREE.Geometry();
+    orbOneHealingRayGeometry.vertices.push(
+        orbOne.mesh.getWorldPosition(orbOnePosition),
+        orbOnePosition
+    );
+    orbOneHealingRay = new THREE.Line(orbOneHealingRayGeometry, healingRayMaterial.clone());
+    orbOneHealingRay.frustumCulled = false;
+
+    let orbTwoPosition = new THREE.Vector3();
+    let orbTwoHealingRayGeometry = new THREE.Geometry();
+    orbTwoHealingRayGeometry.vertices.push(
+        orbTwo.mesh.getWorldPosition(orbTwoPosition),
+        orbTwoPosition
+    );
+    orbTwoHealingRay = new THREE.Line(orbTwoHealingRayGeometry, healingRayMaterial.clone());
+    orbTwoHealingRay.frustumCulled = false;
+
+    let orbThreePosition = new THREE.Vector3();
+    let orbThreeHealingRayGeometry = new THREE.Geometry();
+    orbThreeHealingRayGeometry.vertices.push(
+        orbThree.mesh.getWorldPosition(orbThreePosition),
+        orbThreePosition
+    );
+    orbThreeHealingRay = new THREE.Line(orbThreeHealingRayGeometry, healingRayMaterial.clone());
+    orbThreeHealingRay.frustumCulled = false;
+
+    let orbFourPosition = new THREE.Vector3();
+    let orbFourHealingRayGeometry = new THREE.Geometry();
+    orbFourHealingRayGeometry.vertices.push(
+        orbFour.mesh.getWorldPosition(orbFourPosition),
+        orbFourPosition
+    );
+    orbFourHealingRay = new THREE.Line(orbFourHealingRayGeometry, healingRayMaterial.clone());
+    orbFourHealingRay.frustumCulled = false;
+    
+    healingRayArray.push(orbOneHealingRay);
+    healingRayArray.push(orbTwoHealingRay);
+    healingRayArray.push(orbThreeHealingRay);
+    healingRayArray.push(orbFourHealingRay);
+    
+    scene.add(orbOneHealingRay);
+    scene.add(orbTwoHealingRay);
+    scene.add(orbThreeHealingRay);
+    scene.add(orbFourHealingRay);
+}
+
 function drawPaper() {
     /** NOTES */
     paper_noteOne = new THREE.Mesh(new THREE.BoxBufferGeometry(1, 0.01, 1), new THREE.MeshLambertMaterial( {color: "#f2eecb"} ));    
@@ -4459,7 +4643,7 @@ function updateBullets() {
             distance_twoVec.subVectors(item.bullet.position, item.lastPosition);
             let distance_two = distance_twoVec.length();
 
-            if(distance_one <= distance_two) {
+            if(distance_one <= distance_two) { // Hit
                
                 if(intersect.object.parent.parent.name != null) {
                     switch(intersect.object.parent.parent.name) { // The name of the model that the hitbox mesh is attached to
@@ -4510,6 +4694,52 @@ function updateBullets() {
                             audioCollection.hitmarker.play();
                             damageBoss(item.type);
                             removeBullet(player, item.bullet, index);
+                            break;
+                    }
+                }
+            }
+        }
+
+        if(currentLevel == 4 && !intro) {
+            let intersects = item.raycaster.intersectObjects(orbCollidableMeshList, true);
+
+            if(intersects.length > 0) {
+                let intersect = intersects[0];
+                let distance_one = intersect.distance;
+                let distance_twoVec = new THREE.Vector3();
+                distance_twoVec.subVectors(item.bullet.position, item.lastPosition);
+                let distance_two = distance_twoVec.length();
+    
+                if(distance_one <= distance_two) { // Hit
+                    if(audioCollection.orbExplosion.isPlaying) {
+                        audioCollection.orbExplosion.stop();
+                    }
+                    audioCollection.orbExplosion.play();
+
+                    switch(intersect.object.name) {
+                        case "orbOne":
+                            orbOne.active = false;
+                            orbOne.statusMesh.material.color.setHex(0xff0000);
+                            healingRayArray[0].visible = false;
+                            orbOne.mesh.visible = false;
+                            break;
+                        case "orbTwo":
+                            orbTwo.active = false;
+                            orbTwo.statusMesh.material.color.setHex(0xff0000);
+                            healingRayArray[1].visible = false;
+                            orbTwo.mesh.visible = false;
+                            break;
+                        case "orbThree":
+                            orbThree.active = false;
+                            orbThree.statusMesh.material.color.setHex(0xff0000);
+                            healingRayArray[2].visible = false;
+                            orbThree.mesh.visible = false;
+                            break;
+                        case "orbFour":
+                            orbFour.active = false;
+                            orbFour.statusMesh.material.color.setHex(0xff0000);
+                            healingRayArray[3].visible = false;
+                            orbFour.mesh.visible = false;
                             break;
                     }
                 }
@@ -4850,6 +5080,12 @@ function damageBoss(type) {
                             boss.model.remove(boss.hitbox.mesh);
                             defeatedBoss = true;
                             bossHealth.style.visibility = "hidden";
+
+                            resetBossTowers = true;
+                            for(let i = 0; i < towerArray.length; i++) {
+                                healingRayArray[i].visible = false;
+                                orbArray[i].mesh.material.color.setHex(0xffffff);
+                            }
                         }
                     }
 
@@ -4877,6 +5113,12 @@ function damageBoss(type) {
         boss.model.remove(boss.hitbox.mesh);
         defeatedBoss = true;
         bossHealth.style.visibility = "hidden";
+
+        resetBossTowers = true;
+        for(let i = 0; i < towerArray.length; i++) {
+            healingRayArray[i].visible = false;
+            orbArray[i].mesh.material.color.setHex(0xffffff);
+        }
     }
 
     setTimeout(() => {
@@ -5859,6 +6101,10 @@ function loadAudio(url, key) {
             audioCollection.burp = new THREE.Audio(listener);
             configureAudio(url, audioCollection.burp, false, 0.4, false);
             break;
+        case "orb_explosion":
+            audioCollection.orbExplosion = new THREE.Audio(listener);
+            configureAudio(url, audioCollection.orbExplosion, false, 0.4, false);
+            break;
     }
 }
 
@@ -5952,6 +6198,8 @@ function restartCheckpoint() {
     inHole = false;
     onPlatform = false;
     screamPlayed = false;
+
+    resetBossTowers = false;
 
     controls.lock();
 
@@ -6075,22 +6323,22 @@ function spawnLevelFourAliens() {
 
                 switch(i) {
                     case 0: 
-                        alienArray[i].model.position.set(380, 0, -290);
+                        alienArray[i].model.position.set(380, 0, -150);
                         alienArray[i].canShoot.level = 4;
                         alienArray[i].canShoot.box = 1;
                         break;
                     case 1: 
-                        alienArray[i].model.position.set(580, 0, -290);
+                        alienArray[i].model.position.set(580, 0, -150);
                         alienArray[i].canShoot.level = 4;
                         alienArray[i].canShoot.box = 1;
                         break;
                     case 2:
-                        alienArray[i].model.position.set(380, 0, -90); 
+                        alienArray[i].model.position.set(400, 0, -90); 
                         alienArray[i].canShoot.level = 4;
                         alienArray[i].canShoot.box = 1;
                         break;
                     case 3: 
-                        alienArray[i].model.position.set(580, 0, -90);
+                        alienArray[i].model.position.set(560, 0, -90);
                         alienArray[i].canShoot.level = 4;
                         alienArray[i].canShoot.box = 1;
                         break;
@@ -6117,12 +6365,47 @@ function updateBossPosition() {
     direction = player.playerModel.position.clone().sub(boss.model.position);
     direction.y = 0;
 
+    if(boss.currentHealth > 0) {
+        for(let i = 0; i < towerArray.length; i++) {
+            if(boss.model.position.clone().distanceTo(towerArray[i].clone()) < 150 && boss.currentHealth < 1000) {
+                if(orbArray[i].active) {
+                    orbArray[i].mesh.material.color.setHex(0x1ac3fd);
+                    boss.currentHealth = Math.round(boss.currentHealth + 1);
+                    bossHealthBar.setAttribute("style", "width: " + boss.currentHealth / 33.33 + "%");
+
+                    healingRayArray[i].geometry.vertices[1] = boss.model.position.clone();
+                    healingRayArray[i].geometry.vertices[1].y = 24;
+                    healingRayArray[i].geometry.verticesNeedUpdate = true;
+                    healingRayArray[i].visible = true;
+
+                    if(boss.currentHealth > 1000) {
+                        boss.currentHealth = 1000;
+                    }
+                }
+            }
+            else {
+                if(orbArray[i].active) {
+                    healingRayArray[i].visible = false;
+                    orbArray[i].mesh.material.color.setHex(0xffffff);
+                }
+            }
+        }
+    }
+
     if(!bossInRangeOfPlayer()) {
         if(!bossAttacked && !bossWalking) {
             updateBossAnimation(boss.walkAnim);
             bossWalking = true;
         }
         boss.model.position.add(direction.normalize().multiplyScalar(0.3)); // Move the boss towards the player 0.3
+
+        boss.teleportCooldown -= 0.5;
+
+        console.log(boss.teleportCooldown);
+        if(Math.round(boss.teleportCooldown) <= 0) {
+            boss.teleportCooldown = 100;
+            boss.model.position.set(player.playerModel.position.x, 0, player.playerModel.position.z - 15);
+        }
     }
     else if(!bossAttacked) {
         bossWalking = false;
@@ -7396,6 +7679,9 @@ function initAudio() {
     /** TRIPWIRE */
     loadAudio("audio/environment/tripwire/tripwire_activated.wav", "tripwire_activated");
     loadAudio("audio/environment/tripwire/tripwire_buzz.wav", "tripwire_buzz");
+
+    /** ORB */
+    loadAudio("audio/boss/orb_explosion.wav", "orb_explosion");
 }
 
 function initWorld() {
@@ -7405,6 +7691,7 @@ function initWorld() {
     drawRocks();
     drawStars();
     drawTotems();
+    drawTowers();
     drawPaper();
     drawNotePoles();
     drawHealthPacks();

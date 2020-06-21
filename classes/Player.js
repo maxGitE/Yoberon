@@ -1,6 +1,6 @@
 class Player {
     constructor() {
-        this._currentHealth = 100;
+        this._currentHealth = 100000;
         this._maxHealth = 100;
         this._currentStamina = 100;
         this._maxStamina = 100;
