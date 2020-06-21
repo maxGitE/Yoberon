@@ -3,7 +3,7 @@ class Boss {
         this._currentHealth = 1000;
         this._model = undefined;
         this._hitbox = undefined;
-        this._teleportCooldown = 100;
+        this._teleportCooldown = 200;
         this._currentAnimation = undefined;
         this._walkAnim = undefined;
         this._attackAnim = undefined;

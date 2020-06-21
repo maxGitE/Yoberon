@@ -49,6 +49,7 @@ class AudioCollection {
         this._recordScratch;
         this._burp;
         this._orbExplosion;
+        this._bossTeleport;
     }
 
     get wildlife() {
@@ -453,5 +454,13 @@ class AudioCollection {
 
     set orbExplosion(audio) {
         this._orbExplosion = audio;
+    }
+
+    get bossTeleport() {
+        return this._bossTeleport;
+    }
+
+    set bossTeleport(audio) {
+        this._bossTeleport = audio;
     }
 }

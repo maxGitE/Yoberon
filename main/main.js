@@ -274,6 +274,7 @@ let pausedRoarAudio = false;
 let intro = true;
 let bossAttacked = false;
 let bossWalking = false;
+let bossRoaring = false;
 let updatedAlienRange = false;
 let movedBlockingTreesLevelFour = false;
 let endGameBlockingTrees;
@@ -4690,7 +4691,7 @@ function updateBullets() {
                             }
                             break;
                         case "boss": // Boss
-                            if(!bossFightStarted || intro) return; // Prevent player from shooting boss before combat is enabled
+                            if(!bossFightStarted || intro || bossRoaring) return; // Prevent player from shooting boss before combat is enabled or while boss is roaring
                             audioCollection.hitmarker.play();
                             damageBoss(item.type);
                             removeBullet(player, item.bullet, index);
@@ -6029,6 +6030,10 @@ function loadAudio(url, key) {
                 audioCollection.bossFootstep.playBackRate = 1.75;
             });
             break;
+        case "boss_teleport":
+            audioCollection.bossTeleport = new THREE.Audio(listener);
+            configureAudio(url, audioCollection.bossTeleport, false, 0.6, false);
+            break;
         case "boss_death":
             audioCollection.bossDeath = new THREE.Audio(listener);
             configureAudio(url, audioCollection.bossDeath, false, 0.6, false);
@@ -6393,18 +6398,39 @@ function updateBossPosition() {
     }
 
     if(!bossInRangeOfPlayer()) {
-        if(!bossAttacked && !bossWalking) {
+        if(!bossAttacked && !bossWalking && !bossRoaring) {
             updateBossAnimation(boss.walkAnim);
             bossWalking = true;
         }
-        boss.model.position.add(direction.normalize().multiplyScalar(0.3)); // Move the boss towards the player 0.3
+        if(!audioCollection.bossRoar.isPlaying) { // Stop the boss from moving while he roars
+            boss.model.position.add(direction.normalize().multiplyScalar(0.3)); // Move the boss towards the player 0.3
+            boss.teleportCooldown -= 0.5;
+        }
 
-        boss.teleportCooldown -= 0.5;
-
-        console.log(boss.teleportCooldown);
         if(Math.round(boss.teleportCooldown) <= 0) {
-            boss.teleportCooldown = 100;
-            boss.model.position.set(player.playerModel.position.x, 0, player.playerModel.position.z - 15);
+
+            if(!audioCollection.bossRoar.isPlaying) {
+                bossRoaring = true;
+                bossWalking = false;
+                audioCollection.bossRoar.play();
+                updateBossAnimation(boss.flexAnim);
+            }
+            else {
+                audioCollection.bossRoar.source.onended = function() { // Teleport the boss after the roar has finished      
+                    boss.teleportCooldown = 200;
+
+                    let bossTeleport = Math.floor(Math.random() * 3);
+                    if(bossTeleport != 2) { // Randomize whether the boss will teleport or not (teleport 2/3 times)
+                        boss.model.position.set(player.playerModel.position.x, 0, player.playerModel.position.z - 15);
+                        if(!audioCollection.bossTeleport.isPlaying) {
+                            audioCollection.bossTeleport.play();
+                        }
+                    }
+
+                    bossRoaring = false;
+                    audioCollection.bossRoar.isPlaying = false;         
+                };
+            }
         }
     }
     else if(!bossAttacked) {
@@ -6541,33 +6567,33 @@ function bossInRangeOfPlayer() {
 }
 
 function openFullscreen() {
-    // if(document.documentElement.requestFullscreen) {
-    //     document.documentElement.requestFullscreen();
-    // } 
-    // else if(document.documentElement.mozRequestFullScreen) { /* Firefox */
-    //     document.documentElement.mozRequestFullScreen();
-    // } 
-    // else if(document.documentElement.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
-    //     document.documentElement.webkitRequestFullscreen();
-    // } 
-    // else if(document.documentElement.msRequestFullscreen) { /* IE / Edge */
-    //     document.documentElement.msRequestFullscreen();
-    // }
+    if(document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+    } 
+    else if(document.documentElement.mozRequestFullScreen) { /* Firefox */
+        document.documentElement.mozRequestFullScreen();
+    } 
+    else if(document.documentElement.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+        document.documentElement.webkitRequestFullscreen();
+    } 
+    else if(document.documentElement.msRequestFullscreen) { /* IE / Edge */
+        document.documentElement.msRequestFullscreen();
+    }
 }
 
 function closeFullscreen() {
-    // if(document.exitFullscreen) {
-    //     document.exitFullscreen();
-    // } 
-    // else if(document.mozCancelFullScreen) {
-    //     document.mozCancelFullScreen();
-    // } 
-    // else if(document.webkitExitFullscreen) {
-    //     document.webkitExitFullscreen();
-    // } 
-    // else if(document.msExitFullscreen) {
-    //     document.msExitFullscreen();
-    // }
+    if(document.exitFullscreen) {
+        document.exitFullscreen();
+    } 
+    else if(document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+    } 
+    else if(document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+    } 
+    else if(document.msExitFullscreen) {
+        document.msExitFullscreen();
+    }
 }
 
 /**
@@ -7652,6 +7678,7 @@ function initAudio() {
     loadAudio("audio/boss/boss_fight_music.wav", "boss_fight_music");
     loadAudio("audio/boss/boss_attack.mp3", "boss_attack");
     loadAudio("audio/boss/boss_footstep.wav", "boss_footstep");
+    loadAudio("audio/boss/boss_teleport.mp3", "boss_teleport");
     loadAudio("audio/boss/boss_death.wav", "boss_death");
     loadAudio("audio/environment/tree_fall.wav", "tree_fall");
     loadAudio("audio/environment/black_hole.wav", "hole");
