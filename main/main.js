@@ -282,10 +282,10 @@ let towerOne;
 let towerTwo;
 let towerThree;
 let towerFour;
-let orbOne = {mesh: undefined, active: true, statusMesh: undefined, health: 3};
-let orbTwo = {mesh: undefined, active: true, statusMesh: undefined, health: 3};
-let orbThree = {mesh: undefined, active: true, statusMesh: undefined, health: 3};
-let orbFour = {mesh: undefined, active: true, statusMesh: undefined, health: 3};
+let orbOne = {mesh: undefined, active: true, statusMesh: undefined};
+let orbTwo = {mesh: undefined, active: true, statusMesh: undefined};
+let orbThree = {mesh: undefined, active: true, statusMesh: undefined};
+let orbFour = {mesh: undefined, active: true, statusMesh: undefined};
 let towerArray = [];
 let orbArray = [orbOne, orbTwo, orbThree, orbFour];
 let orbOneHealingRay;
@@ -293,7 +293,6 @@ let orbTwoHealingRay;
 let orbThreeHealingRay;
 let orbFourHealingRay;
 let healingRayArray = [];
-let resetBossTowers = false;
 
 /** HUD */
 let tooltipVisible = false;
@@ -476,6 +475,8 @@ function gameLoop() {
 
             // Updates the animations on the health packs
             updateHealthPackAnimation();
+
+            updateOrbAnimation();
 
             // Updates the animation of the player's gun on the ground (before it is picked up)
             if(!player.hasGun && !finishedPuzzleTwo) {
@@ -3043,20 +3044,39 @@ function drawTowers() {
     /** ORBS */
     let orbTexture = loadReflectiveTexture(skyboxURLs);
 
-    let orbGeometry = new THREE.SphereBufferGeometry(3, 64, 16);
+    let orbGeometry = new THREE.BoxBufferGeometry(3, 3, 3);
     let orbOneMaterial = new THREE.MeshBasicMaterial( {color: "white"} );
     let orbTwoMaterial = orbOneMaterial.clone();
     let orbThreeMaterial = orbOneMaterial.clone();
     let orbFourMaterial = orbOneMaterial.clone();
 
+    let edges = new THREE.EdgesGeometry(orbGeometry);
+    let edgeMaterial = new THREE.LineBasicMaterial( {color: "#1ac3fd"} );
+
+    let orbOneEdges = new THREE.LineSegments(edges, edgeMaterial.clone());
+    orbOneEdges.name = "orbOne";
+    let orbTwoEdges = new THREE.LineSegments(edges, edgeMaterial.clone());
+    orbTwoEdges.name = "orbTwo";
+    let orbThreeEdges = new THREE.LineSegments(edges, edgeMaterial.clone());
+    orbThreeEdges.name = "orbThree";
+    let orbFourEdges = new THREE.LineSegments(edges, edgeMaterial.clone());
+    orbFourEdges.name = "orbFour";
+
     orbOne.mesh = new THREE.Mesh(orbGeometry, orbOneMaterial);
     orbOne.mesh.name = "orbOne";
+    orbOne.mesh.add(orbOneEdges);
+
     orbTwo.mesh = new THREE.Mesh(orbGeometry, orbTwoMaterial);
     orbTwo.mesh.name = "orbTwo";
+    orbTwo.mesh.add(orbTwoEdges);
+
     orbThree.mesh = new THREE.Mesh(orbGeometry, orbThreeMaterial);
     orbThree.mesh.name = "orbThree";
+    orbThree.mesh.add(orbThreeEdges);
+
     orbFour.mesh = new THREE.Mesh(orbGeometry, orbFourMaterial);
     orbFour.mesh.name = "orbFour";
+    orbFour.mesh.add(orbFourEdges);
 
     orbCollidableMeshList.push(orbOne.mesh);
     orbCollidableMeshList.push(orbTwo.mesh);
@@ -4706,42 +4726,71 @@ function updateBullets() {
 
             if(intersects.length > 0) {
                 let intersect = intersects[0];
+                console.log(intersect);
                 let distance_one = intersect.distance;
                 let distance_twoVec = new THREE.Vector3();
                 distance_twoVec.subVectors(item.bullet.position, item.lastPosition);
                 let distance_two = distance_twoVec.length();
     
                 if(distance_one <= distance_two) { // Hit
-                    if(audioCollection.orbExplosion.isPlaying) {
-                        audioCollection.orbExplosion.stop();
-                    }
-                    audioCollection.orbExplosion.play();
+                    if(intersect.object.visible) {
+                        audioCollection.hitmarker.play();
+                        crosshair.style.background = "url(hud/crosshairs/crosshair_hitmarker.svg)";
+                        setTimeout(() => {
+                            crosshair.style.background = "url(hud/crosshairs/crosshair.svg)";
+                            crosshair.style.filter = "none";
+                        }, 300);
+                    
+                        switch(intersect.object.name) {
+                            case "orbOne":
+                                orbOne.active = false;
+                                orbOne.statusMesh.material.color.setHex(0xff0000);
+                                healingRayArray[0].visible = false;
+                                orbOne.mesh.visible = false;
+                                orbOne.mesh.children[0].visible = false;
 
-                    switch(intersect.object.name) {
-                        case "orbOne":
-                            orbOne.active = false;
-                            orbOne.statusMesh.material.color.setHex(0xff0000);
-                            healingRayArray[0].visible = false;
-                            orbOne.mesh.visible = false;
-                            break;
-                        case "orbTwo":
-                            orbTwo.active = false;
-                            orbTwo.statusMesh.material.color.setHex(0xff0000);
-                            healingRayArray[1].visible = false;
-                            orbTwo.mesh.visible = false;
-                            break;
-                        case "orbThree":
-                            orbThree.active = false;
-                            orbThree.statusMesh.material.color.setHex(0xff0000);
-                            healingRayArray[2].visible = false;
-                            orbThree.mesh.visible = false;
-                            break;
-                        case "orbFour":
-                            orbFour.active = false;
-                            orbFour.statusMesh.material.color.setHex(0xff0000);
-                            healingRayArray[3].visible = false;
-                            orbFour.mesh.visible = false;
-                            break;
+                                if(audioCollection.orbExplosion.isPlaying) {
+                                    audioCollection.orbExplosion.stop();
+                                }
+                                audioCollection.orbExplosion.play();
+                                break;
+                            case "orbTwo":
+                                orbTwo.active = false;
+                                orbTwo.statusMesh.material.color.setHex(0xff0000);
+                                healingRayArray[1].visible = false;
+                                orbTwo.mesh.visible = false;
+                                orbTwo.mesh.children[0].visible = false;
+
+                                if(audioCollection.orbExplosion.isPlaying) {
+                                    audioCollection.orbExplosion.stop();
+                                }
+                                audioCollection.orbExplosion.play();
+                                break;
+                            case "orbThree":
+                                orbThree.active = false;
+                                orbThree.statusMesh.material.color.setHex(0xff0000);
+                                healingRayArray[2].visible = false;
+                                orbThree.mesh.visible = false;
+                                orbThree.mesh.children[0].visible = false;
+
+                                if(audioCollection.orbExplosion.isPlaying) {
+                                    audioCollection.orbExplosion.stop();
+                                }
+                                audioCollection.orbExplosion.play();
+                                break;
+                            case "orbFour":
+                                orbFour.active = false;
+                                orbFour.statusMesh.material.color.setHex(0xff0000);
+                                healingRayArray[3].visible = false;
+                                orbFour.mesh.visible = false;
+                                orbFour.mesh.children[0].visible = false;
+
+                                if(audioCollection.orbExplosion.isPlaying) {
+                                    audioCollection.orbExplosion.stop();
+                                }
+                                audioCollection.orbExplosion.play();
+                                break;
+                        }
                     }
                 }
             }
@@ -5082,7 +5131,6 @@ function damageBoss(type) {
                             defeatedBoss = true;
                             bossHealth.style.visibility = "hidden";
 
-                            resetBossTowers = true;
                             for(let i = 0; i < towerArray.length; i++) {
                                 healingRayArray[i].visible = false;
                                 orbArray[i].mesh.material.color.setHex(0xffffff);
@@ -5115,7 +5163,6 @@ function damageBoss(type) {
         defeatedBoss = true;
         bossHealth.style.visibility = "hidden";
 
-        resetBossTowers = true;
         for(let i = 0; i < towerArray.length; i++) {
             healingRayArray[i].visible = false;
             orbArray[i].mesh.material.color.setHex(0xffffff);
@@ -5380,6 +5427,16 @@ function updateBossAnimation(newAnimation) {
     boss.currentAnimation.stop();
     newAnimation.play();
     boss.currentAnimation = newAnimation;
+}
+
+function updateOrbAnimation() {
+    for(let i = 0; i < orbArray.length; i++) {
+        if(orbArray[i].mesh.visible) {
+            orbArray[i].mesh.rotation.x += 0.01;
+            orbArray[i].mesh.rotation.y += 0.01;
+            orbArray[i].mesh.rotation.z += 0.01;
+        }
+    }
 }
 
 /**
@@ -6204,7 +6261,14 @@ function restartCheckpoint() {
     onPlatform = false;
     screamPlayed = false;
 
-    resetBossTowers = false;
+    for(let i = 0; i < towerArray.length; i++) {
+        if(!orbArray[i].active) {
+            orbArray[i].active = true;
+            orbArray[i].mesh.visible = true;
+            orbArray[i].mesh.children[0].visible = true;
+            orbArray[i].statusMesh.material.color.setHex(0x1ac3fd);
+        }
+    }
 
     controls.lock();
 
@@ -6375,6 +6439,7 @@ function updateBossPosition() {
             if(boss.model.position.clone().distanceTo(towerArray[i].clone()) < 150 && boss.currentHealth < 1000) {
                 if(orbArray[i].active) {
                     orbArray[i].mesh.material.color.setHex(0x1ac3fd);
+                    orbArray[i].mesh.children[0].material.color.setHex(0xffffff);
                     boss.currentHealth = Math.round(boss.currentHealth + 1);
                     bossHealthBar.setAttribute("style", "width: " + boss.currentHealth / 33.33 + "%");
 
@@ -6392,6 +6457,7 @@ function updateBossPosition() {
                 if(orbArray[i].active) {
                     healingRayArray[i].visible = false;
                     orbArray[i].mesh.material.color.setHex(0xffffff);
+                    orbArray[i].mesh.children[0].material.color.setHex(0x1ac3fd);
                 }
             }
         }
