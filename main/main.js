@@ -275,6 +275,7 @@ let intro = true;
 let bossAttacked = false;
 let bossWalking = false;
 let bossRoaring = false;
+let bossRespawned = false;
 let updatedAlienRange = false;
 let movedBlockingTreesLevelFour = false;
 let endGameBlockingTrees;
@@ -355,20 +356,10 @@ function gameLoop() {
             player.velocityZ = player.velocityZ - player.velocityZ * 10 * clock.delta;
 
             if(player.movingLeft) {
-                if(inPuzzleTwo && !finishedPuzzleTwo) {
-                    player.velocityX = player.velocityX - 50 * clock.delta;
-                }
-                else {
-                    player.velocityX = player.velocityX - 400 * clock.delta * player.runFactor;
-                }
+                player.velocityX = player.velocityX - 400 * clock.delta * player.runFactor;
             }
             if(player.movingRight) {
-                if(inPuzzleTwo && !finishedPuzzleTwo) {
-                    player.velocityX = player.velocityX + 50 * clock.delta;
-                }
-                else {
-                    player.velocityX = player.velocityX + 400 * clock.delta * player.runFactor;
-                }
+                player.velocityX = player.velocityX + 400 * clock.delta * player.runFactor;
             }
             if(player.movingForward) {
                 if(inPuzzleTwo && !finishedPuzzleTwo) {
@@ -787,9 +778,11 @@ function levelTwoPuzzle() {
         inPuzzleTwo = true;
         shieldDisplay.style.visibility = "hidden";
 
+        player.playerModel.position.set(460, player.playerModel.position.y, player.playerModel.position.z);
+
         /** Set the camera to look at the player from the front */
-        puzzleTwoCamera.position.set(camera.position.x, camera.position.y + 2, camera.position.z + 25);
-        puzzleTwoCamera.lookAt(camera.position.x, camera.position.y, camera.position.z);
+        puzzleTwoCamera.position.set(player.playerModel.position.x, 10, player.playerModel.position.z + 25);
+        puzzleTwoCamera.lookAt(player.playerModel.position.x, 8, player.playerModel.position.z);
 
         /** Place the spotlight above the player looking down */
         puzzleSpotLight.position.set(460, 18, -1020);
@@ -814,27 +807,7 @@ function levelTwoPuzzle() {
         controls.getObject().rotation.set(0, Math.PI, 0);
         player.playerModel.rotation.set(0, Math.PI, 0);
         cameraType = "puzzleTwo";
-        audioCollection.wildlife.stop();
-
-        /** Move the player to the center of the box in the x position after a timeout to account for lag when switching to new camera */
-        setTimeout(() => {
-            if(!inPositionX) {
-                if(xPos < 460) {
-                    player.movingRight = false;
-                    player.movingLeft = true;
-                }
-                else if(xPos > 460) {
-                    player.movingLeft = false;
-                    player.movingRight = true;
-                }
-    
-                if(Math.round(xPos) == 460) {            
-                    player.movingLeft = false;
-                    player.movingRight = false;
-                    inPositionX = true;
-                }
-            }
-        }, 2000);
+        audioCollection.wildlife.stop();       
 
         /** Move the player to the center of the box in the z position */
         if(zPos < -1020) {
@@ -855,7 +828,7 @@ function levelTwoPuzzle() {
             pointLight.intensity = 0;
         }
 
-        if(inPositionX && inPositionZ) {        
+        if(inPositionZ) {        
             setTimeout(() => {            
                 if(!audioCollection.recordScratch.isPlaying && danceIncorrect < 2) { // Start the music after a short delay
                     playMusic(); 
@@ -4907,6 +4880,9 @@ function updateAlienBullet(alien) {
                     if(audioCollection.bossFightMusic.isPlaying) {
                         audioCollection.bossFightMusic.stop();
                     }
+                    if(audioCollection.bossRoar.isPlaying) {
+                        audioCollection.bossRoar.stop();
+                    }
                     player.currentHealth = 0;
                     audioCollection.playerDeath.play();
                     playerDeath.classList.add("fadein");
@@ -6241,6 +6217,9 @@ function restartCheckpoint() {
                 bossHealth.style.visibility = "visible";
                 boss.model.position.set(480, 0, -90);
                 boss.currentHealth = 1000;
+                boss.teleportCooldown = 200;
+                bossRoaring = false;
+                // updateBossAnimation(boss.idleAnim);
                 bossHealthBar.setAttribute("style", "width: 30%");
                 audioCollection.bossFightMusic.play();
             }
@@ -6476,7 +6455,12 @@ function updateBossPosition() {
                 }
 
                 if(player.currentHealth <= 0) {
-                    audioCollection.bossFightMusic.stop();
+                    if(audioCollection.bossFightMusic.isPlaying) {
+                        audioCollection.bossFightMusic.stop();
+                    }
+                    if(audioCollection.bossRoar.isPlaying) {
+                        audioCollection.bossRoar.stop();
+                    }
                     player.currentHealth = 0;
                     audioCollection.playerDeath.play();
                     playerDeath.classList.add("fadein");
@@ -7162,27 +7146,27 @@ function initControls() {
                 }
                 break;
             case 49:    // 1
-                if(!inPuzzleTwo || finishedPuzzleTwo || dancePlaying) return;
+                if(!inPuzzleTwo || finishedPuzzleTwo || dancePlaying || !inPositionZ) return;
                 updatePlayerAnimation(player.animations.chickenDance);
                 checkDance();
                 break;
             case 50:    // 2
-                if(!inPuzzleTwo || finishedPuzzleTwo || dancePlaying) return;
+                if(!inPuzzleTwo || finishedPuzzleTwo || dancePlaying || !inPositionZ) return;
                 updatePlayerAnimation(player.animations.breakdance);
                 checkDance();
                 break;
             case 51:    // 3
-                if(!inPuzzleTwo || finishedPuzzleTwo || dancePlaying) return;
+                if(!inPuzzleTwo || finishedPuzzleTwo || dancePlaying || !inPositionZ) return;
                 updatePlayerAnimation(player.animations.macarenaDance);
                 checkDance();
                 break;
             case 52:    // 4
-                if(!inPuzzleTwo || finishedPuzzleTwo || dancePlaying) return;
+                if(!inPuzzleTwo || finishedPuzzleTwo || dancePlaying || !inPositionZ) return;
                 updatePlayerAnimation(player.animations.ymcaDance);
                 checkDance();
                 break;
             case 53:    // 5
-                if(!inPuzzleTwo || finishedPuzzleTwo || dancePlaying) return;
+                if(!inPuzzleTwo || finishedPuzzleTwo || dancePlaying || !inPositionZ) return;
                 updatePlayerAnimation(player.animations.gangnamStyle);
                 checkDance();
                 break;
