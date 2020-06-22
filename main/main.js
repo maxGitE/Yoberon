@@ -275,7 +275,8 @@ let intro = true;
 let bossAttacked = false;
 let bossWalking = false;
 let bossRoaring = false;
-let bossRespawned = false;
+let bossStartedTeleporting = false;
+let bossTeleportPaused = false;
 let updatedAlienRange = false;
 let movedBlockingTreesLevelFour = false;
 let endGameBlockingTrees;
@@ -3018,7 +3019,7 @@ function drawTowers() {
     let orbTexture = loadReflectiveTexture(skyboxURLs);
 
     let orbGeometry = new THREE.BoxBufferGeometry(3, 3, 3);
-    let orbOneMaterial = new THREE.MeshBasicMaterial( {color: "white"} );
+    let orbOneMaterial = new THREE.MeshBasicMaterial( {color: "#d8d1d1"} );
     let orbTwoMaterial = orbOneMaterial.clone();
     let orbThreeMaterial = orbOneMaterial.clone();
     let orbFourMaterial = orbOneMaterial.clone();
@@ -4699,7 +4700,6 @@ function updateBullets() {
 
             if(intersects.length > 0) {
                 let intersect = intersects[0];
-                console.log(intersect);
                 let distance_one = intersect.distance;
                 let distance_twoVec = new THREE.Vector3();
                 distance_twoVec.subVectors(item.bullet.position, item.lastPosition);
@@ -5055,7 +5055,7 @@ function damageAlien(alien, intersect, type) {
  */
 function damageBoss(type) {
     if(type == "normal") { // Normal shot
-        boss.currentHealth -= 300;
+        boss.currentHealth -= 40;
         bossHealthBar.setAttribute("style", "width: " + boss.currentHealth / 33.33 + "%");
         crosshair.style.background = "url(hud/crosshairs/crosshair_hitmarker.svg)";
     }
@@ -6362,9 +6362,7 @@ function spawnLevelFourAliens() {
             }
 
             for(let i = 0; i < 4; i++) {
-                if(alienArray[i].currentHealth < 100) {
-                    alienArray[i].currentHealth = 100;
-                }
+                alienArray[i].currentHealth = 100;
 
                 alienArray[i].model.add(alienArray[i].hitbox.mesh);
                 bulletCollidableMeshList.push(alienArray[i].hitbox.mesh);
@@ -6418,7 +6416,7 @@ function updateBossPosition() {
             if(boss.model.position.clone().distanceTo(towerArray[i].clone()) < 150 && boss.currentHealth < 1000) {
                 if(orbArray[i].active) {
                     orbArray[i].mesh.material.color.setHex(0x1ac3fd);
-                    orbArray[i].mesh.children[0].material.color.setHex(0xffffff);
+                    orbArray[i].mesh.children[0].material.color.setHex(0xc8c1c1);
                     boss.currentHealth = Math.round(boss.currentHealth + 1);
                     bossHealthBar.setAttribute("style", "width: " + boss.currentHealth / 33.33 + "%");
 
@@ -6435,7 +6433,7 @@ function updateBossPosition() {
             else {
                 if(orbArray[i].active) {
                     healingRayArray[i].visible = false;
-                    orbArray[i].mesh.material.color.setHex(0xffffff);
+                    orbArray[i].mesh.material.color.setHex(0xc8c1c1);
                     orbArray[i].mesh.children[0].material.color.setHex(0x1ac3fd);
                 }
             }
@@ -6447,34 +6445,37 @@ function updateBossPosition() {
             updateBossAnimation(boss.walkAnim);
             bossWalking = true;
         }
-        if(!audioCollection.bossRoar.isPlaying) { // Stop the boss from moving while he roars
+
+        if(!audioCollection.bossRoar.isPlaying && !bossStartedTeleporting) { // Stop the boss from moving while he roars
             boss.model.position.add(direction.normalize().multiplyScalar(0.3)); // Move the boss towards the player 0.3
             boss.teleportCooldown -= 0.5;
         }
+        
+        if(Math.round(boss.teleportCooldown) == 0) {
 
-        if(Math.round(boss.teleportCooldown) <= 0) {
-
-            if(!audioCollection.bossRoar.isPlaying) {
+            if(!audioCollection.bossRoar.isPlaying && !bossStartedTeleporting) {
+                bossStartedTeleporting = true;
                 bossRoaring = true;
                 bossWalking = false;
                 audioCollection.bossRoar.play();
                 updateBossAnimation(boss.flexAnim);
             }
-            else {
-                audioCollection.bossRoar.source.onended = function() { // Teleport the boss after the roar has finished      
-                    boss.teleportCooldown = 200;
-
-                    let bossTeleport = Math.floor(Math.random() * 3);
-                    if(bossTeleport != 2) { // Randomize whether the boss will teleport or not (teleport 2/3 times)
-                        boss.model.position.set(player.playerModel.position.x, 0, player.playerModel.position.z - 15);
-                        if(!audioCollection.bossTeleport.isPlaying) {
-                            audioCollection.bossTeleport.play();
-                        }
+            else if(!audioCollection.bossRoar.isPlaying && !bossTeleportPaused) {
+                boss.teleportCooldown = 200;
+    
+                let bossTeleport = Math.floor(Math.random() * 3);
+                if(bossTeleport != 2) { // Randomize whether the boss will teleport or not (teleport 2/3 times)
+                    boss.model.position.set(player.playerModel.position.x, 0, player.playerModel.position.z - 15);
+                    if(!audioCollection.bossTeleport.isPlaying) {
+                        audioCollection.bossTeleport.play();
                     }
-
-                    bossRoaring = false;
-                    audioCollection.bossRoar.isPlaying = false;         
-                };
+                }
+                audioCollection.bossRoar.stop();
+                bossStartedTeleporting = false;
+                bossRoaring = false;
+            }
+            else {
+                bossTeleportPaused = false;
             }
         }
     }
@@ -6976,6 +6977,7 @@ function initControls() {
 
         if(audioCollection.bossRoar.isPlaying) {
             pausedRoarAudio = true;
+            bossTeleportPaused = true;
             audioCollection.bossRoar.pause();
         }
 
@@ -7724,11 +7726,11 @@ function initAudio() {
     loadAudio("audio/songs/record_scratch.wav", "record_scratch");
     loadAudio("audio/character/health_refill.wav", "health_refill");
     loadAudio("audio/weapon/gun_cock.wav", "gun_cock");
+    loadAudio("audio/boss/boss_teleport.mp3", "boss_teleport");
     loadAudio("audio/boss/boss_roar.wav", "boss_roar");
     loadAudio("audio/boss/boss_fight_music.wav", "boss_fight_music");
     loadAudio("audio/boss/boss_attack.mp3", "boss_attack");
     loadAudio("audio/boss/boss_footstep.wav", "boss_footstep");
-    loadAudio("audio/boss/boss_teleport.mp3", "boss_teleport");
     loadAudio("audio/boss/boss_death.wav", "boss_death");
     loadAudio("audio/environment/tree_fall.wav", "tree_fall");
     loadAudio("audio/environment/black_hole.wav", "hole");

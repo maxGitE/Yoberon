@@ -29,7 +29,7 @@ class Hitbox {
                 break;
 
             case "boss":
-                this._body = new THREE.Mesh(new THREE.CylinderBufferGeometry(0.5, 0.7, 3.25), new THREE.MeshBasicMaterial());
+                this._body = new THREE.Mesh(new THREE.CylinderBufferGeometry(0.6, 0.8, 3.25), new THREE.MeshBasicMaterial());
 
                 this._body.name = "body";
 
