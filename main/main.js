@@ -232,7 +232,6 @@ let movedBlockingTreesLevelTwo = false;
 let removedLevelTwoAliens = false
 let inPuzzleTwo = false;
 let finishedPuzzleTwo = false;
-let inPositionX  = false;
 let inPositionZ = false;
 let droppedGun = false;
 let spotLightColour = 0;
@@ -7071,20 +7070,6 @@ function initControls() {
                         updatePlayerAnimation(player.animations.runAnim);
                     }
                 }
-                break;
-            case 82:  // R
-                controls.getObject().position.set(0, 8, -720);
-                currentLevel = 2;
-                break;
-            case 84:  // T
-                controls.getObject().position.set(400, 8, -410);
-                camera.lookAt(475, 8, -790);
-                currentLevel = 3;
-                break;
-            case 89:    // Y
-                currentLevel = 3;
-                controls.getObject().position.set(460, 8, -930);
-                camera.lookAt(460, 8, 1);
                 break;
             case 112:   // F1 (first-person camera)
                 if(inPuzzleTwo && !finishedPuzzleTwo) return;
