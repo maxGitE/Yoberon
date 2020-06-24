@@ -6246,6 +6246,9 @@ function restartCheckpoint() {
         }
     }
 
+    bossStartedTeleporting = false;
+    bossTeleportPaused = false;
+
     controls.lock();
 
     switch(currentLevel) {
