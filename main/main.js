@@ -6347,13 +6347,21 @@ function spawnLevelThreeAliens() {
 function spawnLevelFourAliens() {
     if(!startWaves) return;
 
-    if(waveDefeated) {
+    if(waveDefeated) { // Will be set to true as soon as one alien dies. If the player kills all 4, the aliens will not spawn for an extra 10s (30s total since first alien died), else spawn them all back after 20s
         waveDefeated = false;
         inWaveTimeout = true;
-        setTimeout(() => { // Wait 8 seconds until the next wave is spawned
-            spawnedLevelFourAliens = false;
-            inWaveTimeout = false;
-        }, 8000);
+        setTimeout(() => {
+            if(bulletCollidableMeshList.length == 1) { 
+                setTimeout(() => {
+                    spawnedLevelFourAliens = false;
+                    inWaveTimeout = false;
+                }, 10000);
+            }
+            else {
+                spawnedLevelFourAliens = false;
+                inWaveTimeout = false;
+            }
+        }, 20000);
     }
     else {
         if(!spawnedLevelFourAliens) {
@@ -6397,7 +6405,7 @@ function spawnLevelFourAliens() {
         } 
         else {
             if(inWaveTimeout) return;
-            if(bulletCollidableMeshList.length == 1) waveDefeated = true; // All 4 aliens have died (and only the boss is alive)
+            if(bulletCollidableMeshList.length < 5) waveDefeated = true; // An alien has been killed
         }   
     }
 }
@@ -6467,7 +6475,14 @@ function updateBossPosition() {
     
                 let bossTeleport = Math.floor(Math.random() * 3);
                 if(bossTeleport != 2) { // Randomize whether the boss will teleport or not (teleport 2/3 times)
-                    boss.model.position.set(player.playerModel.position.x, 0, player.playerModel.position.z - 15);
+                    let playerDirection = new THREE.Vector3();
+                    controls.getDirection(playerDirection);
+                    playerDirection.multiplyScalar(-15); // Boss will teleport 15 units behind player 
+
+                    let newBossPosition = new THREE.Vector3();
+                    newBossPosition.addVectors(player.playerModel.position, playerDirection);
+
+                    boss.model.position.set(newBossPosition.x, 0, newBossPosition.z);
                     if(!audioCollection.bossTeleport.isPlaying) {
                         audioCollection.bossTeleport.play();
                     }
@@ -7228,6 +7243,10 @@ function initControls() {
                 break;
             case 77:    // M (minimap)
                 minimapToggle = true;
+                break;
+            case 84:
+                camera.position.set(480, 8, -300);
+                currentLevel = 4;
                 break;
         }
     }
